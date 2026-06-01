@@ -73,7 +73,7 @@ export async function subscribeToPush(userId: string | null): Promise<boolean> {
       const keyBytes = urlBase64ToUint8Array(keyData.publicKey);
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: keyBytes,
+        applicationServerKey: keyBytes.buffer.slice(keyBytes.byteOffset, keyBytes.byteOffset + keyBytes.byteLength) as ArrayBuffer,
       });
     }
 

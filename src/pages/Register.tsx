@@ -45,23 +45,7 @@ export default function Register() {
     }
     setLoading(true);
 
-    // Pre-check: phone number must be unique. Use RPC to bypass RLS.
-    const { data: phoneExists, error: phoneCheckError } = await supabase
-      .rpc("check_phone_exists", { p_phone: trimmedPhone });
-
-    if (phoneCheckError) {
-      console.error("Phone check error:", phoneCheckError);
-    }
-
-    if (phoneExists) {
-      setLoading(false);
-      toast({
-        title: "Phone Already Registered",
-        description: "This phone number is already linked to another account. Please use a different number.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Phone uniqueness is enforced by the database trigger prevent_duplicate_phone.
 
     const { error, data } = await signUp(email, password, name, phone);
     setLoading(false);

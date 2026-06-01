@@ -1,14 +1,13 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useCart } from "@/contexts/CartContext";
-import { formatCurrency, calculatePaystackFee, calculateMashupFee, calculateTelecelVSFee } from "@/lib/data";
+import { formatCurrency, calculateMashupFee, calculateTelecelVSFee } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Trash2, ShoppingCart, Wallet, CreditCard, X } from "lucide-react";
+import { Trash2, ShoppingCart, Wallet, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { initPaystack } from "@/lib/paystack";
 import mtnLogo from "@/assets/networks/mtn.png";
 import telecelLogo from "@/assets/networks/telecel.png";
 import airteltigoLogo from "@/assets/networks/airteltigo.png";
@@ -27,7 +26,6 @@ export default function Cart() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "paystack">("wallet");
   const [processing, setProcessing] = useState(false);
 
   const mashupSubtotal = items.filter((i) => i.networkId === "mashup").reduce((sum, i) => sum + i.effectivePrice, 0);
@@ -35,8 +33,7 @@ export default function Cart() {
   const vsSubtotal = items.filter((i) => i.networkId === "vs").reduce((sum, i) => sum + i.effectivePrice, 0);
   const vsFee = calculateTelecelVSFee(vsSubtotal);
   const grandTotal = total + mashupFee + vsFee;
-  const paystackFee = calculatePaystackFee(grandTotal);
-  const paystackTotal = grandTotal + paystackFee;
+
 
   const checkPendingOrders = async (phoneNumbers: string[]): Promise<string[]> => {
     const uniquePhones = [...new Set(phoneNumbers)];
@@ -149,74 +146,8 @@ export default function Cart() {
     }
   };
 
-  const handlePayWithPaystack = async () => {
-    if (!profile) return;
-    setProcessing(true);
 
-    const manualItems = items.filter((i) => i.networkId === "airtime" || i.networkId === "mashup" || i.networkId === "vs");
-    const dataItems = items.filter((i) => i.networkId !== "airtime" && i.networkId !== "mashup" && i.networkId !== "vs");
 
-    const dataPhones = dataItems.map((i) => i.phoneNumber);
-    const pendingPhones = await checkPendingOrders(dataPhones);
-
-    if (pendingPhones.length > 0) {
-      toast({
-        title: "Pending Order Exists",
-        description: `Phone number(s) ${pendingPhones.join(", ")} already have a pending order.`,
-        variant: "destructive",
-      });
-      setProcessing(false);
-      return;
-    }
-
-    const phones = items.map((i) => i.phoneNumber.replace(/\D/g, "")).filter(Boolean);
-    const syntheticEmail = `${phones[0] || "guest"}-${Date.now()}@donmacdatahub.com`;
-
-    const itemsForBackend = [
-      ...dataItems.map((item) => ({
-        network: item.network,
-        network_id: item.networkId,
-        phone: item.phoneNumber,
-        bundle: item.bundle.size,
-        bundle_size_gb: getBundleSizeGB(item.bundle.size),
-        amount: item.effectivePrice,
-      })),
-      ...manualItems.map((item) => {
-        let amount = item.effectivePrice;
-        if (item.networkId === "mashup") amount = item.effectivePrice + calculateMashupFee(item.effectivePrice);
-        else if (item.networkId === "vs") amount = item.effectivePrice + calculateTelecelVSFee(item.effectivePrice);
-        return {
-          network: item.network,
-          network_id: item.networkId,
-          phone: item.phoneNumber,
-          bundle: item.bundle.size,
-          bundle_size_gb: 0,
-          amount,
-        };
-      }),
-    ];
-
-    await initPaystack({
-      email: syntheticEmail,
-      amount: paystackTotal,
-      onSuccess: async (reference) => {
-        try {
-          await supabase.functions.invoke("paystack-verify-order", { body: { reference, items: itemsForBackend } });
-          await refreshProfile();
-          toast({ title: "Order Placed!", description: `${items.length} item(s) ordered via Paystack` });
-          clearCart();
-        } catch (err: any) {
-          toast({ title: "Error", description: err.message, variant: "destructive" });
-        } finally {
-          setProcessing(false);
-        }
-      },
-      onClose: () => {
-        setProcessing(false);
-        toast({ title: "Payment Cancelled" });
-      },
-    });
-  };
 
   return (
     <DashboardLayout title="Cart">
@@ -311,48 +242,13 @@ export default function Cart() {
                 </div>
               </div>
 
-              <div>
-                <p className="font-semibold text-foreground mb-2">Payment method</p>
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("wallet")}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "wallet" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <span
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "wallet" ? "border-primary" : "border-muted-foreground"}`}
-                    >
-                      {paymentMethod === "wallet" && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </span>
-                    <Wallet className="w-5 h-5 text-primary" />
-                    <div className="text-left">
-                      <p className="font-semibold text-foreground">Pay with Wallet</p>
-                      <p className="text-xs text-muted-foreground">
-                        Balance: {formatCurrency(profile?.wallet_balance ?? 0)}
-                      </p>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("paystack")}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "paystack" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <span
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "paystack" ? "border-primary" : "border-muted-foreground"}`}
-                    >
-                      {paymentMethod === "paystack" && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </span>
-                    <CreditCard className="w-5 h-5 text-green-600" />
-                    <div className="text-left">
-                      <p className="font-semibold text-foreground">Pay with Paystack</p>
-                      {paymentMethod === "paystack" && (
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(grandTotal)} + {formatCurrency(paystackFee)} fee ={" "}
-                          {formatCurrency(paystackTotal)}
-                        </p>
-                      )}
-                    </div>
-                  </button>
+              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5">
+                <Wallet className="w-5 h-5 text-primary" />
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-foreground">Pay with Wallet</p>
+                  <p className="text-xs text-muted-foreground">
+                    Balance: {formatCurrency(profile?.wallet_balance ?? 0)}
+                  </p>
                 </div>
               </div>
 
@@ -360,11 +256,9 @@ export default function Cart() {
                 className="w-full gradient-primary border-0"
                 size="lg"
                 disabled={processing}
-                onClick={paymentMethod === "wallet" ? handlePayWithWallet : handlePayWithPaystack}
+                onClick={handlePayWithWallet}
               >
-                {processing
-                  ? "Processing…"
-                  : `Proceed to Pay — ${formatCurrency(paymentMethod === "paystack" ? paystackTotal : grandTotal)}`}
+                {processing ? "Processing…" : `Proceed to Pay — ${formatCurrency(grandTotal)}`}
               </Button>
             </div>
           </>

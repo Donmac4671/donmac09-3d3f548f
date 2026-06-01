@@ -302,24 +302,18 @@ export function calculateTelecelVSFee(amount: number): number {
   return Math.round(amount * TELECEL_VS_FEE_PERCENT * 100) / 100;
 }
 
-export const PAYSTACK_FEE_PERCENT = 0.02; // 2%
+export const MIN_TOPUP = 10;
 
-export const MIN_TOPUP_AGENT = 20;
-export const MIN_TOPUP_GENERAL = 5;
-
-export function getMinTopUp(tier: string): number {
-  return tier === "agent" ? MIN_TOPUP_AGENT : MIN_TOPUP_GENERAL;
-}
-
-export function calculatePaystackFee(amount: number): number {
-  return Math.round(amount * PAYSTACK_FEE_PERCENT * 100) / 100;
+export function getMinTopUp(_tier?: string): number {
+  return MIN_TOPUP;
 }
 
 export function formatCurrency(amount: number): string {
   return `₵${amount.toFixed(2)}`;
 }
 
-/** Get the price for a bundle based on user tier */
-export function getBundlePrice(bundle: DataBundle, tier: string): number {
-  return tier === "agent" ? bundle.price : bundle.generalPrice;
+/** Reseller pricing — single price per bundle */
+export function getBundlePrice(bundle: DataBundle, _tier?: string): number {
+  return bundle.price;
 }
+
