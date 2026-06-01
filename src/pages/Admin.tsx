@@ -418,13 +418,7 @@ export default function Admin() {
                     <TableCell>{u.phone}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(u.wallet_balance)}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={u.tier === "agent" ? "bg-primary/10 text-primary cursor-pointer" : "bg-muted text-muted-foreground cursor-pointer"}
-                        onClick={() => handleSetTier(u.user_id, u.tier === "agent" ? "general" : "agent")}
-                      >
-                        {u.tier === "agent" ? "Agent" : "General"}
-                      </Badge>
+                      <Badge variant="outline" className="bg-primary/10 text-primary">Reseller</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
