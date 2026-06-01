@@ -361,6 +361,7 @@ export type Database = {
           payment_method: string
           phone_number: string
           status: string
+          store_id: string | null
           user_id: string
         }
         Insert: {
@@ -374,6 +375,7 @@ export type Database = {
           payment_method?: string
           phone_number: string
           status?: string
+          store_id?: string | null
           user_id: string
         }
         Update: {
@@ -387,6 +389,7 @@ export type Database = {
           payment_method?: string
           phone_number?: string
           status?: string
+          store_id?: string | null
           user_id?: string
         }
         Relationships: []
