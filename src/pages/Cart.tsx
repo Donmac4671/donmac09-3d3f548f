@@ -146,74 +146,8 @@ export default function Cart() {
     }
   };
 
-  const handlePayWithPaystack = async () => {
-    if (!profile) return;
-    setProcessing(true);
 
-    const manualItems = items.filter((i) => i.networkId === "airtime" || i.networkId === "mashup" || i.networkId === "vs");
-    const dataItems = items.filter((i) => i.networkId !== "airtime" && i.networkId !== "mashup" && i.networkId !== "vs");
 
-    const dataPhones = dataItems.map((i) => i.phoneNumber);
-    const pendingPhones = await checkPendingOrders(dataPhones);
-
-    if (pendingPhones.length > 0) {
-      toast({
-        title: "Pending Order Exists",
-        description: `Phone number(s) ${pendingPhones.join(", ")} already have a pending order.`,
-        variant: "destructive",
-      });
-      setProcessing(false);
-      return;
-    }
-
-    const phones = items.map((i) => i.phoneNumber.replace(/\D/g, "")).filter(Boolean);
-    const syntheticEmail = `${phones[0] || "guest"}-${Date.now()}@donmacdatahub.com`;
-
-    const itemsForBackend = [
-      ...dataItems.map((item) => ({
-        network: item.network,
-        network_id: item.networkId,
-        phone: item.phoneNumber,
-        bundle: item.bundle.size,
-        bundle_size_gb: getBundleSizeGB(item.bundle.size),
-        amount: item.effectivePrice,
-      })),
-      ...manualItems.map((item) => {
-        let amount = item.effectivePrice;
-        if (item.networkId === "mashup") amount = item.effectivePrice + calculateMashupFee(item.effectivePrice);
-        else if (item.networkId === "vs") amount = item.effectivePrice + calculateTelecelVSFee(item.effectivePrice);
-        return {
-          network: item.network,
-          network_id: item.networkId,
-          phone: item.phoneNumber,
-          bundle: item.bundle.size,
-          bundle_size_gb: 0,
-          amount,
-        };
-      }),
-    ];
-
-    await initPaystack({
-      email: syntheticEmail,
-      amount: paystackTotal,
-      onSuccess: async (reference) => {
-        try {
-          await supabase.functions.invoke("paystack-verify-order", { body: { reference, items: itemsForBackend } });
-          await refreshProfile();
-          toast({ title: "Order Placed!", description: `${items.length} item(s) ordered via Paystack` });
-          clearCart();
-        } catch (err: any) {
-          toast({ title: "Error", description: err.message, variant: "destructive" });
-        } finally {
-          setProcessing(false);
-        }
-      },
-      onClose: () => {
-        setProcessing(false);
-        toast({ title: "Payment Cancelled" });
-      },
-    });
-  };
 
   return (
     <DashboardLayout title="Cart">
