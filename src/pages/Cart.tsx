@@ -1,14 +1,13 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useCart } from "@/contexts/CartContext";
-import { formatCurrency, calculatePaystackFee, calculateMashupFee, calculateTelecelVSFee } from "@/lib/data";
+import { formatCurrency, calculateMashupFee, calculateTelecelVSFee } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Trash2, ShoppingCart, Wallet, CreditCard, X } from "lucide-react";
+import { Trash2, ShoppingCart, Wallet, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { initPaystack } from "@/lib/paystack";
 import mtnLogo from "@/assets/networks/mtn.png";
 import telecelLogo from "@/assets/networks/telecel.png";
 import airteltigoLogo from "@/assets/networks/airteltigo.png";
@@ -27,7 +26,6 @@ export default function Cart() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "paystack">("wallet");
   const [processing, setProcessing] = useState(false);
 
   const mashupSubtotal = items.filter((i) => i.networkId === "mashup").reduce((sum, i) => sum + i.effectivePrice, 0);
@@ -35,8 +33,7 @@ export default function Cart() {
   const vsSubtotal = items.filter((i) => i.networkId === "vs").reduce((sum, i) => sum + i.effectivePrice, 0);
   const vsFee = calculateTelecelVSFee(vsSubtotal);
   const grandTotal = total + mashupFee + vsFee;
-  const paystackFee = calculatePaystackFee(grandTotal);
-  const paystackTotal = grandTotal + paystackFee;
+
 
   const checkPendingOrders = async (phoneNumbers: string[]): Promise<string[]> => {
     const uniquePhones = [...new Set(phoneNumbers)];

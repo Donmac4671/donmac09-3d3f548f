@@ -2,21 +2,19 @@ import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wallet, CreditCard, Smartphone, Copy, CheckCircle, Hash, KeyRound, RefreshCw, Sparkles } from "lucide-react";
-import { formatCurrency, calculatePaystackFee, getMinTopUp } from "@/lib/data";
+import { Wallet, Smartphone, Copy, CheckCircle, Hash, KeyRound, RefreshCw, Sparkles } from "lucide-react";
+import { formatCurrency, getMinTopUp } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { initPaystack } from "@/lib/paystack";
 
 export default function TopUpWallet() {
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<"momo" | "paystack">("momo");
   const [showMomoDetails, setShowMomoDetails] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [claiming, setClaiming] = useState(false);
   const { toast } = useToast();
-  const { user, profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [generatingCode, setGeneratingCode] = useState(false);
   const referenceCode = (profile as any)?.topup_reference_code || "";
 
@@ -32,12 +30,9 @@ export default function TopUpWallet() {
     toast({ title: referenceCode ? "New Code Generated" : "Code Generated", description: `Your reference code is ${data}. Old code (if any) is now invalid.` });
   };
 
-  const tier = profile?.tier ?? "general";
-  const minTopUp = getMinTopUp(tier);
-  const quickAmounts = tier === "agent" ? [20, 50, 100, 200, 500] : [5, 10, 20, 50, 100];
+  const minTopUp = getMinTopUp();
+  const quickAmounts = [10, 20, 50, 100, 200];
   const amt = parseFloat(amount) || 0;
-  const paystackFee = calculatePaystackFee(amt);
-  const paystackTotal = amt + paystackFee;
 
   const handleMomoTopUp = () => {
     if (!amt || amt < minTopUp) {
@@ -76,43 +71,6 @@ export default function TopUpWallet() {
     }
   };
 
-  const handlePaystackTopUp = async () => {
-    if (!amt || amt < minTopUp) {
-      toast({ title: "Error", description: `Minimum top-up amount is ₵${minTopUp}`, variant: "destructive" });
-      return;
-    }
-    // Paystack requires unique emails per transaction. Build a synthetic email
-    // from the user's phone number so each customer is properly separated.
-    const userPhone = (profile?.phone || "").replace(/\D/g, "");
-    const uniqueSuffix = Date.now();
-    const payerEmail = userPhone
-      ? `${userPhone}-${uniqueSuffix}@donmacdatahub.com`
-      : `user-${user?.id?.slice(0, 8) || uniqueSuffix}-${uniqueSuffix}@donmacdatahub.com`;
-
-    await initPaystack({
-      email: payerEmail,
-      amount: paystackTotal,
-      onSuccess: async (reference) => {
-        const { data, error } = await supabase.functions.invoke("paystack-verify-topup", {
-          body: { reference, amount: amt },
-        });
-
-        if (error || (data && (data as any).error)) {
-          const msg = (data as any)?.error || error?.message || "Top-up verification failed";
-          toast({ title: "Top-up Failed", description: msg, variant: "destructive" });
-          return;
-        }
-
-        await refreshProfile();
-        toast({ title: "Top-up Successful!", description: `${formatCurrency(amt)} has been added to your wallet.` });
-        setAmount("");
-      },
-      onClose: () => {
-        toast({ title: "Payment Cancelled", description: "You closed the payment window." });
-      },
-    });
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied!", description: text });
@@ -127,27 +85,15 @@ export default function TopUpWallet() {
           <p className="text-3xl font-bold text-foreground">{formatCurrency(profile?.wallet_balance ?? 0)}</p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-sm p-6">
-          <h3 className="font-semibold text-foreground mb-4">Payment Method</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => { setMethod("momo"); setShowMomoDetails(false); }}
-              className={`p-4 rounded-xl border-2 text-center transition-all ${method === "momo" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
-            >
-              <Smartphone className="w-6 h-6 mx-auto mb-1 text-primary" />
-              <p className="text-sm font-medium">Mobile Money</p>
-            </button>
-            <button
-              onClick={() => { setMethod("paystack"); setShowMomoDetails(false); }}
-              className={`p-4 rounded-xl border-2 text-center transition-all ${method === "paystack" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
-            >
-              <CreditCard className="w-6 h-6 mx-auto mb-1 text-primary" />
-              <p className="text-sm font-medium">Paystack</p>
-            </button>
+        <div className="bg-card rounded-xl border border-border shadow-sm p-6 flex items-center gap-3">
+          <Smartphone className="w-6 h-6 text-primary" />
+          <div>
+            <p className="font-semibold">Mobile Money Top-Up</p>
+            <p className="text-xs text-muted-foreground">Send MoMo, then auto-claim with your reference code or manually with the transaction ID.</p>
           </div>
         </div>
 
-        {method === "paystack" && (
+        {!showMomoDetails && (
           <div className="bg-card rounded-xl border border-border shadow-sm p-6">
             <h3 className="font-semibold text-foreground mb-4">Amount (₵) — Min ₵{minTopUp}</h3>
             <Input
@@ -165,15 +111,13 @@ export default function TopUpWallet() {
                 </Button>
               ))}
             </div>
-            {amt >= minTopUp && (
-              <div className="mt-3 p-3 bg-accent rounded-lg text-sm text-muted-foreground">
-                Amount: {formatCurrency(amt)} + 2% fee ({formatCurrency(paystackFee)}) = <span className="font-bold text-foreground">{formatCurrency(paystackTotal)}</span>
-              </div>
-            )}
+            <Button className="w-full gradient-primary border-0 mt-4" size="lg" onClick={handleMomoTopUp} disabled={amt < minTopUp}>
+              Show Payment Details
+            </Button>
           </div>
         )}
 
-        {method === "momo" && !showMomoDetails && (
+        {showMomoDetails && (
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
             <h3 className="font-semibold text-foreground flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-primary" /> Send Payment To
@@ -192,16 +136,19 @@ export default function TopUpWallet() {
                 <p className="text-xs text-muted-foreground">Account Name</p>
                 <p className="font-bold text-foreground">Michael Osei</p>
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Amount to Send</p>
+                <p className="font-bold text-foreground text-lg">{formatCurrency(amt)}</p>
+              </div>
             </div>
 
-            {/* Auto-claim reference code */}
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
               <div className="flex items-start gap-2">
                 <Sparkles className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">Auto-Claim with Reference Code</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Use this 6-character code as the <span className="font-semibold">Reference</span> when sending the money. The exact amount you send will be added to your wallet automatically — no need to claim manually.
+                    Use this 6-character code as the <span className="font-semibold">Reference</span> when sending MoMo. The exact amount you send will be credited automatically.
                   </p>
                 </div>
               </div>
@@ -216,89 +163,42 @@ export default function TopUpWallet() {
                     <Button variant="outline" size="sm" onClick={() => copyToClipboard(referenceCode)}>
                       <Copy className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerateReferenceCode}
-                      disabled={generatingCode}
-                      title="Generate a new code (old code stops working)"
-                    >
+                    <Button variant="outline" size="sm" onClick={handleGenerateReferenceCode} disabled={generatingCode} title="Generate a new code (old code stops working)">
                       <RefreshCw className={`w-4 h-4 ${generatingCode ? "animate-spin" : ""}`} />
                     </Button>
                   </div>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGenerateReferenceCode}
-                  disabled={generatingCode}
-                >
+                <Button variant="outline" className="w-full" onClick={handleGenerateReferenceCode} disabled={generatingCode}>
                   <KeyRound className="w-4 h-4 mr-2" />
                   {generatingCode ? "Generating..." : "Generate My Reference Code"}
                 </Button>
               )}
-
-              {referenceCode && (
-                <p className="text-xs text-muted-foreground">
-                  💡 If you generate a new code, the old one stops working immediately.
-                </p>
-              )}
             </div>
 
-            <p className="text-sm text-muted-foreground text-center">
-              Or send without a reference code, then click below to claim manually with your Transaction ID.
-            </p>
-            <Button className="w-full gradient-primary border-0" size="lg" onClick={() => setShowMomoDetails(true)}>
-              I've Sent the Money
-            </Button>
-          </div>
-        )}
+            <div className="space-y-3 pt-2 border-t border-border">
+              <h4 className="font-semibold flex items-center gap-2"><Hash className="w-4 h-4 text-primary" /> Or claim manually</h4>
+              <p className="text-sm text-muted-foreground">Enter the 11-digit Transaction ID from your network provider.</p>
+              <Input
+                placeholder="Enter 11-digit Transaction ID"
+                value={transactionId}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  setTransactionId(val);
+                }}
+                maxLength={11}
+                inputMode="numeric"
+                className="text-lg text-center tracking-widest"
+              />
+              <Button className="w-full gradient-primary border-0" size="lg" onClick={handleClaimPayment} disabled={transactionId.length !== 11 || claiming}>
+                {claiming ? "Claiming..." : "Claim Payment"}
+              </Button>
+            </div>
 
-        {method === "momo" && showMomoDetails && (
-          <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Hash className="w-5 h-5 text-primary" /> Claim Your Payment
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Enter the 11-digit Transaction ID you received from your network provider after sending the payment.
-            </p>
-            <Input
-              placeholder="Enter 11-digit Transaction ID"
-              value={transactionId}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "").slice(0, 11);
-                setTransactionId(val);
-              }}
-              maxLength={11}
-              inputMode="numeric"
-              className="text-lg text-center tracking-widest"
-            />
-            {transactionId.length > 0 && transactionId.length < 11 && (
-              <p className="text-xs text-destructive">{11 - transactionId.length} more digit(s) needed</p>
-            )}
-            <Button
-              className="w-full gradient-primary border-0"
-              size="lg"
-              onClick={handleClaimPayment}
-              disabled={transactionId.length !== 11 || claiming}
-            >
-              {claiming ? "Claiming..." : "Claim Payment"}
-            </Button>
             <Button variant="ghost" className="w-full" onClick={() => setShowMomoDetails(false)}>
-              ← Back to payment details
+              ← Change amount
             </Button>
           </div>
-        )}
-
-        {method === "paystack" && (
-          <Button
-            className="w-full gradient-primary border-0"
-            size="lg"
-            onClick={handlePaystackTopUp}
-          >
-            Pay {amt >= minTopUp ? formatCurrency(paystackTotal) : ""} with Paystack
-          </Button>
         )}
       </div>
     </DashboardLayout>
