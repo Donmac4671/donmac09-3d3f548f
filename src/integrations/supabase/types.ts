@@ -360,8 +360,10 @@ export type Database = {
           order_ref: string
           payment_method: string
           phone_number: string
+          reseller_profit: number
           status: string
           store_id: string | null
+          storefront_slug: string | null
           user_id: string
         }
         Insert: {
@@ -374,8 +376,10 @@ export type Database = {
           order_ref: string
           payment_method?: string
           phone_number: string
+          reseller_profit?: number
           status?: string
           store_id?: string | null
+          storefront_slug?: string | null
           user_id: string
         }
         Update: {
@@ -388,8 +392,10 @@ export type Database = {
           order_ref?: string
           payment_method?: string
           phone_number?: string
+          reseller_profit?: number
           status?: string
           store_id?: string | null
+          storefront_slug?: string | null
           user_id?: string
         }
         Relationships: []
@@ -538,6 +544,121 @@ export type Database = {
         }
         Relationships: []
       }
+      reseller_bundle_prices: {
+        Row: {
+          bundle_size: string
+          created_at: string
+          id: string
+          network_id: string
+          price: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          bundle_size: string
+          created_at?: string
+          id?: string
+          network_id: string
+          price: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          bundle_size?: string
+          created_at?: string
+          id?: string
+          network_id?: string
+          price?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_bundle_prices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_markups: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          percent: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          percent?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          percent?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_markups_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_stores: {
+        Row: {
+          available_profit: number
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          lifetime_profit: number
+          slug: string
+          store_message: string
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          available_profit?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          lifetime_profit?: number
+          slug: string
+          store_message?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string
+        }
+        Update: {
+          available_profit?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          lifetime_profit?: number
+          slug?: string
+          store_message?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       site_messages: {
         Row: {
           created_at: string
@@ -564,6 +685,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      store_referrals: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_referrals_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppressed_emails: {
         Row: {
@@ -748,6 +898,56 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          admin_notes: string
+          amount: number
+          created_at: string
+          id: string
+          momo_name: string
+          momo_number: string
+          network: string
+          status: string
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string
+          amount: number
+          created_at?: string
+          id?: string
+          momo_name?: string
+          momo_number: string
+          network?: string
+          status?: string
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          momo_name?: string
+          momo_number?: string
+          network?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       custom_bundles_public: {
@@ -782,7 +982,29 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_withdrawal: {
+        Args: { p_id: string; p_notes?: string }
+        Returns: undefined
+      }
+      admin_create_store: {
+        Args: {
+          p_full_name: string
+          p_slug: string
+          p_store_message?: string
+          p_user_id: string
+          p_whatsapp: string
+        }
+        Returns: string
+      }
       admin_get_auto_deliver_minutes: { Args: never; Returns: number }
+      admin_mark_withdrawal_paid: {
+        Args: { p_id: string; p_notes?: string }
+        Returns: undefined
+      }
+      admin_reject_withdrawal: {
+        Args: { p_id: string; p_notes?: string }
+        Returns: undefined
+      }
       admin_set_auto_deliver_minutes: {
         Args: { p_minutes: number }
         Returns: undefined
@@ -880,15 +1102,27 @@ export type Database = {
         }
         Returns: string
       }
-      pay_with_wallet: {
-        Args: {
-          p_amount: number
-          p_bundle: string
-          p_network: string
-          p_phone: string
-        }
-        Returns: string
-      }
+      pay_with_wallet:
+        | {
+            Args: {
+              p_amount: number
+              p_bundle: string
+              p_network: string
+              p_phone: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_bundle: string
+              p_network: string
+              p_phone: string
+              p_profit?: number
+              p_store_id?: string
+            }
+            Returns: string
+          }
       process_pending_orders: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
@@ -900,6 +1134,16 @@ export type Database = {
       }
       refund_failed_order: { Args: { p_order_id: string }; Returns: undefined }
       register_referral: { Args: { p_code: string }; Returns: undefined }
+      register_store_referral: { Args: { p_slug: string }; Returns: undefined }
+      request_withdrawal: {
+        Args: {
+          p_amount: number
+          p_momo_name: string
+          p_momo_number: string
+          p_network: string
+        }
+        Returns: string
+      }
       run_auto_deliver: { Args: never; Returns: number }
     }
     Enums: {
