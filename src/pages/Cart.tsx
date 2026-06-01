@@ -242,48 +242,13 @@ export default function Cart() {
                 </div>
               </div>
 
-              <div>
-                <p className="font-semibold text-foreground mb-2">Payment method</p>
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("wallet")}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "wallet" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <span
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "wallet" ? "border-primary" : "border-muted-foreground"}`}
-                    >
-                      {paymentMethod === "wallet" && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </span>
-                    <Wallet className="w-5 h-5 text-primary" />
-                    <div className="text-left">
-                      <p className="font-semibold text-foreground">Pay with Wallet</p>
-                      <p className="text-xs text-muted-foreground">
-                        Balance: {formatCurrency(profile?.wallet_balance ?? 0)}
-                      </p>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("paystack")}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "paystack" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <span
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === "paystack" ? "border-primary" : "border-muted-foreground"}`}
-                    >
-                      {paymentMethod === "paystack" && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </span>
-                    <CreditCard className="w-5 h-5 text-green-600" />
-                    <div className="text-left">
-                      <p className="font-semibold text-foreground">Pay with Paystack</p>
-                      {paymentMethod === "paystack" && (
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(grandTotal)} + {formatCurrency(paystackFee)} fee ={" "}
-                          {formatCurrency(paystackTotal)}
-                        </p>
-                      )}
-                    </div>
-                  </button>
+              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5">
+                <Wallet className="w-5 h-5 text-primary" />
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-foreground">Pay with Wallet</p>
+                  <p className="text-xs text-muted-foreground">
+                    Balance: {formatCurrency(profile?.wallet_balance ?? 0)}
+                  </p>
                 </div>
               </div>
 
@@ -291,11 +256,9 @@ export default function Cart() {
                 className="w-full gradient-primary border-0"
                 size="lg"
                 disabled={processing}
-                onClick={paymentMethod === "wallet" ? handlePayWithWallet : handlePayWithPaystack}
+                onClick={handlePayWithWallet}
               >
-                {processing
-                  ? "Processing…"
-                  : `Proceed to Pay — ${formatCurrency(paymentMethod === "paystack" ? paystackTotal : grandTotal)}`}
+                {processing ? "Processing…" : `Proceed to Pay — ${formatCurrency(grandTotal)}`}
               </Button>
             </div>
           </>
