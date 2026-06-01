@@ -38,18 +38,6 @@ export default function GuideVideos() {
         ]}
       />
 
-      <VideoGuide
-        title="How to Deposit (Paystack)"
-        emoji="💳"
-        accentColor="#6366f1"
-        steps={[
-          { caption: "Open Top Up Wallet, choose Paystack, enter the amount you want to deposit, then tap Proceed to Pay to open Paystack." },
-          { caption: "Enter your Mobile Money number — the amount will be deducted from your MoMo wallet." },
-          { caption: "First-time only: enter the 6-digit OTP sent to you for verification." },
-          { caption: "When the prompt appears, enter your MoMo PIN to authorize the payment (the prompt will definitely show on your first time)." },
-          { caption: "Wait for Successful Payment, or tap I've Paid once you've completed it. If no prompt came, go to your MoMo Approvals and approve the transaction." },
-        ]}
-      />
 
       <VideoGuide
         title="How to File a Complaint"
