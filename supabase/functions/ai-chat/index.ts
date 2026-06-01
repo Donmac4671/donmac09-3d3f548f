@@ -454,12 +454,12 @@ ABOUT DONMAC DATA HUB:
 - We sell affordable data bundles for MTN, Telecel, AT Big Time, and AT Premium in Ghana.
 - Website: donmacdatahub.com
 - Support WhatsApp: 0549358359 (Osei Michael).
-- Payment options: Wallet (top up first) or Paystack (direct, 2% fee).
-- Wallet top-up: Paystack online, OR send MoMo to 0549358359 and claim with the transaction ID on the Top Up page.
-- Minimum top-up: ₵5 for general users, ₵20 for agents.
+- Payment: pay from your wallet. Top up the wallet by sending MoMo to 0549358359, then auto-claim with your 6-character reference code or manually with the 11-digit transaction ID on the Top Up page.
+- Minimum top-up: ₵10.
 - Order delivery: MTN takes 3 minutes to 4 hours. Telecel and AT are instant.
 - Orders placed between 10pm and 5am UTC are queued and fulfilled at 5am.
-- Becoming an agent: pay a one-time ₵40 MoMo fee to 0549358359 and apply on the Become an Agent page. Agents get wholesale prices and a unique sequential agent code.
+- Reseller model: every account is a reseller. Resellers have a personal storefront they can share to earn commission. Becoming a reseller is handled by admin via WhatsApp 0549358359.
+- Bundle validity: AT Big Time has no expiry. AT Premium = 60 days. MTN = 90 days. Telecel = 90 days.
 - Bundle validity: AT Big Time has no expiry. AT Premium = 60 days. MTN = 90 days. Telecel = 90 days.
 - Referrals: General users earn ₵0.50 when their referral makes their first purchase. Agents earn ₵10 when their referral becomes an agent.
 - Complaints: users can file a complaint about any order from the past 48 hours on the Complaints page.
