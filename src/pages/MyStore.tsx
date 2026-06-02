@@ -29,7 +29,7 @@ interface ResellerStore {
 const MARKUP_KINDS = [
   { key: "airtime", label: "Airtime" },
   { key: "mashup", label: "Mashup" },
-  { key: "telecel_vds", label: "Telecel V+D+S" },
+  { key: "vs", label: "Telecel V+D+S" },
 ] as const;
 
 export default function MyStore() {
