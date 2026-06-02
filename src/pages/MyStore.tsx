@@ -38,7 +38,7 @@ export default function MyStore() {
   const [loading, setLoading] = useState(true);
   const [store, setStore] = useState<ResellerStore | null>(null);
   const [profile, setProfile] = useState({ full_name: "", whatsapp: "", store_message: "" });
-  const [markups, setMarkups] = useState<Record<string, number>>({ airtime: 0, mashup: 0, telecel_vds: 0 });
+  const [markups, setMarkups] = useState<Record<string, number>>({ airtime: 0, mashup: 0, vs: 0 });
   const [prices, setPrices] = useState<Record<string, number>>({}); // key: `${networkId}|${bundle}`
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdraw, setWithdraw] = useState({ amount: "", momo_number: "", momo_name: "", network: "MTN" });
