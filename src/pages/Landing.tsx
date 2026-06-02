@@ -1,44 +1,29 @@
-import { Link } from "react-router-dom";
 import { useCanonical } from "@/hooks/useCanonical";
-import { Wifi, Zap, Shield, Clock, Star, ChevronRight, Phone } from "lucide-react";
+import { Zap, Shield, TrendingUp, Wallet, ChevronRight, MessageCircle, Store, Percent, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
-import PromoCountdown from "@/components/dashboard/PromoCountdown";
+import { useEffect, useState } from "react";
 
-const networks = [
-  { name: "MTN", color: "bg-yellow-500", desc: "Cheapest MTN data bundles in Ghana – from 1GB to 100GB+" },
-  { name: "Telecel", color: "bg-red-500", desc: "Affordable Telecel (Vodafone) data packages at unbeatable prices" },
-  { name: "AirtelTigo", color: "bg-blue-500", desc: "Budget-friendly AirtelTigo data bundles for everyone" },
+const RESELLER_WHATSAPP = "233549358359";
+const RESELLER_MSG = encodeURIComponent("Hi Donmac, I want to become a reseller. Please help me get started.");
+
+const benefits = [
+  { icon: TrendingUp, title: "Set Your Own Prices", desc: "Mark up data, airtime, mashup & Telecel V+D+S — keep 100% of the profit." },
+  { icon: Wallet, title: "Withdraw Anytime", desc: "Request payout to your MoMo once your profit balance reaches ₵30." },
+  { icon: Store, title: "Your Own Storefront", desc: "Get a personal link (e.g. donmac.com/yourstore) with your name & WhatsApp." },
+  { icon: Zap, title: "Instant Fulfillment", desc: "Orders go straight to GHData. Mashup & airtime are instant, MTN 3min–4hr." },
+  { icon: Shield, title: "Secure Wallet System", desc: "Auto-claim MoMo top-ups via your reference code. No admin wait." },
+  { icon: Percent, title: "Low Wholesale Prices", desc: "Wholesale rates so even with markup, your customers still pay less." },
 ];
 
-const features = [
-  { icon: Zap, title: "Fast Delivery", desc: "Data bundles delivered to your phone within 3–30 minutes of purchase" },
-  { icon: Shield, title: "Secure Payments", desc: "Pay safely via Mobile Money (MoMo) or Paystack. 100% secure" },
-  { icon: Clock, title: "24/7 Availability", desc: "Buy cheap data bundles anytime, day or night, from anywhere in Ghana" },
-  { icon: Star, title: "Lowest Prices", desc: "We guarantee the cheapest data bundle prices in Ghana. Save more!" },
-];
-
-const faqs = [
-  {
-    q: "How do I buy cheap MTN data bundles?",
-    a: "Simply register on Donmac Data Hub, top up your wallet via MoMo or Paystack, choose your MTN data bundle size, enter your phone number, and receive your data within 3–30 minutes. It's the easiest way to buy cheap MTN data in Ghana.",
-  },
-  {
-    q: "What networks do you support?",
-    a: "We support all major Ghana networks: MTN, Telecel (formerly Vodafone), and AirtelTigo. All at the cheapest data bundle prices you'll find online.",
-  },
-  {
-    q: "Is it safe to buy data bundles online?",
-    a: "Absolutely! Donmac Data Hub uses secure payment processing via Paystack and Mobile Money. Your transactions are encrypted and your data is protected.",
-  },
-  {
-    q: "How fast is the data delivery?",
-    a: "Data bundles are typically delivered within 3–30 minutes after payment confirmation. Delivery times may vary slightly depending on the network.",
-  },
+const steps = [
+  { step: "1", title: "Click ‘Become a Reseller’", desc: "Send us a WhatsApp message — we’ll respond within minutes." },
+  { step: "2", title: "Get Your Store Link", desc: "We create your storefront and send your unique link." },
+  { step: "3", title: "Share & Earn", desc: "Share with customers, set markups, and watch profits roll in." },
 ];
 
 export default function Landing() {
   useCanonical("/");
+  const [storeUrl, setStoreUrl] = useState("");
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -46,168 +31,123 @@ export default function Landing() {
     script.id = "landing-jsonld";
     script.text = JSON.stringify({
       "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "WebSite",
-          name: "Donmac Data Hub",
-          url: "https://donmacdatahub.com",
-          description: "Buy the cheapest data bundles in Ghana. MTN, Telecel & AirtelTigo data at the lowest prices with fast delivery within 3–30 minutes.",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://donmacdatahub.com/?q={search_term_string}",
-            "query-input": "required name=search_term_string",
-          },
-        },
-        {
-          "@type": "Organization",
-          name: "Donmac Data Hub",
-          url: "https://donmacdatahub.com",
-          logo: "https://donmacdatahub.com/favicon.png",
-          description: "Ghana's most affordable data bundle platform. Buy cheap MTN, Telecel & AirtelTigo data online.",
-          contactPoint: {
-            "@type": "ContactPoint",
-            contactType: "customer service",
-            availableLanguage: "English",
-          },
-          sameAs: [],
-        },
-        {
-          "@type": "FAQPage",
-          mainEntity: faqs.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        },
-        {
-          "@type": "Product",
-          name: "MTN 1GB Data Bundle",
-          description: "Buy MTN 1GB data bundle in Ghana at the cheapest price. Fast delivery within 3–30 minutes.",
-          brand: { "@type": "Brand", name: "MTN Ghana" },
-          category: "Mobile Data Bundle",
-          image: "https://donmacdatahub.com/favicon.png",
-          offers: {
-            "@type": "Offer",
-            url: "https://donmacdatahub.com/",
-            priceCurrency: "GHS",
-            price: "4.40",
-            priceValidUntil: "2026-12-31",
-            availability: "https://schema.org/InStock",
-            seller: { "@type": "Organization", name: "Donmac Data Hub" },
-          },
-        },
-      ],
+      "@type": "Organization",
+      name: "Donmac Data Hub",
+      url: "https://donmacdatahub.com",
+      description: "Donmac Data Hub — Ghana's reseller platform for cheap MTN, Telecel & AirtelTigo data bundles. Become a reseller and earn.",
+      logo: "https://donmacdatahub.com/favicon.png",
     });
     document.head.appendChild(script);
-    return () => {
-      document.getElementById("landing-jsonld")?.remove();
-    };
+    return () => { document.getElementById("landing-jsonld")?.remove(); };
   }, []);
+
+  const handleGoToStore = () => {
+    const trimmed = storeUrl.trim();
+    if (!trimmed) return;
+    // Accept full URL or just slug
+    try {
+      const url = new URL(trimmed.startsWith("http") ? trimmed : `https://x/${trimmed}`);
+      const slug = url.pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
+      if (slug) window.location.href = `/${slug}`;
+    } catch {
+      const slug = trimmed.replace(/^\/+|\/+$/g, "");
+      if (slug) window.location.href = `/${slug}`;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 pt-4">
-        <PromoCountdown />
-      </div>
       {/* Hero */}
       <header className="relative overflow-hidden">
-        <div className="absolute inset-0 gradient-primary opacity-90" />
+        <div className="absolute inset-0 gradient-primary opacity-95" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
           <div className="flex justify-center mb-6">
-            <img src="/favicon.png" alt="Donmac Data Hub logo" className="w-16 h-16 rounded-xl" />
+            <img src="/favicon.png" alt="Donmac Data Hub" className="w-16 h-16 rounded-xl" />
           </div>
+          <span className="inline-block px-3 py-1 rounded-full bg-white/15 text-primary-foreground text-xs font-semibold mb-4">
+            🚀 RESELLERS ONLY · GHANA
+          </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-primary-foreground mb-4 leading-tight">
-            Cheap Data Bundles Ghana – Buy MTN, Telecel &amp; AirtelTigo Data Online
+            Start Your Own Data Business Today
           </h1>
           <p className="text-lg sm:text-xl text-primary-foreground/90 max-w-2xl mx-auto mb-8">
-            Donmac Data Hub offers the <strong>cheapest data bundles in Ghana</strong>. Get <strong>MTN 1GB for just ₵4.40</strong>. Buy affordable MTN data, Telecel data, and AirtelTigo data with <strong>fast delivery in 3–30 minutes</strong>. Save up to 40% on every purchase!
+            Become a Donmac reseller. Get wholesale prices on MTN, Telecel & AirtelTigo data,
+            set your own markup, and earn profit on every sale — paid straight to your MoMo.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg" variant="secondary" className="text-base font-semibold px-8">
-              <Link to="/register">
-                Get Started – Buy Cheap Data <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
+            <Button
+              asChild
+              size="lg"
+              variant="secondary"
+              className="text-base font-bold px-8 shadow-lg"
+            >
+              <a
+                href={`https://wa.me/${RESELLER_WHATSAPP}?text=${RESELLER_MSG}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Become a Reseller
+              </a>
             </Button>
-            <Button asChild size="lg" className="text-base bg-white text-primary font-semibold hover:bg-white/90 border-0">
-              <Link to="/login">Sign In</Link>
-            </Button>
+          </div>
+
+          {/* Already have a store */}
+          <div className="mt-10 max-w-md mx-auto bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+            <p className="text-primary-foreground/90 text-sm font-medium mb-2">
+              Already have a reseller store link?
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={storeUrl}
+                onChange={(e) => setStoreUrl(e.target.value)}
+                placeholder="Paste store link or slug"
+                onKeyDown={(e) => e.key === "Enter" && handleGoToStore()}
+                className="flex-1 rounded-md bg-white text-foreground px-3 py-2 text-base"
+              />
+              <Button onClick={handleGoToStore} variant="secondary" className="font-semibold">
+                Go
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Networks */}
+      {/* Benefits */}
       <section className="max-w-5xl mx-auto px-4 py-12">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-          Cheapest Data Bundles for All Ghana Networks
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2">
+          Why Become a Donmac Reseller?
         </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {networks.map((n) => (
-            <article key={n.name} className="bg-card border border-border rounded-xl p-6 text-center">
-              <div className={`w-12 h-12 ${n.color} rounded-full mx-auto mb-3 flex items-center justify-center`}>
-                <Wifi className="w-6 h-6 text-white" />
+        <p className="text-center text-muted-foreground mb-8">Everything you need to run a profitable data business.</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {benefits.map((b) => (
+            <article key={b.title} className="bg-card border border-border rounded-xl p-5">
+              <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center mb-3">
+                <b.icon className="w-5 h-5 text-primary-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-1">{n.name} Cheap Data Bundles</h3>
-              <p className="text-sm text-muted-foreground">{n.desc}</p>
+              <h3 className="font-bold text-foreground mb-1">{b.title}</h3>
+              <p className="text-sm text-muted-foreground">{b.desc}</p>
             </article>
           ))}
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* How */}
       <section className="bg-muted/50 py-12">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-            Why Buy Data from Donmac Data Hub?
+            Get Started in 3 Steps
           </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <div key={f.title} className="bg-card border border-border rounded-xl p-5 text-center">
-                <f.icon className="w-8 h-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold text-foreground mb-1">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {steps.map((s) => (
+              <div key={s.step} className="bg-card border border-border rounded-xl p-6 text-center">
+                <div className="w-10 h-10 gradient-primary rounded-full mx-auto mb-3 flex items-center justify-center text-primary-foreground font-bold">
+                  {s.step}
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
+                <p className="text-sm text-muted-foreground">{s.desc}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-5xl mx-auto px-4 py-12">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-          How to Buy Cheap Data Bundles Online in Ghana
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            { step: "1", title: "Create Free Account", desc: "Register on Donmac Data Hub in 30 seconds. No fees, no hidden charges." },
-            { step: "2", title: "Top Up Your Wallet", desc: "Add funds via Mobile Money (MoMo) or Paystack. Quick and secure." },
-            { step: "3", title: "Buy & Receive Your Data", desc: "Choose your network & bundle size. Data delivered to your phone within 3–30 minutes!" },
-          ].map((s) => (
-            <div key={s.step} className="bg-card border border-border rounded-xl p-6 text-center">
-              <div className="w-10 h-10 gradient-primary rounded-full mx-auto mb-3 flex items-center justify-center text-primary-foreground font-bold">
-                {s.step}
-              </div>
-              <h3 className="font-semibold text-foreground mb-1">{s.title}</h3>
-              <p className="text-sm text-muted-foreground">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="bg-muted/50 py-12">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-            Frequently Asked Questions – Cheap Data Ghana
-          </h2>
-          <div className="space-y-4">
-            {faqs.map((f, i) => (
-              <details key={i} className="bg-card border border-border rounded-xl p-4 group">
-                <summary className="font-semibold text-foreground cursor-pointer list-none flex items-center justify-between">
-                  {f.q}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-open:rotate-90 transition-transform" />
-                </summary>
-                <p className="text-sm text-muted-foreground mt-2">{f.a}</p>
-              </details>
             ))}
           </div>
         </div>
@@ -215,26 +155,26 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="max-w-5xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-          Ready to Buy the Cheapest Data in Ghana?
-        </h2>
-        <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-          Join thousands of Ghanaians saving money on MTN, Telecel, and AirtelTigo data bundles every day.
-        </p>
-        <Button asChild size="lg" className="gradient-primary border-0 text-base font-semibold px-8">
-          <Link to="/register">
-            Sign Up Now – It's Free <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
-        </Button>
+        <div className="bg-card border border-border rounded-2xl p-8">
+          <div className="flex justify-center mb-3">
+            <Users className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+            Ready to Start Earning?
+          </h2>
+          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            Click below to message us on WhatsApp. We'll set up your reseller account and storefront within minutes.
+          </p>
+          <Button asChild size="lg" className="gradient-primary border-0 text-base font-bold px-8">
+            <a href={`https://wa.me/${RESELLER_WHATSAPP}?text=${RESELLER_MSG}`} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="w-5 h-5 mr-2" /> Become a Reseller <ChevronRight className="w-4 h-4 ml-1" />
+            </a>
+          </Button>
+        </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>© 2026 Donmac Data Hub. Ghana's #1 platform for cheap data bundles online.</p>
-        <div className="flex justify-center gap-4 mt-2">
-          <Link to="/login" className="hover:text-primary">Login</Link>
-          <Link to="/register" className="hover:text-primary">Register</Link>
-        </div>
+        <p>© 2026 Donmac Data Hub · Reseller Platform · Ghana</p>
       </footer>
     </div>
   );
