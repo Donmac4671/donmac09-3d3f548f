@@ -27,6 +27,7 @@ import Admin from "./pages/Admin";
 import Complaints from "./pages/Complaints";
 import ResetPassword from "./pages/ResetPassword";
 import Flyer from "./pages/Flyer";
+import MyStore from "./pages/MyStore";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -186,6 +187,14 @@ const App = () => (
                 }
               />
               <Route path="/flyer" element={<Flyer />} />
+              <Route
+                path="/mystore"
+                element={
+                  <ProtectedRoute>
+                    <MyStore />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

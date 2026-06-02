@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, Receipt, CreditCard, LogOut, User, Shield, MessageSquare } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Receipt, CreditCard, LogOut, User, Shield, MessageSquare, Store } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { label: "Orders", icon: ShoppingBag, path: "/orders" },
   { label: "Transactions", icon: Receipt, path: "/transactions" },
   { label: "Top Ups", icon: CreditCard, path: "/topups" },
+  { label: "My Store", icon: Store, path: "/mystore" },
   { label: "Complaints", icon: MessageSquare, path: "/complaints" },
   { label: "Profile", icon: User, path: "/profile" },
 ];
