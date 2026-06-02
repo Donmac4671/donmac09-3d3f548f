@@ -187,6 +187,14 @@ const App = () => (
                 }
               />
               <Route path="/flyer" element={<Flyer />} />
+              <Route
+                path="/mystore"
+                element={
+                  <ProtectedRoute>
+                    <MyStore />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
