@@ -53,7 +53,7 @@ export default function MyStore() {
     setProfile({ full_name: s.full_name || "", whatsapp: s.whatsapp || "", store_message: s.store_message || "" });
 
     const { data: mk } = await supabase.from("reseller_markups").select("*").eq("store_id", s.id);
-    const mkMap: Record<string, number> = { airtime: 0, mashup: 0, telecel_vds: 0 };
+    const mkMap: Record<string, number> = { airtime: 0, mashup: 0, vs: 0 };
     (mk || []).forEach((r: any) => { mkMap[r.kind] = Number(r.percent) || 0; });
     setMarkups(mkMap);
 
