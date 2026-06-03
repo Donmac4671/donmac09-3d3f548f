@@ -55,6 +55,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return provider === "anonymous" || (authUser as User & { is_anonymous?: boolean }).is_anonymous === true;
   };
 
+  const attributeStoreReferral = async () => {
+    if (typeof window === "undefined") return;
+    try {
+      const slug = window.localStorage.getItem("donmac_store_slug");
+      if (!slug) return;
+      await supabase.rpc("register_store_referral", { p_slug: slug });
+      window.localStorage.removeItem("donmac_store_slug");
+    } catch (err) {
+      console.warn("Store referral attribution skipped:", err);
+    }
+  };
+
 
   const fetchProfile = async (authUser: User) => {
     try {
@@ -139,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (sessionUser) {
         void fetchProfile(sessionUser);
+        void attributeStoreReferral();
       } else {
         setSafeState(() => {
           setProfile(null);
