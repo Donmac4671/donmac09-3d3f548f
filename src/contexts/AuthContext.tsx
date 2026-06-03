@@ -151,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (sessionUser) {
         void fetchProfile(sessionUser);
+        void attributeStoreReferral();
       } else {
         setSafeState(() => {
           setProfile(null);
