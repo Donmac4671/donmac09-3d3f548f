@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
-import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw } from "lucide-react";
+import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine } from "lucide-react";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminBundleManager from "@/components/admin/AdminBundleManager";
 import AdminPromoManager from "@/components/admin/AdminPromoManager";
@@ -22,6 +22,8 @@ import AdminSiteMessage from "@/components/admin/AdminSiteMessage";
 import AdminBroadcast from "@/components/admin/AdminBroadcast";
 import AdminLiveChat from "@/components/admin/AdminLiveChat";
 import AdminMonthlyRankings from "@/components/admin/AdminMonthlyRankings";
+import AdminResellers from "@/components/admin/AdminResellers";
+import AdminWithdrawals from "@/components/admin/AdminWithdrawals";
 import { Switch } from "@/components/ui/switch";
 import { useProductToggles } from "@/hooks/useProductToggles";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -46,7 +48,7 @@ export default function Admin() {
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
-    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "promos", "site-message", "broadcast", "live-chat", "rankings"];
+    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals"];
     return validTabs.includes(hash) ? hash : "analytics";
   };
 
@@ -360,6 +362,8 @@ export default function Admin() {
           <TabsList className="w-full h-auto flex flex-nowrap overflow-x-auto justify-start gap-1">
             <TabsTrigger value="bundles" className="gap-2 justify-center whitespace-nowrap"><Wifi className="w-4 h-4" /> Bundles</TabsTrigger>
             <TabsTrigger value="promos" className="gap-2 justify-center whitespace-nowrap"><Percent className="w-4 h-4" /> Promos</TabsTrigger>
+            <TabsTrigger value="resellers" className="gap-2 justify-center whitespace-nowrap"><Store className="w-4 h-4" /> Resellers</TabsTrigger>
+            <TabsTrigger value="withdrawals" className="gap-2 justify-center whitespace-nowrap"><ArrowDownToLine className="w-4 h-4" /> Withdrawals</TabsTrigger>
             <TabsTrigger value="site-message" className="gap-2 justify-center whitespace-nowrap"><Megaphone className="w-4 h-4" /> Message</TabsTrigger>
             <TabsTrigger value="broadcast" className="gap-2 justify-center whitespace-nowrap"><Megaphone className="w-4 h-4" /> Broadcast</TabsTrigger>
             <TabsTrigger value="live-chat" className="gap-2 justify-center whitespace-nowrap"><MessageCircle className="w-4 h-4" /> Live Chat</TabsTrigger>
@@ -809,6 +813,14 @@ export default function Admin() {
         {/* LIVE CHAT TAB */}
         <TabsContent value="live-chat">
           <AdminLiveChat />
+        </TabsContent>
+
+        <TabsContent value="resellers">
+          <AdminResellers />
+        </TabsContent>
+
+        <TabsContent value="withdrawals">
+          <AdminWithdrawals />
         </TabsContent>
       </Tabs>
 
