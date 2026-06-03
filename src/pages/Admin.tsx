@@ -814,6 +814,14 @@ export default function Admin() {
         <TabsContent value="live-chat">
           <AdminLiveChat />
         </TabsContent>
+
+        <TabsContent value="resellers">
+          <AdminResellers />
+        </TabsContent>
+
+        <TabsContent value="withdrawals">
+          <AdminWithdrawals />
+        </TabsContent>
       </Tabs>
 
       {/* Wallet Dialog */}
