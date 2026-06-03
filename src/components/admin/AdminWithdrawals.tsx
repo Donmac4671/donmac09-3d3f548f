@@ -61,7 +61,11 @@ export default function AdminWithdrawals() {
 
   const storeFor = (id: string) => stores.find((s) => s.id === id);
 
-  const act = async (rpc: string, p_id: string, label: string) => {
+  const act = async (
+    rpc: "admin_approve_withdrawal" | "admin_reject_withdrawal" | "admin_mark_withdrawal_paid",
+    p_id: string,
+    label: string,
+  ) => {
     const { error } = await supabase.rpc(rpc, { p_id });
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });
