@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,10 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCanonical } from "@/hooks/useCanonical";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Login() {
   useCanonical("/login");
   const [searchParams] = useSearchParams();
+  const storeBrand = useStoreBranding();
+  const displayName = storeBrand?.full_name || "Donmac Data Hub";
+  const initial = displayName.charAt(0).toUpperCase() || "D";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -145,9 +149,9 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">D</span>
+            <span className="text-primary-foreground font-bold text-2xl">{initial}</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Donmac Data Hub</h1>
+          <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
           <p className="text-muted-foreground mt-1">{forgotMode ? "Reset your password" : "Sign in to your account"}</p>
         </div>
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
