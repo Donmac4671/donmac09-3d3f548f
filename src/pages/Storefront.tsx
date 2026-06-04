@@ -125,7 +125,7 @@ export default function Storefront() {
             </div>
           </div>
           <span className="inline-block px-3 py-1 rounded-full bg-white/15 text-primary-foreground text-xs font-semibold mb-3">
-            OFFICIAL RESELLER STORE
+            OFFICIAL STORE
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-primary-foreground mb-3 leading-tight">
             {store.full_name}
@@ -176,7 +176,7 @@ export default function Storefront() {
           <Card className="p-5 text-center">
             <Zap className="w-8 h-8 text-primary mx-auto mb-2" />
             <h3 className="font-bold mb-1">Fast Delivery</h3>
-            <p className="text-sm text-muted-foreground">Airtime & Mashup instant. MTN within 3min–4hr.</p>
+            <p className="text-sm text-muted-foreground">Airtime & Mashup instant. MTN within 3–30 minutes.</p>
           </Card>
           <Card className="p-5 text-center">
             <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />

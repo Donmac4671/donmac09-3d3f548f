@@ -1,7 +1,8 @@
 import { useCanonical } from "@/hooks/useCanonical";
-import { Zap, Shield, TrendingUp, Wallet, ChevronRight, MessageCircle, Store, Percent, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Zap, Shield, TrendingUp, Wallet, ChevronRight, MessageCircle, Store, Percent, Users, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const RESELLER_WHATSAPP = "233549358359";
 const RESELLER_MSG = encodeURIComponent("Hi Donmac, I want to become a reseller. Please help me get started.");
@@ -9,8 +10,8 @@ const RESELLER_MSG = encodeURIComponent("Hi Donmac, I want to become a reseller.
 const benefits = [
   { icon: TrendingUp, title: "Set Your Own Prices", desc: "Mark up data, airtime, mashup & Telecel V+D+S — keep 100% of the profit." },
   { icon: Wallet, title: "Withdraw Anytime", desc: "Request payout to your MoMo once your profit balance reaches ₵30." },
-  { icon: Store, title: "Your Own Storefront", desc: "Get a personal link (e.g. donmac.com/yourstore) with your name & WhatsApp." },
-  { icon: Zap, title: "Instant Fulfillment", desc: "Orders go straight to GHData. Mashup & airtime are instant, MTN 3min–4hr." },
+  { icon: Store, title: "Your Own Storefront", desc: "Get a personal link (e.g. donmac09.lovable.app/yourstore) with your name & WhatsApp." },
+  { icon: Zap, title: "Instant Fulfillment", desc: "Orders go straight to our servers. Mashup & airtime are instant, MTN 3–30 minutes." },
   { icon: Shield, title: "Secure Wallet System", desc: "Auto-claim MoMo top-ups via your reference code. No admin wait." },
   { icon: Percent, title: "Low Wholesale Prices", desc: "Wholesale rates so even with markup, your customers still pay less." },
 ];
@@ -23,7 +24,6 @@ const steps = [
 
 export default function Landing() {
   useCanonical("/");
-  const [storeUrl, setStoreUrl] = useState("");
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -33,34 +33,31 @@ export default function Landing() {
       "@context": "https://schema.org",
       "@type": "Organization",
       name: "Donmac Data Hub",
-      url: "https://donmacdatahub.com",
+      url: "https://donmac09.lovable.app",
       description: "Donmac Data Hub — Ghana's reseller platform for cheap MTN, Telecel & AirtelTigo data bundles. Become a reseller and earn.",
-      logo: "https://donmacdatahub.com/favicon.png",
+      logo: "https://donmac09.lovable.app/favicon.png",
     });
     document.head.appendChild(script);
     return () => { document.getElementById("landing-jsonld")?.remove(); };
   }, []);
 
-  const handleGoToStore = () => {
-    const trimmed = storeUrl.trim();
-    if (!trimmed) return;
-    // Accept full URL or just slug
-    try {
-      const url = new URL(trimmed.startsWith("http") ? trimmed : `https://x/${trimmed}`);
-      const slug = url.pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
-      if (slug) window.location.href = `/${slug}`;
-    } catch {
-      const slug = trimmed.replace(/^\/+|\/+$/g, "");
-      if (slug) window.location.href = `/${slug}`;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
+      {/* Top nav with Sign In */}
+      <nav className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 sm:px-8 py-4">
+        <div className="flex items-center gap-2">
+          <img src="/favicon.png" alt="Donmac Data Hub" className="w-8 h-8 rounded-lg" />
+          <span className="font-bold text-primary-foreground hidden sm:inline">Donmac Data Hub</span>
+        </div>
+        <Button asChild size="sm" variant="secondary" className="font-semibold shadow-md">
+          <Link to="/login"><LogIn className="w-4 h-4 mr-1" /> Sign In</Link>
+        </Button>
+      </nav>
+
       {/* Hero */}
       <header className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-primary opacity-95" />
-        <div className="relative z-10 max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-24 pb-16 sm:pt-28 sm:pb-24 text-center">
           <div className="flex justify-center mb-6">
             <img src="/favicon.png" alt="Donmac Data Hub" className="w-16 h-16 rounded-xl" />
           </div>
@@ -75,12 +72,7 @@ export default function Landing() {
             set your own markup, and earn profit on every sale — paid straight to your MoMo.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="text-base font-bold px-8 shadow-lg"
-            >
+            <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
               <a
                 href={`https://wa.me/${RESELLER_WHATSAPP}?text=${RESELLER_MSG}`}
                 target="_blank"
@@ -90,26 +82,14 @@ export default function Landing() {
                 Become a Reseller
               </a>
             </Button>
-          </div>
-
-          {/* Already have a store */}
-          <div className="mt-10 max-w-md mx-auto bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
-            <p className="text-primary-foreground/90 text-sm font-medium mb-2">
-              Already have a reseller store link?
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={storeUrl}
-                onChange={(e) => setStoreUrl(e.target.value)}
-                placeholder="Paste store link or slug"
-                onKeyDown={(e) => e.key === "Enter" && handleGoToStore()}
-                className="flex-1 rounded-md bg-white text-foreground px-3 py-2 text-base"
-              />
-              <Button onClick={handleGoToStore} variant="secondary" className="font-semibold">
-                Go
-              </Button>
-            </div>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-base font-bold px-8 bg-white/10 text-primary-foreground border-white/40 hover:bg-white/20 hover:text-primary-foreground"
+            >
+              <Link to="/login"><LogIn className="w-5 h-5 mr-2" /> Sign In</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -117,7 +97,7 @@ export default function Landing() {
       {/* Benefits */}
       <section className="max-w-5xl mx-auto px-4 py-12">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2">
-          Why Become a Donmac Reseller?
+          Why Become a Reseller?
         </h2>
         <p className="text-center text-muted-foreground mb-8">Everything you need to run a profitable data business.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
