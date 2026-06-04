@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Mail, Lock, User, Phone, Tag, ArrowLeft } from "lucide-react";
@@ -8,10 +8,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Register() {
   useCanonical("/register");
   const [searchParams] = useSearchParams();
+  const storeBrand = useStoreBranding();
+  const displayName = storeBrand?.full_name || "Donmac Data Hub";
+  const initial = displayName.charAt(0).toUpperCase() || "D";
+  // Only allow sign-up when coming from a reseller storefront (slug saved)
+  const hasStoreSlug = typeof window !== "undefined" && !!window.localStorage.getItem("donmac_store_slug");
+  if (!hasStoreSlug) {
+    return <Navigate to="/" replace />;
+  }
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -112,9 +121,9 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">D</span>
+            <span className="text-primary-foreground font-bold text-2xl">{initial}</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Donmac Data Hub</h1>
+          <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
           <p className="text-muted-foreground mt-1">Create your account</p>
         </div>
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
