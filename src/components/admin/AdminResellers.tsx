@@ -187,13 +187,16 @@ export default function AdminResellers() {
           </h2>
           <p className="text-sm text-muted-foreground">Create stores for users and manage existing ones.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Input
             placeholder="Search slug, name, email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
+          <Button onClick={() => setAddUserOpen(true)} variant="outline">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Reseller
+          </Button>
           <Button onClick={() => setCreateOpen(true)} className="gradient-primary border-0">
             <Plus className="w-4 h-4 mr-1" /> New Store
           </Button>
