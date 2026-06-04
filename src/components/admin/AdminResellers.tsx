@@ -341,6 +341,41 @@ export default function AdminResellers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Reseller User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Full Name</label>
+              <Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Email</label>
+              <Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Phone (10 digits)</label>
+              <Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })} placeholder="0549358359" className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Password</label>
+              <Input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Min 6 characters" className="mt-1" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The user is created with the email already verified. After they sign in, create their store with “New Store”.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddUser} disabled={creatingUser} className="gradient-primary border-0">
+              {creatingUser ? "Creating..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
