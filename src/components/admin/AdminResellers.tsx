@@ -29,7 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format } from "date-fns";
-import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus } from "lucide-react";
 
 interface ResellerStore {
   id: string;
@@ -66,6 +66,27 @@ export default function AdminResellers() {
   });
   const [userSearch, setUserSearch] = useState("");
   const [search, setSearch] = useState("");
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const handleAddUser = async () => {
+    if (!newUser.full_name || !newUser.email || !newUser.phone || !newUser.password) {
+      toast({ title: "Missing fields", description: "All fields are required.", variant: "destructive" });
+      return;
+    }
+    setCreatingUser(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
+    setCreatingUser(false);
+    if (error || (data as any)?.error) {
+      toast({ title: "Create failed", description: (data as any)?.error || error?.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
+    setAddUserOpen(false);
+    setNewUser({ full_name: "", email: "", phone: "", password: "" });
+    void load();
+  };
 
   const load = async () => {
     setLoading(true);
