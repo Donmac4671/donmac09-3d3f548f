@@ -179,11 +179,13 @@ export default function MyStore() {
               size="sm"
               variant="secondary"
               className="mt-3 font-semibold"
-              disabled={!canWithdraw}
               onClick={() => setWithdrawOpen(true)}
             >
-              <ArrowDownToLine className="w-4 h-4 mr-1" /> {canWithdraw ? "Request Withdrawal" : "Min ₵30 to withdraw"}
+              <ArrowDownToLine className="w-4 h-4 mr-1" /> Request Withdrawal
             </Button>
+            {!canWithdraw && (
+              <p className="text-xs opacity-90 mt-1">Minimum ₵30 required to withdraw.</p>
+            )}
           </Card>
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-1 text-muted-foreground"><TrendingUp className="w-4 h-4" /><span className="text-xs font-semibold">Lifetime Profit</span></div>
@@ -311,7 +313,7 @@ export default function MyStore() {
             <Card className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold">Withdrawal History</h3>
-                <Button size="sm" disabled={!canWithdraw} onClick={() => setWithdrawOpen(true)} className="gradient-primary border-0">
+                <Button size="sm" onClick={() => setWithdrawOpen(true)} className="gradient-primary border-0">
                   <ArrowDownToLine className="w-4 h-4 mr-1" />New Request
                 </Button>
               </div>

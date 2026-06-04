@@ -29,7 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format } from "date-fns";
-import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus } from "lucide-react";
 
 interface ResellerStore {
   id: string;
@@ -66,6 +66,27 @@ export default function AdminResellers() {
   });
   const [userSearch, setUserSearch] = useState("");
   const [search, setSearch] = useState("");
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const handleAddUser = async () => {
+    if (!newUser.full_name || !newUser.email || !newUser.phone || !newUser.password) {
+      toast({ title: "Missing fields", description: "All fields are required.", variant: "destructive" });
+      return;
+    }
+    setCreatingUser(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
+    setCreatingUser(false);
+    if (error || (data as any)?.error) {
+      toast({ title: "Create failed", description: (data as any)?.error || error?.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
+    setAddUserOpen(false);
+    setNewUser({ full_name: "", email: "", phone: "", password: "" });
+    void load();
+  };
 
   const load = async () => {
     setLoading(true);
@@ -166,13 +187,16 @@ export default function AdminResellers() {
           </h2>
           <p className="text-sm text-muted-foreground">Create stores for users and manage existing ones.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Input
             placeholder="Search slug, name, email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
+          <Button onClick={() => setAddUserOpen(true)} variant="outline">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Reseller
+          </Button>
           <Button onClick={() => setCreateOpen(true)} className="gradient-primary border-0">
             <Plus className="w-4 h-4 mr-1" /> New Store
           </Button>
@@ -314,6 +338,41 @@ export default function AdminResellers() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} className="gradient-primary border-0">Create Store</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Reseller User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Full Name</label>
+              <Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Email</label>
+              <Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Phone (10 digits)</label>
+              <Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })} placeholder="0549358359" className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Password</label>
+              <Input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Min 6 characters" className="mt-1" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The user is created with the email already verified. After they sign in, create their store with “New Store”.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddUser} disabled={creatingUser} className="gradient-primary border-0">
+              {creatingUser ? "Creating..." : "Create User"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

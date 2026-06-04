@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.pay_with_wallet(text, text, text, numeric);
