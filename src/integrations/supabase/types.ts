@@ -1102,27 +1102,17 @@ export type Database = {
         }
         Returns: string
       }
-      pay_with_wallet:
-        | {
-            Args: {
-              p_amount: number
-              p_bundle: string
-              p_network: string
-              p_phone: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_amount: number
-              p_bundle: string
-              p_network: string
-              p_phone: string
-              p_profit?: number
-              p_store_id?: string
-            }
-            Returns: string
-          }
+      pay_with_wallet: {
+        Args: {
+          p_amount: number
+          p_bundle: string
+          p_network: string
+          p_phone: string
+          p_profit?: number
+          p_store_id?: string
+        }
+        Returns: string
+      }
       process_pending_orders: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
