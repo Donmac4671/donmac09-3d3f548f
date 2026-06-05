@@ -15,7 +15,7 @@ const navItems = [
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, isReferredCustomer, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -49,6 +49,7 @@ export default function Sidebar() {
       <nav className="flex flex-col gap-1 flex-1">
         {navItems.map((item) => {
           if ((item as any).hideForAgents && profile?.tier === "agent") return null;
+          if (item.path === "/mystore" && isReferredCustomer) return null;
           const isActive = location.pathname === item.path;
           return (
             <Link

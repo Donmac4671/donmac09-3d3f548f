@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   isAdmin: boolean;
+  isReferredCustomer: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isReferredCustomer, setIsReferredCustomer] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const clearStoredSession = () => {
@@ -111,6 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+
+      const { data: referral } = await supabase
+        .from("store_referrals")
+        .select("id")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      setIsReferredCustomer(Boolean(referral));
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
@@ -236,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, isReferredCustomer, loading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
