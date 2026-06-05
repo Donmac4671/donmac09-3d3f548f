@@ -36,7 +36,8 @@ function NetworkIcon({ network }: { network: Network }) {
 
 function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getResellerPrice }: { bundle: DataBundle; network: Network; tier: string; onSelect: () => void; applyDiscount?: (price: number) => number; getResellerPrice: (netId: string, size: string, base: number) => number }) {
   const gradientClass = network.gradient;
-  const basePrice = getResellerPrice(network.id, bundle.size, getBundlePrice(bundle, tier));
+  const wholesalePrice = getBundlePrice(bundle, tier);
+  const basePrice = tier === "customer" ? getResellerPrice(network.id, bundle.size, wholesalePrice) : wholesalePrice;
   const displayPrice = applyDiscount ? applyDiscount(basePrice) : basePrice;
   const hasDiscount = displayPrice < basePrice;
 
@@ -130,7 +131,8 @@ export default function DataBundles() {
       toast({ title: "Unknown Number", description: "This phone number prefix is not recognized. Please check the number.", variant: "destructive" });
       return;
     }
-    let effectivePrice = getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, getBundlePrice(selectedBundle.bundle, userTier));
+    const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
+    let effectivePrice = userTier === "customer" ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
     if (promo) {
       effectivePrice = applyDiscount(effectivePrice);
     }
@@ -225,7 +227,8 @@ export default function DataBundles() {
               <p className="text-xs text-muted-foreground mb-1">💰 Price</p>
               {(() => {
                 if (!selectedBundle) return null;
-                const base = getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, getBundlePrice(selectedBundle.bundle, userTier));
+                const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
+                const base = userTier === "customer" ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
                 const final = promo ? applyDiscount(base) : base;
                 const hasDiscount = final < base;
                 return (
