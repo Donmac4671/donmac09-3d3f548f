@@ -73,7 +73,7 @@ export default function Storefront() {
   // customers and so customers can register/sign in from this page.
   useEffect(() => {
     if (authLoading || !user || !store) return;
-    supabase.rpc("register_store_referral", { p_slug: store.slug }).catch(() => undefined);
+    void supabase.rpc("register_store_referral", { p_slug: store.slug }).then(() => undefined, () => undefined);
   }, [authLoading, user, store]);
 
   if (loading) {
