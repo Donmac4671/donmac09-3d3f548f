@@ -48,9 +48,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function ResellerOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { isReseller, isAdmin, isReferredCustomer, loading } = useAuth();
+  const { profile, isAdmin, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (isReferredCustomer && !isReseller && !isAdmin) return <Navigate to="/dashboard" replace />;
+  if (profile?.tier === "customer" && !isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
