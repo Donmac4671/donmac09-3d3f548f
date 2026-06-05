@@ -20,6 +20,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isReseller: boolean;
   isReferredCustomer: boolean;
+  referredStoreId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReseller, setIsReseller] = useState(false);
   const [isReferredCustomer, setIsReferredCustomer] = useState(false);
+  const [referredStoreId, setReferredStoreId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const clearStoredSession = () => {
@@ -105,31 +107,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setProfile((profileData as Profile) ?? null);
 
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authUser.id);
-
-      if (rolesError) {
-        console.error("Role fetch error:", rolesError.message);
-      }
-
       const [rolesRes, storeRes, referralRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", authUser.id),
         supabase.from("reseller_stores").select("id").eq("user_id", authUser.id).maybeSingle(),
-        supabase.from("store_referrals").select("id").eq("user_id", authUser.id).maybeSingle()
+        supabase.from("store_referrals").select("id, store_id").eq("user_id", authUser.id).maybeSingle()
       ]);
 
       if (rolesRes.error) console.error("Role fetch error:", rolesRes.error.message);
       setIsAdmin(rolesRes.data?.some((r) => r.role === "admin") ?? false);
       setIsReseller(Boolean(storeRes.data));
       setIsReferredCustomer(Boolean(referralRes.data));
+      setReferredStoreId((referralRes.data as any)?.store_id ?? null);
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
       setIsAdmin(false);
       setIsReseller(false);
       setIsReferredCustomer(false);
+      setReferredStoreId(null);
     }
   };
 
@@ -156,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setIsReseller(false);
           setIsReferredCustomer(false);
+          setReferredStoreId(null);
           setLoading(false);
         });
         return;
@@ -175,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setIsReseller(false);
           setIsReferredCustomer(false);
+          setReferredStoreId(null);
         });
       }
     };
@@ -252,12 +249,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       setIsReseller(false);
       setIsReferredCustomer(false);
+      setReferredStoreId(null);
       clearStoredSession();
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, isReseller, isReferredCustomer, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, isReseller, isReferredCustomer, referredStoreId, loading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
