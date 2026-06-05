@@ -98,10 +98,11 @@ export default function Login() {
             .single();
           
           if (storeData) {
+            // Save store slug to localStorage for pricing context
             localStorage.setItem("donmac_store_slug", storeData.slug);
+            // Redirect to dashboard, NOT to storefront
             setLoading(false);
-            // Changed: use /${slug} instead of /store/${slug} to match your route
-            navigate(`/${storeData.slug}`);
+            navigate("/dashboard");
             return;
           }
         }
