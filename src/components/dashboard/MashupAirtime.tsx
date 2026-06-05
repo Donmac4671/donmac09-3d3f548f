@@ -7,6 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { MASHUP_PACKAGES, MashupPackage, TELECEL_VS_PACKAGES, TelecelVSPackage, AIRTIME_MIN, AIRTIME_MAX, formatCurrency } from "@/lib/data";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useResellerPrices } from "@/hooks/useResellerPrices";
 import { Label } from "@/components/ui/label";
 import { useProductToggles } from "@/hooks/useProductToggles";
 
@@ -38,6 +39,7 @@ export default function MashupAirtime() {
   const { addItem } = useCart();
   const { toast } = useToast();
   const { mashupEnabled, airtimeEnabled, vsEnabled } = useProductToggles();
+  const { getMarkupPrice } = useResellerPrices();
 
   const isValidPhone = (phone: string) => /^\d{10}$/.test(phone);
 
@@ -76,15 +78,16 @@ export default function MashupAirtime() {
     }
     const productName = variant.kind === "vds" ? "Telecel V+D+S" : "Telecel V&S";
     const parts = [variant.minutes, variant.data, variant.sms].filter(Boolean).join(" + ");
-    const sizeLabel = `${productName} ${formatCurrency(vsPkg.price)} (${parts}${variant.validity ? `, ${variant.validity}` : ""}${variant.allNetworks ? ", all networks" : ""})`;
+    const effectivePrice = getMarkupPrice("vs", vsPkg.price);
+    const sizeLabel = `${productName} ${formatCurrency(effectivePrice)} (${parts}${variant.validity ? `, ${variant.validity}` : ""}${variant.allNetworks ? ", all networks" : ""})`;
     addItem(
       "vs",
       productName,
-      { size: sizeLabel, sizeGB: 0, price: vsPkg.price, generalPrice: vsPkg.price },
+      { size: sizeLabel, sizeGB: 0, price: effectivePrice, generalPrice: effectivePrice },
       vsPhone,
-      vsPkg.price,
+      effectivePrice,
     );
-    toast({ title: "Added to cart", description: `${productName} ${formatCurrency(vsPkg.price)} for ${vsPhone}` });
+    toast({ title: "Added to cart", description: `${productName} ${formatCurrency(effectivePrice)} for ${vsPhone}` });
     closeVs();
   };
 
@@ -110,22 +113,23 @@ export default function MashupAirtime() {
       return;
     }
 
+    const effectivePrice = getMarkupPrice("mashup", pkg.price);
     addItem(
       "mashup",
       "MashUp",
       {
-        size: `MashUp ${formatCurrency(pkg.price)} (${pkg.data} / ${pkg.minutes})`,
+        size: `MashUp ${formatCurrency(effectivePrice)} (${pkg.data} / ${pkg.minutes})`,
         sizeGB: 0,
-        price: pkg.price,
-        generalPrice: pkg.price,
+        price: effectivePrice,
+        generalPrice: effectivePrice,
       },
       mashupPhone,
-      pkg.price,
+      effectivePrice,
     );
 
     toast({
       title: "Added to cart",
-      description: `MashUp ${formatCurrency(pkg.price)} for MTN ${mashupPhone}`,
+      description: `MashUp ${formatCurrency(effectivePrice)} for MTN ${mashupPhone}`,
     });
     closeMashup();
   };
@@ -151,22 +155,23 @@ export default function MashupAirtime() {
       return;
     }
 
+    const effectivePrice = getMarkupPrice("airtime", amt);
     addItem(
       "airtime",
       "Airtime",
       {
-        size: `Airtime ${formatCurrency(amt)}`,
+        size: `Airtime ${formatCurrency(effectivePrice)}`,
         sizeGB: 0,
-        price: amt,
-        generalPrice: amt,
+        price: effectivePrice,
+        generalPrice: effectivePrice,
       },
       airtimePhone,
-      amt,
+      effectivePrice,
     );
 
     toast({
       title: "Added to cart",
-      description: `Airtime ${formatCurrency(amt)} for ${airtimePhone}`,
+      description: `Airtime ${formatCurrency(effectivePrice)} for ${airtimePhone}`,
     });
     closeAirtime();
   };
@@ -205,7 +210,7 @@ export default function MashupAirtime() {
                 onClick={() => setPkg(p)}
                 className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-3 text-white text-center hover:shadow-lg hover:-translate-y-1 transition-all"
               >
-                <p className="text-2xl font-bold">{formatCurrency(p.price)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(getMarkupPrice("mashup", p.price))}</p>
                 <p className="text-[10px] mt-1 opacity-90">{p.data}</p>
                 <p className="text-[10px] opacity-90">{p.minutes}</p>
               </button>
@@ -276,6 +281,7 @@ export default function MashupAirtime() {
             {TELECEL_VS_PACKAGES.map((p, idx) => {
               const hasChoice = p.variants.length > 1;
               const first = p.variants[0];
+              const effectivePrice = getMarkupPrice("vs", p.price);
               return (
                 <button
                   key={`${p.price}-${idx}`}
@@ -283,7 +289,7 @@ export default function MashupAirtime() {
                   className={`rounded-2xl p-3 text-white text-center hover:shadow-lg hover:-translate-y-1 transition-all ${p.isSpecial ? "bg-gradient-to-br from-amber-500 to-orange-600 ring-2 ring-amber-300" : "bg-gradient-to-br from-red-500 to-rose-600"}`}
                 >
                   {p.isSpecial && <p className="text-[9px] font-bold opacity-90">SPECIAL</p>}
-                  <p className="text-2xl font-bold">{formatCurrency(p.price)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(effectivePrice)}</p>
                   {hasChoice ? (
                     <p className="text-[10px] mt-1 opacity-90">2 offers — tap to choose</p>
                   ) : (
@@ -307,7 +313,7 @@ export default function MashupAirtime() {
       <Dialog open={!!vsPkg} onOpenChange={(o) => { if (!o) closeVs(); }}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Telecel {vsPkg ? formatCurrency(vsPkg.price) : ""}</DialogTitle>
+            <DialogTitle>Telecel {vsPkg ? formatCurrency(getMarkupPrice("vs", vsPkg.price)) : ""}</DialogTitle>
           </DialogHeader>
           {vsPkg && (
             <div className="space-y-3">
@@ -376,7 +382,7 @@ export default function MashupAirtime() {
       >
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>MashUp {pkg ? formatCurrency(pkg.price) : ""}</DialogTitle>
+            <DialogTitle>MashUp {pkg ? formatCurrency(getMarkupPrice("mashup", pkg.price)) : ""}</DialogTitle>
           </DialogHeader>
           {pkg && (
             <div className="space-y-3">
