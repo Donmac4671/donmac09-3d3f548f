@@ -68,22 +68,13 @@ export default function Storefront() {
     };
   }, [slug]);
 
-  // If already signed in, attribute and bounce to dashboard.
+  // Quietly attribute the referral for signed-in visitors but DO NOT redirect.
+  // The storefront landing must remain visible so the reseller can show it to
+  // customers and so customers can register/sign in from this page.
   useEffect(() => {
     if (authLoading || !user || !store) return;
-    (async () => {
-      try {
-        await supabase.rpc("register_store_referral", { p_slug: store.slug });
-      } catch {
-        /* ignore */
-      }
-      toast({
-        title: `Welcome to ${store.full_name}'s store`,
-        description: "You're shopping with reseller pricing.",
-      });
-      navigate("/dashboard", { replace: true });
-    })();
-  }, [authLoading, user, store, navigate, toast]);
+    supabase.rpc("register_store_referral", { p_slug: store.slug }).catch(() => undefined);
+  }, [authLoading, user, store]);
 
   if (loading) {
     return (
