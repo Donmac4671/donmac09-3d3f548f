@@ -23,7 +23,7 @@ interface AuthContextType {
   referredStoreId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
+  signUp: (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => Promise<{ error: any; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -73,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   const fetchProfile = async (authUser: User) => {
     try {
       let { data: profileData, error: profileError } = await supabase
@@ -86,8 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
-      // We rely on the database trigger 'handle_new_user' to create profiles.
-      // Client-side inserts cause 409 conflicts and race conditions.
       setProfile((profileData as Profile) ?? null);
 
       const [rolesRes, storeRes, referralRes] = await Promise.all([
@@ -210,12 +207,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone },
+        data: { 
+          full_name: fullName, 
+          phone,
+          user_type: 'customer',
+          reseller_code: resellerCode || null
+        },
       },
     });
     return { error, data };
@@ -249,4 +251,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-
