@@ -16,11 +16,16 @@ export default function Register() {
   const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
-  // Only allow sign-up when coming from a reseller storefront (slug saved)
+  
+  // Capture reseller code from URL
+  const resellerCode = searchParams.get("ref") || searchParams.get("agent_code") || "";
+  
+  // Only allow sign-up when coming from a reseller storefront (slug saved) OR have reseller code
   const hasStoreSlug = typeof window !== "undefined" && !!window.localStorage.getItem("donmac_store_slug");
-  if (!hasStoreSlug) {
+  if (!hasStoreSlug && !resellerCode) {
     return <Navigate to="/" replace />;
   }
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,9 +59,9 @@ export default function Register() {
     }
     setLoading(true);
 
-    // Phone uniqueness is enforced by the database trigger prevent_duplicate_phone.
-
-    const { error, data } = await signUp(email, password, name, phone);
+    // Sign up with metadata including reseller code
+    const { error, data } = await signUp(email, password, name, phone, resellerCode);
+    
     setLoading(false);
     if (error) {
       const msg = (/phone/i.test(error.message) || /unique/i.test(error.message))
@@ -71,7 +76,6 @@ export default function Register() {
     } else {
       if (data?.session) {
         toast({ title: "Welcome!", description: "Account created successfully." });
-        // Wait a small moment for the trigger to finish profile creation
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
@@ -128,6 +132,9 @@ export default function Register() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
           <p className="text-muted-foreground mt-1">Create your account</p>
+          {resellerCode && (
+            <p className="text-xs text-primary mt-2">Signing up under affiliate</p>
+          )}
         </div>
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
           {!verificationMode ? (
