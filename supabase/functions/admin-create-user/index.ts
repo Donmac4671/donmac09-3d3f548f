@@ -28,12 +28,15 @@ Deno.serve(async (req) => {
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: jsonHeaders });
 
     const body = await req.json().catch(() => ({}));
+    console.log("Request body:", JSON.stringify(body));
+
     const full_name = String(body.full_name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const phone = String(body.phone ?? "").trim();
     const password = String(body.password ?? "");
 
     if (!full_name || !email || !phone || !password) {
+      console.error("Missing fields:", { full_name, email, phone, password_provided: !!password });
       return new Response(JSON.stringify({ error: "All fields are required" }), { status: 400, headers: jsonHeaders });
     }
     if (!/^\d{10}$/.test(phone)) {
@@ -51,6 +54,7 @@ Deno.serve(async (req) => {
     });
 
     if (createErr) {
+      console.error("Supabase Admin CreateUser error:", createErr.message);
       return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: jsonHeaders });
     }
 
