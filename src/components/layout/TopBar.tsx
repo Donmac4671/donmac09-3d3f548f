@@ -24,7 +24,7 @@ const navItems = [
 
 export default function TopBar({ title }: { title: string }) {
   const { itemCount } = useCart();
-  const { profile, isAdmin, isReferredCustomer, signOut } = useAuth();
+  const { profile, isAdmin, isReseller, isReferredCustomer, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -49,7 +49,7 @@ export default function TopBar({ title }: { title: string }) {
             </div>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
-                if (item.path === "/mystore" && isReferredCustomer) return null;
+                if (item.path === "/mystore" && isReferredCustomer && !isReseller && !isAdmin) return null;
                 const isActive = location.pathname === item.path;
                 return (
                   <Link
