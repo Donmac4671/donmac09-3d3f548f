@@ -100,7 +100,8 @@ export default function Login() {
           if (storeData) {
             localStorage.setItem("donmac_store_slug", storeData.slug);
             setLoading(false);
-            navigate(`/store/${storeData.slug}`);
+            // Changed: use /${slug} instead of /store/${slug} to match your route
+            navigate(`/${storeData.slug}`);
             return;
           }
         }
