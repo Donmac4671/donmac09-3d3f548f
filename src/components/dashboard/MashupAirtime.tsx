@@ -38,13 +38,14 @@ export default function MashupAirtime() {
   const [airtimeAmount, setAirtimeAmount] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const { mashupEnabled, airtimeEnabled, vsEnabled } = useProductToggles();
   const { getMarkupPrice: calculateMarkup } = useResellerPrices();
 
   const userTier = profile?.tier || "customer";
   const getMarkupPrice = (kind: "airtime" | "mashup" | "vs", basePrice: number) => {
-    return userTier === "customer" ? calculateMarkup(kind, basePrice) : basePrice;
+    if (isAdmin || userTier === "reseller") return basePrice;
+    return calculateMarkup(kind, basePrice);
   };
 
   const isValidPhone = (phone: string) => /^\d{10}$/.test(phone);
