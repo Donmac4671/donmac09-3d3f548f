@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
@@ -831,6 +831,7 @@ export default function Admin() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{walletDialog?.type === "credit" ? "Credit" : "Debit"} Wallet — {walletDialog?.user?.full_name}</DialogTitle>
+            <DialogDescription className="sr-only">Update the wallet balance for this user</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <Input type="number" placeholder="Amount (₵)" value={walletAmount} onChange={(e) => setWalletAmount(e.target.value)} />
@@ -847,6 +848,7 @@ export default function Admin() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Reply to Complaint</DialogTitle>
+            <DialogDescription className="sr-only">Review and reply to a user's complaint</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-4">
             <div className="bg-muted p-3 rounded-lg text-sm">

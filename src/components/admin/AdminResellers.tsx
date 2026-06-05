@@ -15,6 +15,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -283,6 +284,7 @@ export default function AdminResellers() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Create Reseller Store</DialogTitle>
+            <DialogDescription className="sr-only">Assign a new store to an existing user</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -346,6 +348,7 @@ export default function AdminResellers() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Reseller User</DialogTitle>
+            <DialogDescription className="sr-only">Create a new user account with reseller tier</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
