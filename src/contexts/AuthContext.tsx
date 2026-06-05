@@ -113,6 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+
+      const { data: referral } = await supabase
+        .from("store_referrals")
+        .select("id")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      setIsReferredCustomer(Boolean(referral));
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
