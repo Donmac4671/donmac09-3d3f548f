@@ -47,6 +47,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ResellerOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { isReferredCustomer, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (isReferredCustomer) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 function RecoveryRedirect() {
   const location = useLocation();
   const navigate = useNavigate();
