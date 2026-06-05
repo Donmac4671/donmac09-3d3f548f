@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export function useResellerPrices() {
-  const { referredStoreId } = useAuth();
+export function useResellerPrices(storeId?: string | null) {
+  const { referredStoreId: authStoreId } = useAuth();
+  const targetStoreId = storeId !== undefined ? storeId : authStoreId;
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [markups, setMarkups] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!referredStoreId) {
+    if (!targetStoreId) {
       setOverrides({});
       setMarkups({});
       return;
@@ -18,8 +19,8 @@ export function useResellerPrices() {
     const fetchData = async () => {
       setLoading(true);
       const [pricesRes, markupsRes] = await Promise.all([
-        supabase.from("reseller_bundle_prices").select("network_id, bundle_size, price").eq("store_id", referredStoreId),
-        supabase.from("reseller_markups").select("kind, percent").eq("store_id", referredStoreId)
+        supabase.from("reseller_bundle_prices").select("network_id, bundle_size, price").eq("store_id", targetStoreId),
+        supabase.from("reseller_markups").select("kind, percent").eq("store_id", targetStoreId)
       ]);
 
       if (pricesRes.data) {
@@ -41,7 +42,7 @@ export function useResellerPrices() {
     };
 
     void fetchData();
-  }, [referredStoreId]);
+  }, [targetStoreId]);
 
   const getResellerPrice = (networkId: string, bundleSize: string, basePrice: number) => {
     const key = `${networkId}|${bundleSize}`;

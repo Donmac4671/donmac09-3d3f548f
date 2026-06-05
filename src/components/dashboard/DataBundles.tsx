@@ -71,10 +71,15 @@ export default function DataBundles() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const { networks: mergedNetworks } = useCustomBundles();
-  const { getResellerPrice } = useResellerPrices();
-  const userTier = profile?.tier || "general";
+  const { getResellerPrice: calculateResellerPrice, loading: pricesLoading } = useResellerPrices();
+  const userTier = profile?.tier || "customer";
+
+  const getResellerPrice = (netId: string, size: string, base: number) => {
+    if (isAdmin || userTier === "reseller") return base;
+    return calculateResellerPrice(netId, size, base);
+  };
   const { promo, applyDiscount } = useActivePromo(userTier);
 
   const toggleNetwork = (id: string) => {

@@ -163,8 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (sessionUser) {
+        await attributeStoreReferral();
         void fetchProfile(sessionUser);
-        void attributeStoreReferral();
       } else {
         setSafeState(() => {
           setProfile(null);
