@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, User, Wallet, Menu, LayoutDashboard, ShoppingBag, Receipt, CreditCard, LogOut, Shield, MessageSquare, Crown, Share2, Store } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 import { formatCurrency } from "@/lib/data";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ const navItems = [
 export default function TopBar({ title }: { title: string }) {
   const { itemCount } = useCart();
   const { profile, isAdmin, isReseller, isReferredCustomer, signOut } = useAuth();
+  const storeBrand = useStoreBranding();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -32,6 +34,9 @@ export default function TopBar({ title }: { title: string }) {
     await signOut();
     navigate("/login", { replace: true });
   };
+
+  const storeName = storeBrand?.full_name || "Donmac Data Hub";
+  const initial = storeName.charAt(0).toUpperCase();
 
   return (
     <header className="flex items-center justify-between px-4 lg:px-6 py-3 bg-card border-b border-border">
@@ -43,9 +48,9 @@ export default function TopBar({ title }: { title: string }) {
           <SheetContent side="left" className="w-[260px] p-4">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">D</span>
+                <span className="text-primary-foreground font-bold text-lg">{initial}</span>
               </div>
-              <span className="font-bold text-foreground">Donmac Data Hub</span>
+              <span className="font-bold text-foreground">{storeName}</span>
             </div>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {

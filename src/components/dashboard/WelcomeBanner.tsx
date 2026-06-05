@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 import { CalendarDays, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 export default function WelcomeBanner() {
   const { profile } = useAuth();
+  const storeBrand = useStoreBranding();
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -14,12 +16,14 @@ export default function WelcomeBanner() {
 
   const firstName = profile?.full_name?.split(" ")[0] || "User";
 
+  const storeName = storeBrand?.full_name || "Donmac Data Hub";
+
   return (
     <div className="rounded-xl gradient-primary p-4 text-primary-foreground">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">👋</span>
         <span className="font-bold text-sm">
-          Welcome to DonMacDataHub, {firstName}!
+          Welcome to {storeName}, {firstName}!
         </span>
       </div>
       <div className="flex items-center gap-4 mt-2">

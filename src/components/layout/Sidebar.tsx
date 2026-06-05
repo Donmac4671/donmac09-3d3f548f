@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, ShoppingBag, Receipt, CreditCard, LogOut, User, Shield, MessageSquare, Store } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -16,19 +17,23 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, isAdmin, isReseller, isReferredCustomer, signOut } = useAuth();
+  const storeBrand = useStoreBranding();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login", { replace: true });
   };
 
+  const storeName = storeBrand?.full_name || "Donmac Data Hub";
+  const initial = storeName.charAt(0).toUpperCase();
+
   return (
     <aside className="hidden lg:flex flex-col w-[220px] h-screen sticky top-0 bg-card border-r border-border p-4 overflow-y-auto overscroll-contain">
       <div className="flex items-center gap-2 mb-6">
         <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-lg">D</span>
+          <span className="text-primary-foreground font-bold text-lg">{initial}</span>
         </div>
-        <span className="font-bold text-foreground text-sm">Donmac Data Hub</span>
+        <span className="font-bold text-foreground text-sm">{storeName}</span>
       </div>
 
       <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 mb-6">
