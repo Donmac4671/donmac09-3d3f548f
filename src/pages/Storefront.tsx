@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import {
   Store,
   MessageCircle,
@@ -28,9 +27,7 @@ const STOREFRONT_KEY = "donmac_store_slug";
 
 export default function Storefront() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
