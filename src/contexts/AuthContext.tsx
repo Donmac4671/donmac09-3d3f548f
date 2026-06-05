@@ -21,9 +21,10 @@ interface AuthContextType {
   isReseller: boolean;
   isReferredCustomer: boolean;
   referredStoreId: string | null;
+  referredStoreSlug: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => Promise<{ error: any; data?: any }>;
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isReseller, setIsReseller] = useState(false);
   const [isReferredCustomer, setIsReferredCustomer] = useState(false);
   const [referredStoreId, setReferredStoreId] = useState<string | null>(null);
+  const [referredStoreSlug, setReferredStoreSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const clearStoredSession = () => {
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+
   const fetchProfile = async (authUser: User) => {
     try {
       let { data: profileData, error: profileError } = await supabase
@@ -85,12 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
+      // We rely on the database trigger 'handle_new_user' to create profiles.
+      // Client-side inserts cause 409 conflicts and race conditions.
       setProfile((profileData as Profile) ?? null);
 
       const [rolesRes, storeRes, referralRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", authUser.id),
         supabase.from("reseller_stores").select("id").eq("user_id", authUser.id).maybeSingle(),
-        supabase.from("store_referrals").select("id, store_id").eq("user_id", authUser.id).maybeSingle()
+        supabase.from("store_referrals").select("id, store_id, reseller_stores(slug)").eq("user_id", authUser.id).maybeSingle()
       ]);
 
       if (rolesRes.error) console.error("Role fetch error:", rolesRes.error.message);
@@ -98,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsReseller(Boolean(storeRes.data));
       setIsReferredCustomer(Boolean(referralRes.data));
       setReferredStoreId((referralRes.data as any)?.store_id ?? null);
+      setReferredStoreSlug((referralRes.data as any)?.reseller_stores?.slug ?? null);
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
@@ -132,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsReseller(false);
           setIsReferredCustomer(false);
           setReferredStoreId(null);
+          setReferredStoreSlug(null);
           setLoading(false);
         });
         return;
@@ -152,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsReseller(false);
           setIsReferredCustomer(false);
           setReferredStoreId(null);
+          setReferredStoreSlug(null);
         });
       }
     };
@@ -207,76 +215,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { 
-          full_name: fullName, 
-          phone,
-          user_type: 'customer',
-          reseller_code: resellerCode || null
-        },
+        data: { full_name: fullName, phone },
       },
     });
-    
-    // If user was created successfully, manually create profile and role
-    if (data?.user && !error) {
-      // Create profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          user_id: data.user.id,
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          wallet_balance: 0,
-          is_blocked: false,
-          tier: 'customer',
-          agent_code: null,
-          referral_code: null,
-          topup_reference_code: null
-        });
-      
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-      }
-      
-      // Create user role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: data.user.id,
-          role: 'user'
-        });
-      
-      if (roleError) {
-        console.error("Role creation error:", roleError);
-      }
-      
-      // If there's a reseller code, link the customer
-      if (resellerCode && !profileError) {
-        // Find reseller by agent_code
-        const { data: resellerData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("agent_code", resellerCode)
-          .eq("tier", "reseller")
-          .single();
-        
-        if (resellerData) {
-          await supabase
-            .from("customer_reseller_links")
-            .insert({
-              customer_id: data.user.id,
-              reseller_id: resellerData.id
-            });
-        }
-      }
-    }
-    
     return { error, data };
   };
 
@@ -292,12 +238,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsReseller(false);
       setIsReferredCustomer(false);
       setReferredStoreId(null);
+      setReferredStoreSlug(null);
       clearStoredSession();
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, isReseller, isReferredCustomer, referredStoreId, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, isAdmin, isReseller, isReferredCustomer, referredStoreId, referredStoreSlug, loading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
