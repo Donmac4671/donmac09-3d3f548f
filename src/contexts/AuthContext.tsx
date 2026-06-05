@@ -220,6 +220,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       },
     });
+    
+    // If user was created successfully, manually create profile and role
+    if (data?.user && !error) {
+      // Create profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: data.user.id,
+          user_id: data.user.id,
+          full_name: fullName,
+          email: email,
+          phone: phone,
+          wallet_balance: 0,
+          is_blocked: false,
+          tier: 'customer',
+          agent_code: null,
+          referral_code: null,
+          topup_reference_code: null
+        });
+      
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+      }
+      
+      // Create user role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: data.user.id,
+          role: 'user'
+        });
+      
+      if (roleError) {
+        console.error("Role creation error:", roleError);
+      }
+      
+      // If there's a reseller code, link the customer
+      if (resellerCode && !profileError) {
+        // Find reseller by agent_code
+        const { data: resellerData } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("agent_code", resellerCode)
+          .eq("tier", "reseller")
+          .single();
+        
+        if (resellerData) {
+          await supabase
+            .from("customer_reseller_links")
+            .insert({
+              customer_id: data.user.id,
+              reseller_id: resellerData.id
+            });
+        }
+      }
+    }
+    
     return { error, data };
   };
 
