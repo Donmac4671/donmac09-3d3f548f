@@ -16,6 +16,7 @@ import {
 
 interface StoreInfo {
   id: string;
+  user_id: string;
   slug: string;
   full_name: string;
   whatsapp: string;
@@ -40,7 +41,7 @@ export default function Storefront() {
       const cleaned = slug.trim().toLowerCase();
       const { data, error } = await supabase
         .from("reseller_stores")
-        .select("id, slug, full_name, whatsapp, store_message, is_active")
+        .select("id, user_id, slug, full_name, whatsapp, store_message, is_active")
         .eq("slug", cleaned)
         .eq("is_active", true)
         .maybeSingle();
@@ -70,6 +71,10 @@ export default function Storefront() {
   // customers and so customers can register/sign in from this page.
   useEffect(() => {
     if (authLoading || !user || !store) return;
+    // Don't attribute referral if the user is the store owner
+    const isOwner = store.user_id === user.id;
+    if (isOwner) return;
+
     void supabase.rpc("register_store_referral", { p_slug: store.slug }).then(() => undefined, () => undefined);
   }, [authLoading, user, store]);
 
