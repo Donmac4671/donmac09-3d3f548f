@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,34 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCanonical } from "@/hooks/useCanonical";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Login() {
   useCanonical("/login");
   const [searchParams] = useSearchParams();
-  
-  // Get store info from localStorage (set by Storefront)
-  const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
-  const storeSlug = localStorage.getItem("donmac_store_slug");
-  const [loadingBrand, setLoadingBrand] = useState(true);
-
-  useEffect(() => {
-    if (storeSlug) {
-      supabase
-        .from("reseller_stores")
-        .select("full_name")
-        .eq("slug", storeSlug)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setStoreBrand(data);
-          }
-          setLoadingBrand(false);
-        });
-    } else {
-      setLoadingBrand(false);
-    }
-  }, [storeSlug]);
-
+  const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
 
@@ -51,7 +29,7 @@ export default function Login() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [verificationMode, setVerificationMode] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const { signIn } = useAuth();
+  const { signIn, user, referredStoreSlug } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -66,8 +44,8 @@ export default function Login() {
     }
 
     const { error } = await signIn(email, password);
-    setLoading(false);
     if (error) {
+      setLoading(false);
       if (error.message.toLowerCase().includes("confirmed")) {
         setVerificationMode(true);
         toast({ title: "Email Not Verified", description: "Please enter the verification code sent to your email." });
@@ -79,7 +57,22 @@ export default function Login() {
         });
       }
     } else {
-      navigate("/dashboard");
+      // Small delay to allow AuthContext to fetch the profile/referral details
+      setTimeout(async () => {
+        const { data: referral } = await supabase
+          .from("store_referrals")
+          .select("reseller_stores(slug)")
+          .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+          .maybeSingle();
+
+        const slug = (referral as any)?.reseller_stores?.slug;
+        setLoading(false);
+        if (slug) {
+          navigate(`/${slug}`);
+        } else {
+          navigate("/dashboard");
+        }
+      }, 500);
     }
   };
 
@@ -165,16 +158,6 @@ export default function Login() {
       navigate("/reset-password");
     }
   };
-
-  if (loadingBrand) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-2xl">D</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

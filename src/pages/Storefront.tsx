@@ -134,19 +134,29 @@ export default function Storefront() {
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
-              <Link to="/register">
-                Create Account <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="text-base font-bold px-8 bg-white/10 text-primary-foreground border-white/40 hover:bg-white/20 hover:text-primary-foreground"
-            >
-              <Link to="/login">Sign In</Link>
-            </Button>
+            {user ? (
+              <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
+                <Link to="/dashboard">
+                  Enter Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
+                  <Link to="/register">
+                    Create Account <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="text-base font-bold px-8 bg-white/10 text-primary-foreground border-white/40 hover:bg-white/20 hover:text-primary-foreground"
+                >
+                  <Link to="/login">Sign In</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {waLink && (
