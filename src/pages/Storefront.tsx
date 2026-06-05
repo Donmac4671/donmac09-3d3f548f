@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import {
   Store,
   MessageCircle,
@@ -28,9 +27,7 @@ const STOREFRONT_KEY = "donmac_store_slug";
 
 export default function Storefront() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -68,22 +65,13 @@ export default function Storefront() {
     };
   }, [slug]);
 
-  // If already signed in, attribute and bounce to dashboard.
+  // Quietly attribute the referral for signed-in visitors but DO NOT redirect.
+  // The storefront landing must remain visible so the reseller can show it to
+  // customers and so customers can register/sign in from this page.
   useEffect(() => {
     if (authLoading || !user || !store) return;
-    (async () => {
-      try {
-        await supabase.rpc("register_store_referral", { p_slug: store.slug });
-      } catch {
-        /* ignore */
-      }
-      toast({
-        title: `Welcome to ${store.full_name}'s store`,
-        description: "You're shopping with reseller pricing.",
-      });
-      navigate("/dashboard", { replace: true });
-    })();
-  }, [authLoading, user, store, navigate, toast]);
+    void supabase.rpc("register_store_referral", { p_slug: store.slug }).then(() => undefined, () => undefined);
+  }, [authLoading, user, store]);
 
   if (loading) {
     return (
