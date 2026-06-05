@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
     const email = String(body.email ?? "").trim().toLowerCase();
     const phone = String(body.phone ?? "").trim();
     const password = String(body.password ?? "");
-    const user_type = String(body.user_type ?? "reseller"); // 'reseller' or 'customer'
-    const reseller_code = String(body.reseller_code ?? ""); // For customer signup via reseller link
+    const user_type = String(body.user_type ?? "reseller");
+    const agent_code = String(body.agent_code ?? "");
 
     if (!full_name || !email || !phone || !password) {
       console.error("Missing fields:", { full_name, email, phone, password_provided: !!password });
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name, phone, user_type },
+      user_metadata: { full_name, phone, user_type, agent_code },
     });
 
     if (createErr) {
@@ -78,29 +78,60 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Failed to create user" }), { status: 500, headers: jsonHeaders });
     }
 
-    // CREATE THE PROFILE RECORD
+    console.log("User created with ID:", newUserId);
+
+    // Wait for user to be available in auth.users
+    let retries = 0;
+    let userConfirmed = false;
+    
+    while (retries < 5 && !userConfirmed) {
+      await new Promise(resolve => setTimeout(resolve, 500 * (retries + 1)));
+      
+      const { data: userCheck, error: checkError } = await admin
+        .from('auth.users')
+        .select('id')
+        .eq('id', newUserId)
+        .single();
+      
+      if (!checkError && userCheck) {
+        userConfirmed = true;
+        console.log("User confirmed in auth.users");
+      }
+      retries++;
+    }
+
+    // CREATE THE PROFILE RECORD - WITH ALL REQUIRED FIELDS
     const { error: profileError } = await admin
       .from("profiles")
       .insert({
         id: newUserId,
+        user_id: newUserId,  // CRITICAL: This was missing!
         full_name: full_name,
         email: email,
         phone: phone,
+        agent_code: agent_code || null,
+        wallet_balance: 0,
+        is_blocked: false,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        tier: user_type,
+        referral_code: null,
+        topup_reference_code: null
       });
 
     if (profileError) {
       console.error("Profile creation error:", profileError.message);
-      // Don't return error - user is created, but log it
+      return new Response(JSON.stringify({ error: `Profile creation failed: ${profileError.message}` }), { status: 500, headers: jsonHeaders });
     }
+
+    console.log("Profile created successfully");
 
     // ASSIGN ROLE IN user_roles TABLE
     const { error: roleError } = await admin
       .from("user_roles")
       .insert({
         user_id: newUserId,
-        role: user_type, // 'reseller' or 'customer'
+        role: user_type,
         created_at: new Date().toISOString()
       });
 
@@ -108,35 +139,11 @@ Deno.serve(async (req) => {
       console.error("Role assignment error:", roleError.message);
     }
 
-    // IF CUSTOMER WITH RESELLER CODE, LINK THEM
-    if (user_type === "customer" && reseller_code) {
-      // Find reseller by their code
-      const { data: resellerData, error: resellerError } = await admin
-        .from("profiles")
-        .select("id")
-        .eq("reseller_code", reseller_code)
-        .single();
-      
-      if (!resellerError && resellerData) {
-        // Link customer to reseller
-        const { error: linkError } = await admin
-          .from("customer_reseller_links")
-          .insert({
-            customer_id: newUserId,
-            reseller_id: resellerData.id,
-            created_at: new Date().toISOString()
-          });
-        
-        if (linkError) {
-          console.error("Reseller link error:", linkError.message);
-        }
-      }
-    }
-
     return new Response(JSON.stringify({ 
       success: true, 
       user_id: newUserId,
-      user_type: user_type
+      user_type: user_type,
+      message: "User created successfully"
     }), { status: 200, headers: jsonHeaders });
     
   } catch (err) {
