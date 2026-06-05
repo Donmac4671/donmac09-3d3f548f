@@ -77,13 +77,42 @@ export default function AdminResellers() {
       return;
     }
     setCreatingUser(true);
-    const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
+    const { data, error } = await supabase.functions.invoke("admin-create-user", { 
+      body: {
+        full_name: newUser.full_name,
+        email: newUser.email,
+        phone: newUser.phone,
+        password: newUser.password,
+        user_type: "reseller"
+      } 
+    });
     setCreatingUser(false);
+    
     if (error || (data as any)?.error) {
       toast({ title: "Create failed", description: (data as any)?.error || error?.message, variant: "destructive" });
       return;
     }
+    
     toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
+    
+    // Auto-create store for the new reseller
+    if (data?.user_id) {
+      const cleanSlug = newUser.full_name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+      const { error: storeError } = await supabase.rpc("admin_create_store", {
+        p_user_id: data.user_id,
+        p_slug: cleanSlug,
+        p_full_name: newUser.full_name,
+        p_whatsapp: newUser.phone,
+        p_store_message: `Welcome to ${newUser.full_name}'s store - Affordable data bundles!`,
+      });
+      
+      if (storeError) {
+        toast({ title: "Store creation failed", description: storeError.message, variant: "destructive" });
+      } else {
+        toast({ title: "Store created", description: `/${cleanSlug} is live.` });
+      }
+    }
+    
     setAddUserOpen(false);
     setNewUser({ full_name: "", email: "", phone: "", password: "" });
     void load();
@@ -368,13 +397,13 @@ export default function AdminResellers() {
               <Input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Min 6 characters" className="mt-1" />
             </div>
             <p className="text-xs text-muted-foreground">
-              The user is created with the email already verified. After they sign in, create their store with “New Store”.
+              The user is created with the email already verified. The store will be created automatically.
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
             <Button onClick={handleAddUser} disabled={creatingUser} className="gradient-primary border-0">
-              {creatingUser ? "Creating..." : "Create User"}
+              {creatingUser ? "Creating..." : "Create Reseller"}
             </Button>
           </DialogFooter>
         </DialogContent>
