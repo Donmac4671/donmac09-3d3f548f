@@ -86,25 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
-      if (!profileData) {
-        const { data: createdProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: authUser.id,
-            full_name: (authUser.user_metadata as { full_name?: string } | undefined)?.full_name ?? "",
-            email: authUser.email ?? "",
-            phone: (authUser.user_metadata as { phone?: string } | undefined)?.phone ?? "",
-          })
-          .select("*")
-          .single();
-
-        if (createError) {
-          console.error("Profile bootstrap error:", createError.message);
-        } else {
-          profileData = createdProfile;
-        }
-      }
-
+      // We rely on the database trigger 'handle_new_user' to create profiles.
+      // Client-side inserts cause 409 conflicts and race conditions.
       setProfile((profileData as Profile) ?? null);
 
       const [rolesRes, storeRes, referralRes] = await Promise.all([
