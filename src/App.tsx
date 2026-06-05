@@ -192,7 +192,9 @@ const App = () => (
                 path="/mystore"
                 element={
                   <ProtectedRoute>
-                    <MyStore />
+                    <ResellerOnlyRoute>
+                      <MyStore />
+                    </ResellerOnlyRoute>
                   </ProtectedRoute>
                 }
               />
