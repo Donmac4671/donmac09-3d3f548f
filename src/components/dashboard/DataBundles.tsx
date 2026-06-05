@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -222,7 +223,7 @@ export default function DataBundles() {
               {selectedBundle && <NetworkIcon network={selectedBundle.network} />}
               <div>
                 <DialogTitle>{selectedBundle?.network.name} {selectedBundle?.bundle.size}</DialogTitle>
-                <p className="text-sm text-muted-foreground">Add bundle to cart</p>
+                <DialogDescription className="text-sm text-muted-foreground">Add bundle to cart</DialogDescription>
               </div>
             </div>
           </DialogHeader>

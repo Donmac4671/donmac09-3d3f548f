@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, networks } from "@/lib/data";
 import { Store, TrendingUp, Wallet, Share2, Copy, Save, Percent, ExternalLink, ArrowDownToLine } from "lucide-react";
@@ -344,6 +344,7 @@ export default function MyStore() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Withdrawal</DialogTitle>
+            <DialogDescription className="sr-only">Submit a request to withdraw your earned profit</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,6 +55,7 @@ export default function ClaimPayment() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Claim Payment</DialogTitle>
+            <DialogDescription className="sr-only">Submit details of your manual payment for verification</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>

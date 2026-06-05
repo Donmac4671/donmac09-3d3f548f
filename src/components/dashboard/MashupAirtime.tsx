@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Phone, Smartphone, ShoppingCart, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -322,6 +322,7 @@ export default function MashupAirtime() {
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Telecel {vsPkg ? formatCurrency(getMarkupPrice("vs", vsPkg.price)) : ""}</DialogTitle>
+            <DialogDescription className="sr-only">Configure your Telecel Voice, Data, and SMS package</DialogDescription>
           </DialogHeader>
           {vsPkg && (
             <div className="space-y-3">
@@ -391,6 +392,7 @@ export default function MashupAirtime() {
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>MashUp {pkg ? formatCurrency(getMarkupPrice("mashup", pkg.price)) : ""}</DialogTitle>
+            <DialogDescription className="sr-only">Configure your MTN MashUp package</DialogDescription>
           </DialogHeader>
           {pkg && (
             <div className="space-y-3">
@@ -433,6 +435,7 @@ export default function MashupAirtime() {
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Buy Airtime</DialogTitle>
+            <DialogDescription className="sr-only">Configure your airtime top-up</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

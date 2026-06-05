@@ -51,8 +51,7 @@ export default function Sidebar() {
           if ((item as any).hideForAgents && profile?.tier === "agent") return null;
           // Strictly hide "My Store" unless explicitly reseller or admin
           if (item.path === "/mystore") {
-            const isResellerTier = profile?.tier === "reseller";
-            if (!isResellerTier && !isAdmin) return null;
+            if (!isReseller && !isAdmin && profile?.tier !== "reseller") return null;
           }
           const isActive = location.pathname === item.path;
           return (
