@@ -49,7 +49,11 @@ export default function TopBar({ title }: { title: string }) {
             </div>
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
-                if (item.path === "/mystore" && profile?.tier === "customer" && !isAdmin) return null;
+                // Strictly hide "My Store" unless explicitly reseller or admin
+                if (item.path === "/mystore") {
+                  const isResellerTier = profile?.tier === "reseller";
+                  if (!isResellerTier && !isAdmin) return null;
+                }
                 const isActive = location.pathname === item.path;
                 return (
                   <Link

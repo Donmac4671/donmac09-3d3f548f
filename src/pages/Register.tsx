@@ -70,8 +70,11 @@ export default function Register() {
       });
     } else {
       if (data?.session) {
-        toast({ title: "Welcome!", description: "Account created and signed in successfully." });
-        navigate("/dashboard");
+        toast({ title: "Welcome!", description: "Account created successfully." });
+        // Wait a small moment for the trigger to finish profile creation
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       } else {
         setVerificationMode(true);
         toast({ title: "Account Created!", description: "Please check your email for a verification code." });
