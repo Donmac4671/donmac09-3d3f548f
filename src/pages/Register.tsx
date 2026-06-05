@@ -8,19 +8,46 @@ import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Register() {
   useCanonical("/register");
   const [searchParams] = useSearchParams();
-  const storeBrand = useStoreBranding();
+  
+  // Get store info from localStorage (set by Storefront)
+  const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
+  const storeSlug = localStorage.getItem("donmac_store_slug");
+  const [loadingBrand, setLoadingBrand] = useState(true);
+
+  useEffect(() => {
+    if (storeSlug) {
+      supabase
+        .from("reseller_stores")
+        .select("full_name")
+        .eq("slug", storeSlug)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setStoreBrand(data);
+          }
+          setLoadingBrand(false);
+        });
+    } else {
+      setLoadingBrand(false);
+    }
+  }, [storeSlug]);
+
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
-  // Only allow sign-up when coming from a reseller storefront (slug saved)
-  const hasStoreSlug = typeof window !== "undefined" && !!window.localStorage.getItem("donmac_store_slug");
-  if (!hasStoreSlug) {
+  
+  // Capture reseller code from URL
+  const resellerCode = searchParams.get("ref") || searchParams.get("agent_code") || "";
+  
+  // Only allow sign-up when coming from a reseller storefront (slug saved) OR have reseller code
+  const hasStoreSlug = typeof window !== "undefined" && !!localStorage.getItem("donmac_store_slug");
+  if (!hasStoreSlug && !resellerCode) {
     return <Navigate to="/" replace />;
   }
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,9 +81,9 @@ export default function Register() {
     }
     setLoading(true);
 
-    // Phone uniqueness is enforced by the database trigger prevent_duplicate_phone.
-
-    const { error, data } = await signUp(email, password, name, phone);
+    // Sign up with metadata including reseller code
+    const { error, data } = await signUp(email, password, name, phone, resellerCode);
+    
     setLoading(false);
     if (error) {
       const msg = (/phone/i.test(error.message) || /unique/i.test(error.message))
@@ -71,7 +98,6 @@ export default function Register() {
     } else {
       if (data?.session) {
         toast({ title: "Welcome!", description: "Account created successfully." });
-        // Wait a small moment for the trigger to finish profile creation
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
@@ -119,6 +145,16 @@ export default function Register() {
     }
   };
 
+  if (loadingBrand) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-2xl">D</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -128,6 +164,9 @@ export default function Register() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
           <p className="text-muted-foreground mt-1">Create your account</p>
+          {resellerCode && (
+            <p className="text-xs text-primary mt-2">Signing up under affiliate</p>
+          )}
         </div>
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
           {!verificationMode ? (

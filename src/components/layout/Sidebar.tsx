@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, ShoppingBag, Receipt, CreditCard, LogOut, User, Shield, MessageSquare, Store } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreBranding } from "@/hooks/useStoreBranding";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -18,6 +20,40 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { profile, isAdmin, isReseller, isReferredCustomer, signOut } = useAuth();
   const storeBrand = useStoreBranding();
+  const { profile, isAdmin, isReseller, isReferredCustomer, signOut, user } = useAuth();
+  const [storeName, setStoreName] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if user is a customer (has a reseller link)
+    const fetchStoreName = async () => {
+      if (!user) return;
+      
+      // Check if user is linked to a reseller
+      const { data: linkData } = await supabase
+        .from("customer_reseller_links")
+        .select("reseller_id")
+        .eq("customer_id", user.id)
+        .maybeSingle();
+      
+      if (linkData) {
+        // Get reseller's store name
+        const { data: storeData } = await supabase
+          .from("reseller_stores")
+          .select("full_name")
+          .eq("user_id", linkData.reseller_id)
+          .single();
+        
+        if (storeData) {
+          setStoreName(storeData.full_name);
+        }
+      }
+    };
+    
+    fetchStoreName();
+  }, [user]);
+
+  const displayName = storeName || "Donmac Data Hub";
+  const initial = displayName.charAt(0).toUpperCase() || "D";
 
   const handleSignOut = async () => {
     await signOut();
@@ -34,6 +70,7 @@ export default function Sidebar() {
           <span className="text-primary-foreground font-bold text-lg">{initial}</span>
         </div>
         <span className="font-bold text-foreground text-sm">{storeName}</span>
+        <span className="font-bold text-foreground text-sm">{displayName}</span>
       </div>
 
       <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 mb-6">
@@ -98,4 +135,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
