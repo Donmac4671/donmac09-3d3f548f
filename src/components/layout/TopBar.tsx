@@ -24,7 +24,7 @@ const navItems = [
 
 export default function TopBar({ title }: { title: string }) {
   const { itemCount } = useCart();
-  const { profile, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, isReferredCustomer, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
