@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { CalendarDays, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import {useAuth } from "/contexts/AuthContext";
 
 export default function WelcomeBanner() {
   const { profile, user } = useAuth();
@@ -46,11 +46,14 @@ export default function WelcomeBanner() {
   const firstName = profile?.full_name?.split(" ")[0] || "User";
   const displayName = storeName || "DonMacDataHub";
 
+  const storeName = storeBrand?.full_name || "Donmac Data Hub";
+
   return (
     <div className="rounded-xl gradient-primary p-4 text-primary-foreground">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">👋</span>
         <span className="font-bold text-sm">
+          Welcome to {storeName}, {firstName}!
           Welcome to {displayName}, {firstName}!
         </span>
       </div>
