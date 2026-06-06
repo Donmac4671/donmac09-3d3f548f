@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,34 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useCanonical } from "@/hooks/useCanonical";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Login() {
   useCanonical("/login");
   const [searchParams] = useSearchParams();
-  const storeBrand = useStoreBranding();
+  
+  // Get store info from localStorage (set by Storefront)
+  const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
+  const storeSlug = localStorage.getItem("donmac_store_slug");
+  const [loadingBrand, setLoadingBrand] = useState(true);
+
+  useEffect(() => {
+    if (storeSlug) {
+      supabase
+        .from("reseller_stores")
+        .select("full_name")
+        .eq("slug", storeSlug)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setStoreBrand(data);
+          }
+          setLoadingBrand(false);
+        });
+    } else {
+      setLoadingBrand(false);
+    }
+  }, [storeSlug]);
+
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
 
@@ -29,7 +51,7 @@ export default function Login() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [verificationMode, setVerificationMode] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const { signIn, user, referredStoreSlug } = useAuth();
+  const { signIn } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -43,7 +65,8 @@ export default function Login() {
       sessionStorage.removeItem("donmac_no_persist");
     }
 
-    const { error } = await signIn(email, password);
+    const { error, data } = await signIn(email, password);
+    
     if (error) {
       setLoading(false);
       if (error.message.toLowerCase().includes("confirmed")) {
@@ -57,22 +80,36 @@ export default function Login() {
         });
       }
     } else {
-      // Small delay to allow AuthContext to fetch the profile/referral details
-      setTimeout(async () => {
-        const { data: referral } = await supabase
-          .from("store_referrals")
-          .select("reseller_stores(slug)")
-          .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+      // After successful login, check if user is a customer linked to a reseller
+      const userId = data?.user?.id;
+      if (userId) {
+        const { data: linkData } = await supabase
+          .from("customer_reseller_links")
+          .select("reseller_id")
+          .eq("customer_id", userId)
           .maybeSingle();
-
-        const slug = (referral as any)?.reseller_stores?.slug;
-        setLoading(false);
-        if (slug) {
-          navigate(`/${slug}`);
-        } else {
-          navigate("/dashboard");
+        
+        if (linkData) {
+          // Get the reseller's store slug
+          const { data: storeData } = await supabase
+            .from("reseller_stores")
+            .select("slug")
+            .eq("user_id", linkData.reseller_id)
+            .single();
+          
+          if (storeData) {
+            // Save store slug to localStorage for pricing context
+            localStorage.setItem("donmac_store_slug", storeData.slug);
+            // Redirect to dashboard, NOT to storefront
+            setLoading(false);
+            navigate("/dashboard");
+            return;
+          }
         }
-      }, 500);
+      }
+      
+      setLoading(false);
+      navigate("/dashboard");
     }
   };
 
@@ -158,6 +195,16 @@ export default function Login() {
       navigate("/reset-password");
     }
   };
+
+  if (loadingBrand) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-2xl">D</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
