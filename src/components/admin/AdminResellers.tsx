@@ -115,7 +115,10 @@ export default function AdminResellers() {
     
     setAddUserOpen(false);
     setNewUser({ full_name: "", email: "", phone: "", password: "" });
-    void load();
+    // Small delay before refresh to ensure all background tasks (Edge Function polling) are done
+    setTimeout(() => {
+      void load();
+    }, 1500);
   };
 
   const load = async () => {

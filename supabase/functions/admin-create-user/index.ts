@@ -58,7 +58,25 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: jsonHeaders });
     }
 
-    return new Response(JSON.stringify({ success: true, user_id: created.user?.id }), { status: 200, headers: jsonHeaders });
+    const userId = created.user?.id;
+
+    // Small poll to ensure trigger has finished creating the profile
+    // before we return success to the admin UI.
+    let profileCreated = false;
+    for (let i = 0; i < 5; i++) {
+      const { data: p } = await admin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+      if (p) {
+        profileCreated = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (!profileCreated) {
+      console.warn(`Profile for ${userId} not created within 2.5s`);
+    }
+
+    return new Response(JSON.stringify({ success: true, user_id: userId, profile_verified: profileCreated }), { status: 200, headers: jsonHeaders });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: jsonHeaders });
