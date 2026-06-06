@@ -13,7 +13,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 export default function Login() {
   useCanonical("/login");
   const [searchParams] = useSearchParams();
-  
+
   // Get store info from localStorage (set by Storefront)
   const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
   const storeSlug = localStorage.getItem("donmac_store_slug");
@@ -51,9 +51,21 @@ export default function Login() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [verificationMode, setVerificationMode] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const { signIn } = useAuth();
+  const { signIn, user, profile, loading: authLoading, referredStoreSlug } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Handle redirection based on auth state and referral status
+  useEffect(() => {
+    if (authLoading || !user || !profile) return;
+
+    // Redirect logic: if user is a customer of a reseller, go to the storefront
+    if (referredStoreSlug) {
+      navigate(`/${referredStoreSlug}`, { replace: true });
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, profile, authLoading, referredStoreSlug, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +77,7 @@ export default function Login() {
       sessionStorage.removeItem("donmac_no_persist");
     }
 
-    const { error, data } = await signIn(email, password);
-    
+    const { error } = await signIn(email, password);
     if (error) {
       setLoading(false);
       if (error.message.toLowerCase().includes("confirmed")) {
@@ -79,38 +90,8 @@ export default function Login() {
           variant: "destructive",
         });
       }
-    } else {
-      // After successful login, check if user is a customer linked to a reseller
-      const userId = data?.user?.id;
-      if (userId) {
-        const { data: linkData } = await supabase
-          .from("customer_reseller_links")
-          .select("reseller_id")
-          .eq("customer_id", userId)
-          .maybeSingle();
-        
-        if (linkData) {
-          // Get the reseller's store slug
-          const { data: storeData } = await supabase
-            .from("reseller_stores")
-            .select("slug")
-            .eq("user_id", linkData.reseller_id)
-            .single();
-          
-          if (storeData) {
-            // Save store slug to localStorage for pricing context
-            localStorage.setItem("donmac_store_slug", storeData.slug);
-            // Redirect to dashboard, NOT to storefront
-            setLoading(false);
-            navigate("/dashboard");
-            return;
-          }
-        }
-      }
-      
-      setLoading(false);
-      navigate("/dashboard");
     }
+    // Success is handled by the useEffect above
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -121,8 +102,9 @@ export default function Login() {
     }
     setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.verifyOtp({
-      email,
+      email: cleanEmail,
       token: otpCode,
       type: "signup",
     });
@@ -139,9 +121,10 @@ export default function Login() {
 
   const handleResendOtp = async () => {
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email,
+      email: cleanEmail,
     });
     setLoading(false);
     if (error) {
@@ -159,7 +142,8 @@ export default function Login() {
     }
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {});
+    const cleanEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {});
 
     setLoading(false);
     if (error) {
@@ -181,8 +165,9 @@ export default function Login() {
     }
 
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.verifyOtp({
-      email: email,
+      email: cleanEmail,
       token: resetCode,
       type: "recovery",
     });

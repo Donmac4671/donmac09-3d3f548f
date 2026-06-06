@@ -24,7 +24,7 @@ interface AuthContextType {
   referredStoreSlug: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;
-  signUp: (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => Promise<{ error: any; data?: any }>;
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -87,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
+      // We rely on the database trigger 'handle_new_user' to create profiles.
+      // Client-side inserts cause 409 conflicts and race conditions.
       setProfile((profileData as Profile) ?? null);
 
       const [rolesRes, storeRes, referralRes] = await Promise.all([
@@ -209,80 +211,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const cleanEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
     return { error, data };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string, resellerCode?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
+    const cleanEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
       options: {
-        data: { 
-          full_name: fullName, 
-          phone,
-          user_type: 'customer',
-          reseller_code: resellerCode || null
-        },
+        data: { full_name: fullName, phone },
       },
     });
-    
-    // If user was created successfully, manually create profile and role
-    if (data?.user && !error) {
-      // Create profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          user_id: data.user.id,
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          wallet_balance: 0,
-          is_blocked: false,
-          tier: 'customer',
-          agent_code: null,
-          referral_code: null,
-          topup_reference_code: null
-        });
-      
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-      }
-      
-      // Create user role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: data.user.id,
-          role: 'user'
-        });
-      
-      if (roleError) {
-        console.error("Role creation error:", roleError);
-      }
-      
-      // If there's a reseller code, link the customer
-      if (resellerCode && !profileError) {
-        // Find reseller by agent_code
-        const { data: resellerData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("agent_code", resellerCode)
-          .eq("tier", "reseller")
-          .single();
-        
-        if (resellerData) {
-          await supabase
-            .from("customer_reseller_links")
-            .insert({
-              customer_id: data.user.id,
-              reseller_id: resellerData.id
-            });
-        }
-      }
-    }
-    
     return { error, data };
   };
 

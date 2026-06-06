@@ -48,10 +48,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function ResellerOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { profile, isAdmin, isReseller, loading } = useAuth();
+  const { profile, isAdmin, isReseller, isReferredCustomer, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  // Access allowed if Admin, or if profile tier is reseller, or if isReseller flag is true
-  const isAllowed = isAdmin || profile?.tier === "reseller" || isReseller;
+  // Access allowed if Admin, Reseller, or NOT a referred customer (allowing them to see onboarding)
+  const isAllowed = isAdmin || profile?.tier === "reseller" || isReseller || !isReferredCustomer;
   if (!isAllowed) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }

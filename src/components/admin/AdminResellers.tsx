@@ -79,8 +79,7 @@ export default function AdminResellers() {
     setCreatingUser(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke("admin-create-user", { 
-        body: {
+      const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
           full_name: newUser.full_name,
           email: newUser.email,
           phone: newUser.phone,
@@ -418,13 +417,13 @@ export default function AdminResellers() {
               <Input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Min 6 characters" className="mt-1" />
             </div>
             <p className="text-xs text-muted-foreground">
-              The user is created with the email already verified. The store will be created automatically.
+              The user is created with the email already verified. After they sign in, create their store with “New Store”.
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddUserOpen(false)}>Cancel</Button>
             <Button onClick={handleAddUser} disabled={creatingUser} className="gradient-primary border-0">
-              {creatingUser ? "Creating..." : "Create Reseller"}
+              {creatingUser ? "Creating..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
