@@ -90,8 +90,9 @@ export default function Register() {
     }
     setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.verifyOtp({
-      email,
+      email: cleanEmail,
       token: otpCode,
       type: "signup",
     });
@@ -107,9 +108,10 @@ export default function Register() {
 
   const handleResendOtp = async () => {
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email,
+      email: cleanEmail,
     });
     setLoading(false);
     if (error) {
