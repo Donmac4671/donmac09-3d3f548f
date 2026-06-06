@@ -77,15 +77,15 @@ export default function AdminResellers() {
       return;
     }
     setCreatingUser(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
+      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+        body: {
           full_name: newUser.full_name,
           email: newUser.email,
           phone: newUser.phone,
           password: newUser.password,
-          user_type: "reseller"
-        } 
+          user_type: "reseller",
+        },
       });
 
       if (error) {
@@ -94,7 +94,9 @@ export default function AdminResellers() {
           try {
             const body = await (error as any).context.json();
             if (body.error) msg = body.error;
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
         toast({ title: "Create failed", description: msg, variant: "destructive" });
         return;
@@ -106,28 +108,8 @@ export default function AdminResellers() {
       }
 
       toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
-
-      // Auto-create store for the new reseller
-      if (data?.user_id) {
-        const cleanSlug = newUser.full_name.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-        const { error: storeError } = await supabase.rpc("admin_create_store", {
-          p_user_id: data.user_id,
-          p_slug: cleanSlug,
-          p_full_name: newUser.full_name,
-          p_whatsapp: newUser.phone,
-          p_store_message: `Welcome to ${newUser.full_name}'s store - Affordable data bundles!`,
-        });
-        
-        if (storeError) {
-          toast({ title: "Store creation failed", description: storeError.message, variant: "destructive" });
-        } else {
-          toast({ title: "Store created", description: `/${cleanSlug} is live.` });
-        }
-      }
-
       setAddUserOpen(false);
       setNewUser({ full_name: "", email: "", phone: "", password: "" });
-      
       setTimeout(() => {
         void load();
       }, 1500);

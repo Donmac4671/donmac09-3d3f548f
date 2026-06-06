@@ -16,11 +16,6 @@ export default function Register() {
   const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
-  // Only allow sign-up when coming from a reseller storefront (slug saved)
-  const hasStoreSlug = typeof window !== "undefined" && !!window.localStorage.getItem("donmac_store_slug");
-  if (!hasStoreSlug) {
-    return <Navigate to="/" replace />;
-  }
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
