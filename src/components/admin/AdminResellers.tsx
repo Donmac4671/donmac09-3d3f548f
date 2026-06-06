@@ -77,6 +77,39 @@ export default function AdminResellers() {
       return;
     }
     setCreatingUser(true);
+    
+      const { data, error } = await supabase.functions.invoke("admin-create-user", { body: newUser });
+
+      if (error) {
+        let msg = error.message;
+        // The FunctionsInvokeError from Supabase might have a context.json() if it returned a body
+        if (error instanceof Error && (error as any).context?.json) {
+          try {
+            const body = await (error as any).context.json();
+            if (body.error) msg = body.error;
+          } catch { /* ignore */ }
+        }
+        toast({ title: "Create failed", description: msg, variant: "destructive" });
+        return;
+      }
+
+      if (data?.error) {
+        toast({ title: "Create failed", description: data.error, variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
+      setAddUserOpen(false);
+      setNewUser({ full_name: "", email: "", phone: "", password: "" });
+      // Small delay before refresh to ensure all background tasks (Edge Function polling) are done
+      setTimeout(() => {
+        void load();
+      }, 1500);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setCreatingUser(false);
+    }
     const { data, error } = await supabase.functions.invoke("admin-create-user", { 
       body: {
         full_name: newUser.full_name,
