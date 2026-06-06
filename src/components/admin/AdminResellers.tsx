@@ -86,7 +86,10 @@ export default function AdminResellers() {
     toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
     setAddUserOpen(false);
     setNewUser({ full_name: "", email: "", phone: "", password: "" });
-    void load();
+    // Small delay before refresh to ensure all background tasks (Edge Function polling) are done
+    setTimeout(() => {
+      void load();
+    }, 1500);
   };
 
   const load = async () => {

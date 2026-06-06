@@ -422,9 +422,19 @@ export default function Admin() {
                     <TableCell>{u.phone}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(u.wallet_balance)}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={u.tier === "reseller" ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"}>
-                        {u.tier === "reseller" ? "Reseller" : "Customer"}
-                      </Badge>
+                      <Select
+                        value={u.tier || "customer"}
+                        onValueChange={(val) => handleSetTier(u.user_id, val)}
+                      >
+                        <SelectTrigger className="h-8 w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer">Customer</SelectItem>
+                          <SelectItem value="reseller">Reseller</SelectItem>
+                          <SelectItem value="agent">Agent</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Badge
