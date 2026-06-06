@@ -23,7 +23,7 @@ interface AuthContextType {
   referredStoreId: string | null;
   referredStoreSlug: string | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -75,7 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   const fetchProfile = async (authUser: User) => {
     try {
       let { data: profileData, error: profileError } = await supabase
@@ -111,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsReseller(false);
       setIsReferredCustomer(false);
       setReferredStoreId(null);
+      setReferredStoreSlug(null);
     }
   };
 
@@ -212,8 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-    return { error };
+    const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+    return { error, data };
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
