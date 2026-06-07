@@ -76,11 +76,15 @@ export default function Cart() {
         if (item.networkId === "mashup") amount = item.effectivePrice + calculateMashupFee(item.effectivePrice);
         else if (item.networkId === "vs") amount = item.effectivePrice + calculateTelecelVSFee(item.effectivePrice);
 
+        const profit = Math.max(0, item.effectivePrice - item.wholesalePrice);
+
         const { data: orderId, error: orderError } = await supabase.rpc("pay_with_wallet", {
           p_network: item.network,
           p_phone: item.phoneNumber,
           p_bundle: item.bundle.size,
           p_amount: amount,
+          p_store_id: item.storeId,
+          p_profit: profit,
         });
 
         if (orderError) throw new Error(`${item.networkId} order failed: ${orderError.message}`);
@@ -113,11 +117,14 @@ export default function Cart() {
 
         for (const item of dataItems) {
           // Step 1: Create order and deduct wallet
+          const profit = Math.max(0, item.effectivePrice - item.wholesalePrice);
           const { data: orderId, error: orderError } = await supabase.rpc("pay_with_wallet", {
             p_network: item.network,
             p_phone: item.phoneNumber,
             p_bundle: item.bundle.size,
             p_amount: item.effectivePrice,
+            p_store_id: item.storeId,
+            p_profit: profit,
           });
 
           if (orderError) throw new Error(`Order failed: ${orderError.message}`);

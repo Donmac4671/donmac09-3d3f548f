@@ -72,7 +72,7 @@ export default function DataBundles() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile, isAdmin } = useAuth();
+  const { profile, isAdmin, referredStoreId } = useAuth();
   const { networks: mergedNetworks } = useCustomBundles();
   const { getResellerPrice: calculateResellerPrice, loading: pricesLoading } = useResellerPrices();
   const userTier = profile?.tier || "customer";
@@ -142,7 +142,7 @@ export default function DataBundles() {
     if (promo) {
       effectivePrice = applyDiscount(effectivePrice);
     }
-    addItem(selectedBundle.network.id, selectedBundle.network.name, selectedBundle.bundle, phoneNumber, effectivePrice);
+    addItem(selectedBundle.network.id, selectedBundle.network.name, selectedBundle.bundle, phoneNumber, effectivePrice, wholesalePrice, referredStoreId);
     toast({ title: "Added to cart", description: `${selectedBundle.network.name} ${selectedBundle.bundle.size} added` });
     setSelectedBundle(null);
     setPhoneNumber("");

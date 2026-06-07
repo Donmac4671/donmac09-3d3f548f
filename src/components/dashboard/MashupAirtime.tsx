@@ -39,7 +39,7 @@ export default function MashupAirtime() {
   const [airtimeAmount, setAirtimeAmount] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile, isAdmin } = useAuth();
+  const { profile, isAdmin, referredStoreId } = useAuth();
   const { mashupEnabled, airtimeEnabled, vsEnabled } = useProductToggles();
   const { getMarkupPrice: calculateMarkup } = useResellerPrices();
 
@@ -94,6 +94,8 @@ export default function MashupAirtime() {
       { size: sizeLabel, sizeGB: 0, price: effectivePrice, generalPrice: effectivePrice },
       vsPhone,
       effectivePrice,
+      vsPkg.price,
+      referredStoreId,
     );
     toast({ title: "Added to cart", description: `${productName} ${formatCurrency(effectivePrice)} for ${vsPhone}` });
     closeVs();
@@ -133,6 +135,8 @@ export default function MashupAirtime() {
       },
       mashupPhone,
       effectivePrice,
+      pkg.price,
+      referredStoreId,
     );
 
     toast({
@@ -175,6 +179,8 @@ export default function MashupAirtime() {
       },
       airtimePhone,
       effectivePrice,
+      amt,
+      referredStoreId,
     );
 
     toast({

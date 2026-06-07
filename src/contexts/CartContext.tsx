@@ -3,7 +3,7 @@ import { CartItem, DataBundle } from "@/lib/data";
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (networkId: string, networkName: string, bundle: DataBundle, phoneNumber: string, effectivePrice: number) => void;
+  addItem: (networkId: string, networkName: string, bundle: DataBundle, phoneNumber: string, effectivePrice: number, wholesalePrice: number, storeId?: string | null) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
   total: number;
@@ -30,7 +30,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addItem = (networkId: string, networkName: string, bundle: DataBundle, phoneNumber: string, effectivePrice: number) => {
+  const addItem = (networkId: string, networkName: string, bundle: DataBundle, phoneNumber: string, effectivePrice: number, wholesalePrice: number, storeId?: string | null) => {
     const newItem: CartItem = {
       id: `${Date.now()}-${Math.random()}`,
       network: networkName,
@@ -38,6 +38,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       bundle,
       phoneNumber,
       effectivePrice,
+      wholesalePrice,
+      storeId,
     };
     setItems((prev) => [...prev, newItem]);
   };

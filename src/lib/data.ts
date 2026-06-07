@@ -109,6 +109,10 @@ export interface CartItem {
   phoneNumber: string;
   /** The actual price charged (tier-dependent) */
   effectivePrice: number;
+  /** The base cost of the item */
+  wholesalePrice: number;
+  /** The store ID if this is a referred purchase */
+  storeId?: string | null;
 }
 
 export interface Order {
