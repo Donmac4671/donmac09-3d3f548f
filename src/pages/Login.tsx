@@ -59,10 +59,12 @@ export default function Login() {
   useEffect(() => {
     if (authLoading || !user || !profile) return;
 
-    // Reseller-customer → send to their storefront, not the main dashboard
-    if (referredStoreSlug) {
-      toast({ title: "Use your store link", description: "Customers shop on their reseller's storefront." });
-      navigate(`/${referredStoreSlug}`, { replace: true });
+    const localSlug = typeof window !== "undefined" ? localStorage.getItem("donmac_store_slug") : null;
+    const targetSlug = referredStoreSlug || localSlug;
+
+    // Customer arriving from a reseller's storefront → send them to that store
+    if (targetSlug && profile.tier !== "reseller" && profile.tier !== "agent" && !isReseller) {
+      navigate(`/${targetSlug}`, { replace: true });
       return;
     }
     // Reseller without a store yet → onboarding
