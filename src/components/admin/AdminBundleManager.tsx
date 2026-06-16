@@ -177,26 +177,41 @@ export default function AdminBundleManager() {
             <div className="divide-y divide-border">
               {bundles.map((bundle) => {
                 const key = makeKey(network.id, bundle.size);
-                const isHidden = hiddenBundles.has(key);
+                const status = statusMap.get(key); // undefined = online
+                const isHidden = status === "hidden";
+                const isOffline = status === "offline";
                 const isLoading = loading === key;
                 return (
-                  <div key={bundle.size} className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-3">
+                  <div key={bundle.size} className="flex items-center justify-between px-4 py-3 gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-semibold text-foreground w-16">{bundle.size}</span>
                       <span className="text-sm text-muted-foreground">
                         Agent: {formatCurrency(bundle.agentPrice)} · General: {formatCurrency(bundle.generalPrice)}
                       </span>
                       {isHidden && <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">Hidden</Badge>}
+                      {isOffline && <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 text-xs">Offline</Badge>}
+                      {!status && <Badge variant="outline" className="bg-green-500/10 text-green-700 text-xs">Online</Badge>}
                       {bundle.isCustom && <Badge variant="outline" className="bg-primary/10 text-primary text-xs">Custom</Badge>}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Select
+                        value={status ?? "online"}
+                        onValueChange={(v) => setBundleStatus(network.id, bundle.size, v as any)}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="online">Online</SelectItem>
+                          <SelectItem value="offline">Offline</SelectItem>
+                          <SelectItem value="hidden">Hidden</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button size="sm" variant="ghost" onClick={() => openEditDialog(network.id, bundle)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDeleteBundle(network.id, bundle.size)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Switch checked={!isHidden} onCheckedChange={() => toggleBundle(network.id, bundle.size)} disabled={isLoading} />
                     </div>
                   </div>
                 );
