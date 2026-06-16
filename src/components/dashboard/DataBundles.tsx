@@ -144,11 +144,13 @@ export default function DataBundles() {
     const selectedId = selectedBundle.network.id;
     // AirtelTigo networks share prefixes
     if ((selectedId === "at-bigtime" || selectedId === "at-premium") && (detectedNetwork === "at-bigtime" || detectedNetwork === "at-premium")) return false;
+    // MTN Mashup variants are MTN-only
+    if ((selectedId === "mtn-mashup-data" || selectedId === "mtn-mashup-minutes") && detectedNetwork === "mtn") return false;
     return detectedNetwork !== selectedId;
   }, [detectedNetwork, selectedBundle]);
 
   const getExpectedNetworkName = (networkId: string) => {
-    if (networkId === "mtn") return "MTN";
+    if (networkId === "mtn" || networkId === "mtn-mashup-data" || networkId === "mtn-mashup-minutes") return "MTN";
     if (networkId === "telecel") return "Telecel";
     if (networkId === "at-bigtime" || networkId === "at-premium") return "AirtelTigo";
     return networkId;
