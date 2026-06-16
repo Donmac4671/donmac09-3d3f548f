@@ -225,41 +225,6 @@ export default function Storefront() {
             </Card>
           ))}
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Card className="overflow-hidden border-border/50">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 px-4 py-2 text-white font-bold flex items-center justify-between">
-                <span>MTN MASHUP</span>
-                <Badge variant="outline" className="bg-white/20 text-white border-0 text-[10px] uppercase tracking-wider">OFFERS</Badge>
-              </div>
-              <div className="p-3 grid grid-cols-2 gap-2">
-                {MASHUP_PACKAGES.slice(0, 4).map((p) => (
-                  <div key={p.price} className="bg-accent/30 rounded-lg p-2 text-center border border-border/50">
-                    <p className="text-lg font-bold text-foreground">
-                      {formatCurrency(getMarkupPrice("mashup", p.price))}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">{p.data}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="overflow-hidden border-border/50">
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 px-4 py-2 text-white font-bold flex items-center justify-between">
-                <span>TELECEL V+D+S</span>
-                <Badge variant="outline" className="bg-white/20 text-white border-0 text-[10px] uppercase tracking-wider">OFFERS</Badge>
-              </div>
-              <div className="p-3 grid grid-cols-2 gap-2">
-                {TELECEL_VS_PACKAGES.slice(1, 5).map((p, idx) => (
-                  <div key={idx} className="bg-accent/30 rounded-lg p-2 text-center border border-border/50">
-                    <p className="text-lg font-bold text-foreground">
-                      {formatCurrency(getMarkupPrice("vs", p.price))}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground truncate">{p.variants[0].minutes}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
         </div>
       </section>
 
