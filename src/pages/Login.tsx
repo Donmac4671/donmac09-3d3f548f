@@ -51,7 +51,7 @@ export default function Login() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [verificationMode, setVerificationMode] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const { signIn, user, profile, loading: authLoading, referredStoreSlug } = useAuth();
+  const { signIn, user, profile, loading: authLoading, referredStoreSlug, isReseller } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -59,13 +59,19 @@ export default function Login() {
   useEffect(() => {
     if (authLoading || !user || !profile) return;
 
-    // Redirect logic: if user is a customer of a reseller, go to the storefront
+    // Reseller-customer → send to their storefront, not the main dashboard
     if (referredStoreSlug) {
+      toast({ title: "Use your store link", description: "Customers shop on their reseller's storefront." });
       navigate(`/${referredStoreSlug}`, { replace: true });
-    } else {
-      navigate("/dashboard", { replace: true });
+      return;
     }
-  }, [user, profile, authLoading, referredStoreSlug, navigate]);
+    // Reseller without a store yet → onboarding
+    if (profile.tier === "reseller" && !isReseller) {
+      navigate("/mystore", { replace: true });
+      return;
+    }
+    navigate("/dashboard", { replace: true });
+  }, [user, profile, authLoading, referredStoreSlug, isReseller, navigate, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

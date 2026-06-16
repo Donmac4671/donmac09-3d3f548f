@@ -13,7 +13,7 @@ interface CustomBundle {
 
 export function useCustomBundles() {
   const [customBundles, setCustomBundles] = useState<CustomBundle[]>([]);
-  const { isHidden } = useHiddenBundles();
+  const { isHidden, isOffline } = useHiddenBundles();
 
   useEffect(() => {
     const fetchBundles = async () => {
@@ -50,14 +50,15 @@ export function useCustomBundles() {
         });
       }
 
-      // Sort by sizeGB and filter hidden
+      // Sort by sizeGB, filter hidden, flag offline
       const bundles = Array.from(bundleMap.values())
         .filter((b) => !isHidden(network.id, b.size))
+        .map((b) => ({ ...b, isOffline: isOffline(network.id, b.size) }))
         .sort((a, b) => a.sizeGB - b.sizeGB);
 
       return { ...network, bundles };
     });
-  }, [customBundles, isHidden]);
+  }, [customBundles, isHidden, isOffline]);
 
   return { networks: mergedNetworks, customBundles, refetch: async () => {
     const { data, error } = await supabase.from("custom_bundles").select("*");
