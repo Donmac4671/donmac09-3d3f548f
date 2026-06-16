@@ -43,10 +43,13 @@ function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getReselle
   const hasDiscount = displayPrice < basePrice;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className={`${gradientClass} rounded-2xl p-4 w-full aspect-square flex flex-col items-center justify-center text-white relative transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:scale-105`}>
+    <div className={`flex flex-col items-center ${bundle.isOffline ? "opacity-60" : ""}`}>
+      <div className={`${gradientClass} rounded-2xl p-4 w-full aspect-square flex flex-col items-center justify-center text-white relative transition-all duration-200 ${bundle.isOffline ? "grayscale" : "hover:shadow-lg hover:-translate-y-1 hover:scale-105"}`}>
         <span className="text-3xl lg:text-4xl font-bold">{bundle.sizeGB}</span>
         <span className="text-xs font-medium uppercase">Gigabytes</span>
+        {bundle.isOffline && (
+          <span className="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">Offline</span>
+        )}
       </div>
       <div className="mt-2 bg-accent rounded-full px-3 py-1 flex items-center gap-1">
         <span className="text-[10px] text-muted-foreground">Price</span>
@@ -59,8 +62,9 @@ function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getReselle
         size="sm"
         className="mt-2 gradient-primary border-0 text-xs w-full"
         onClick={onSelect}
+        disabled={bundle.isOffline}
       >
-        <ShoppingCart className="w-3 h-3 mr-1" /> Select Bundle
+        <ShoppingCart className="w-3 h-3 mr-1" /> {bundle.isOffline ? "Offline" : "Select Bundle"}
       </Button>
     </div>
   );
