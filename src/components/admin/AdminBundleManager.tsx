@@ -200,7 +200,7 @@ export default function AdminBundleManager() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingBundle ? "Edit" : "Add"} Bundle — {formNetworkId.toUpperCase()}</DialogTitle>
-            <DialogDescription className="sr-only">Form to {isEditing ? "edit existing" : "add a new"} data bundle</DialogDescription>
+            <DialogDescription className="sr-only">Form to {editingBundle ? "edit existing" : "add a new"} data bundle</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>

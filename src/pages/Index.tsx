@@ -3,7 +3,7 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import WalletTopUp from "@/components/dashboard/WalletTopUp";
 import ClaimPayment from "@/components/dashboard/ClaimPayment";
 import DataBundles from "@/components/dashboard/DataBundles";
-import MashupAirtime from "@/components/dashboard/MashupAirtime";
+
 import PromoCountdown from "@/components/dashboard/PromoCountdown";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import SiteMessageBanner from "@/components/global/SiteMessageBanner";
@@ -22,7 +22,6 @@ export default function Index() {
         <WalletTopUp />
         <ClaimPayment />
         <DataBundles />
-        <MashupAirtime />
         
       </div>
     </DashboardLayout>
