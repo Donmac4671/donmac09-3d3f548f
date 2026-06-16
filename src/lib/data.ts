@@ -3,6 +3,8 @@ export interface DataBundle {
   sizeGB: number;
   price: number;        // agent price
   generalPrice: number; // general user price
+  /** Bundle is visible but disabled (temporarily offline / out-of-stock). */
+  isOffline?: boolean;
 }
 
 export interface Network {
