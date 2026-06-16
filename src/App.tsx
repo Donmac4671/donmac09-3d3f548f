@@ -199,6 +199,14 @@ const App = () => (
               />
               <Route path="/flyer" element={<Flyer />} />
               <Route
+                path="/api-docs"
+                element={
+                  <ProtectedRoute>
+                    <ApiDocs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/mystore"
                 element={
                   <ProtectedRoute>
