@@ -413,7 +413,6 @@ export default function Admin() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Agent Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
