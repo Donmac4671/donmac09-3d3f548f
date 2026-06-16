@@ -382,16 +382,24 @@ function CreateStoreOnboarding({ onCreated }: { onCreated: () => void }) {
     if (!/^\d{10}$/.test(form.whatsapp)) return toast({ title: "WhatsApp must be 10 digits", variant: "destructive" });
 
     setSubmitting(true);
-    const { error } = await supabase.rpc("create_my_store", {
-      p_slug: slug,
-      p_full_name: form.full_name.trim(),
-      p_whatsapp: form.whatsapp.trim(),
-      p_store_message: form.store_message.trim(),
-    });
-    setSubmitting(false);
-    if (error) return toast({ title: "Could not create store", description: error.message, variant: "destructive" });
-    toast({ title: "Store created!", description: "Your storefront is live." });
-    onCreated();
+    try {
+      const { error } = await supabase.rpc("create_my_store", {
+        p_slug: slug,
+        p_full_name: form.full_name.trim(),
+        p_whatsapp: form.whatsapp.trim(),
+        p_store_message: form.store_message.trim(),
+      });
+      if (error) {
+        toast({ title: "Could not create store", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Store created!", description: "Your storefront is live." });
+      onCreated();
+    } catch (e: any) {
+      toast({ title: "Could not create store", description: e?.message || "Unexpected error", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const previewUrl = form.slug ? `${window.location.origin}/${cleanSlug(form.slug)}` : "";
