@@ -91,11 +91,12 @@ export default function Admin() {
   const [complaintDateTo, setComplaintDateTo] = useState<Date | undefined>(today);
 
   const fetchData = async () => {
-    const [{ data: u }, { data: t }, { data: c }, { data: ur }] = await Promise.all([
+    const [{ data: u }, { data: t }, { data: c }, { data: ur }, { data: stores }] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallet_topups").select("*").order("created_at", { ascending: false }),
       supabase.from("complaints").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
+      supabase.from("reseller_stores").select("user_id, available_profit, lifetime_profit"),
     ]);
 
     // Fetch orders in chunks of 1000 since Supabase has a default limit
@@ -124,7 +125,21 @@ export default function Admin() {
       }
     }
 
-    setUsers(u || []);
+    // Merge reseller profit into the user rows so admins can see it inline.
+    const profitMap = new Map<string, { available: number; lifetime: number }>();
+    (stores as any[] | null)?.forEach((s) => {
+      profitMap.set(s.user_id, {
+        available: Number(s.available_profit) || 0,
+        lifetime: Number(s.lifetime_profit) || 0,
+      });
+    });
+    const enrichedUsers = (u || []).map((row: any) => ({
+      ...row,
+      reseller_available_profit: profitMap.get(row.user_id)?.available ?? 0,
+      reseller_lifetime_profit: profitMap.get(row.user_id)?.lifetime ?? 0,
+    }));
+
+    setUsers(enrichedUsers);
     setOrders(allOrders);
     setTopups(t || []);
     setComplaints(c || []);
