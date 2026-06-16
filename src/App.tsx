@@ -28,6 +28,7 @@ import Complaints from "./pages/Complaints";
 import ResetPassword from "./pages/ResetPassword";
 import Flyer from "./pages/Flyer";
 import MyStore from "./pages/MyStore";
+import ApiDocs from "./pages/ApiDocs";
 import Storefront from "./pages/Storefront";
 import NotFound from "./pages/NotFound";
 
