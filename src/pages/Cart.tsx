@@ -112,12 +112,19 @@ export default function Cart() {
         }
 
         for (const item of dataItems) {
-          // Step 1: Create order and deduct wallet
+          // Profit = effective price (with reseller markup) minus wholesale base.
+          const wholesale = item.bundle.price;
+          const profit = Math.max(0, Math.round((item.effectivePrice - wholesale) * 100) / 100);
+
+          // Step 1: Create order and deduct wallet. Pass store_id + profit so the
+          // reseller gets credited on delivery.
           const { data: orderId, error: orderError } = await supabase.rpc("pay_with_wallet", {
             p_network: item.network,
             p_phone: item.phoneNumber,
             p_bundle: item.bundle.size,
             p_amount: item.effectivePrice,
+            p_store_id: referredStoreId ?? undefined,
+            p_profit: profit,
           });
 
           if (orderError) throw new Error(`Order failed: ${orderError.message}`);
