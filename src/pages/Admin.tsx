@@ -426,12 +426,11 @@ export default function Admin() {
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                 ) : filteredUsers.map((u) => {
                   const isUserAdmin = adminUserIds.has(u.user_id);
                   return (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.agent_code || "—"}</TableCell>
                     <TableCell>{u.full_name}</TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{u.phone}</TableCell>
