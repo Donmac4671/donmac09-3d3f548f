@@ -1176,6 +1176,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      api_place_order_for_user: {
+        Args: {
+          p_amount: number
+          p_bundle: string
+          p_network: string
+          p_phone: string
+          p_user_id: string
+        }
+        Returns: {
+          order_id: string
+          order_ref: string
+        }[]
+      }
       auto_claim_topup_by_reference: {
         Args: {
           p_amount: number
