@@ -21,7 +21,8 @@ interface CustomBundle {
 
 export default function AdminBundleManager() {
   const { toast } = useToast();
-  const [hiddenBundles, setHiddenBundles] = useState<Set<string>>(new Set());
+  // Map of bundle key -> "hidden" | "offline" (absent = online)
+  const [statusMap, setStatusMap] = useState<Map<string, "hidden" | "offline">>(new Map());
   const [customBundles, setCustomBundles] = useState<CustomBundle[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -36,10 +37,16 @@ export default function AdminBundleManager() {
 
   const fetchData = async () => {
     const [{ data: hidden }, { data: custom }] = await Promise.all([
-      supabase.from("hidden_bundles").select("network_id, bundle_size"),
+      supabase.from("hidden_bundles").select("network_id, bundle_size, status"),
       supabase.from("custom_bundles").select("*"),
     ]);
-    if (hidden) setHiddenBundles(new Set(hidden.map((r: any) => makeKey(r.network_id, r.bundle_size))));
+    if (hidden) {
+      const m = new Map<string, "hidden" | "offline">();
+      for (const r of hidden as any[]) {
+        m.set(makeKey(r.network_id, r.bundle_size), (r.status ?? "hidden") as any);
+      }
+      setStatusMap(m);
+    }
     if (custom) setCustomBundles(custom as any);
   };
 
@@ -62,24 +69,27 @@ export default function AdminBundleManager() {
     return Array.from(bundleMap.values()).sort((a, b) => a.sizeGB - b.sizeGB);
   };
 
-  const toggleBundle = async (networkId: string, bundleSize: string) => {
+  const setBundleStatus = async (networkId: string, bundleSize: string, target: "online" | "offline" | "hidden") => {
     const key = makeKey(networkId, bundleSize);
     setLoading(key);
-
-    if (hiddenBundles.has(key)) {
-      const { error } = await supabase.from("hidden_bundles").delete().eq("network_id", networkId).eq("bundle_size", bundleSize);
-      if (!error) {
-        setHiddenBundles((prev) => { const n = new Set(prev); n.delete(key); return n; });
-        toast({ title: "Bundle shown" });
+    try {
+      if (target === "online") {
+        await supabase.from("hidden_bundles").delete().eq("network_id", networkId).eq("bundle_size", bundleSize);
+        setStatusMap((prev) => { const n = new Map(prev); n.delete(key); return n; });
+      } else {
+        // upsert
+        const existing = statusMap.has(key);
+        if (existing) {
+          await supabase.from("hidden_bundles").update({ status: target }).eq("network_id", networkId).eq("bundle_size", bundleSize);
+        } else {
+          await supabase.from("hidden_bundles").insert({ network_id: networkId, bundle_size: bundleSize, status: target });
+        }
+        setStatusMap((prev) => { const n = new Map(prev); n.set(key, target); return n; });
       }
-    } else {
-      const { error } = await supabase.from("hidden_bundles").insert({ network_id: networkId, bundle_size: bundleSize });
-      if (!error) {
-        setHiddenBundles((prev) => new Set(prev).add(key));
-        toast({ title: "Bundle hidden" });
-      }
+      toast({ title: target === "online" ? "Bundle online" : target === "offline" ? "Bundle marked offline" : "Bundle hidden" });
+    } finally {
+      setLoading(null);
     }
-    setLoading(null);
   };
 
   const openAddDialog = (networkId: string) => {
