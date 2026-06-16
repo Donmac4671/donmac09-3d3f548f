@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { networks, formatCurrency, MASHUP_PACKAGES, TELECEL_VS_PACKAGES } from "@/lib/data";
+import { networks, formatCurrency } from "@/lib/data";
 import { useResellerPrices } from "@/hooks/useResellerPrices";
 import {
   Store,
