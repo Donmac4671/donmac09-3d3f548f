@@ -25,7 +25,7 @@ export default function Cart() {
   const { items, removeItem, clearCart, total } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, referredStoreId } = useAuth();
   const [processing, setProcessing] = useState(false);
 
   const mashupSubtotal = items.filter((i) => i.networkId === "mashup").reduce((sum, i) => sum + i.effectivePrice, 0);
