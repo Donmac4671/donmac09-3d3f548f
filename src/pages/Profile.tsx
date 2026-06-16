@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, Shield, Lock, KeyRound } from "lucide-react";
+import ApiAccessCard from "@/components/profile/ApiAccessCard";
 
 export default function Profile() {
   const { profile, refreshProfile } = useAuth();
@@ -160,6 +161,8 @@ export default function Profile() {
             {updatingPwd ? "Updating..." : "Update Password"}
           </Button>
         </div>
+
+        <ApiAccessCard />
       </div>
     </DashboardLayout>
   );
