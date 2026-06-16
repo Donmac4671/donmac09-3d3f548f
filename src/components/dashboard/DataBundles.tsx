@@ -22,6 +22,8 @@ import airteltigoLogo from "@/assets/networks/airteltigo.png";
 
 const networkLogos: Record<string, string> = {
   mtn: mtnLogo,
+  "mtn-mashup-data": mtnLogo,
+  "mtn-mashup-minutes": mtnLogo,
   telecel: telecelLogo,
   "at-bigtime": airteltigoLogo,
   "at-premium": airteltigoLogo,
