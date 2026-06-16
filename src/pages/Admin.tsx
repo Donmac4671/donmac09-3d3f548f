@@ -417,7 +417,8 @@ export default function Admin() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>Balance</TableHead>
+                  <TableHead>Wallet</TableHead>
+                  <TableHead>Reseller Profit</TableHead>
                   <TableHead>Tier</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
@@ -426,7 +427,7 @@ export default function Admin() {
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                 ) : filteredUsers.map((u) => {
                   const isUserAdmin = adminUserIds.has(u.user_id);
                   return (
@@ -436,6 +437,16 @@ export default function Admin() {
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{u.phone}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(u.wallet_balance)}</TableCell>
+                    <TableCell className="font-semibold">
+                      {u.tier === "reseller" ? (
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-success">{formatCurrency(u.reseller_available_profit || 0)}</span>
+                          <span className="text-[10px] text-muted-foreground">Lifetime {formatCurrency(u.reseller_lifetime_profit || 0)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Select
                         value={u.tier || "customer"}
