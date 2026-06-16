@@ -355,18 +355,21 @@ export type Database = {
           created_at: string
           id: string
           network_id: string
+          status: string
         }
         Insert: {
           bundle_size: string
           created_at?: string
           id?: string
           network_id: string
+          status?: string
         }
         Update: {
           bundle_size?: string
           created_at?: string
           id?: string
           network_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -1097,6 +1100,15 @@ export type Database = {
       complete_paystack_topup_for_user: {
         Args: { p_amount: number; p_reference: string; p_user_id: string }
         Returns: undefined
+      }
+      create_my_store: {
+        Args: {
+          p_full_name: string
+          p_slug: string
+          p_store_message: string
+          p_whatsapp: string
+        }
+        Returns: string
       }
       create_user_profile: {
         Args: {
