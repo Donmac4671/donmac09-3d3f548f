@@ -366,3 +366,102 @@ export default function MyStore() {
     </DashboardLayout>
   );
 }
+
+function CreateStoreOnboarding({ onCreated }: { onCreated: () => void }) {
+  const { toast } = useToast();
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ slug: "", full_name: "", whatsapp: "", store_message: "" });
+
+  const cleanSlug = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/(^-+|-+$)/g, "");
+
+  const submit = async () => {
+    const slug = cleanSlug(form.slug);
+    if (slug.length < 3) return toast({ title: "Slug too short", description: "Use at least 3 letters/numbers.", variant: "destructive" });
+    if (!form.full_name.trim()) return toast({ title: "Add your store name", variant: "destructive" });
+    if (!/^\d{10}$/.test(form.whatsapp)) return toast({ title: "WhatsApp must be 10 digits", variant: "destructive" });
+
+    setSubmitting(true);
+    const { error } = await supabase.rpc("create_my_store", {
+      p_slug: slug,
+      p_full_name: form.full_name.trim(),
+      p_whatsapp: form.whatsapp.trim(),
+      p_store_message: form.store_message.trim(),
+    });
+    setSubmitting(false);
+    if (error) return toast({ title: "Could not create store", description: error.message, variant: "destructive" });
+    toast({ title: "Store created!", description: "Your storefront is live." });
+    onCreated();
+  };
+
+  const previewUrl = form.slug ? `${window.location.origin}/${cleanSlug(form.slug)}` : "";
+
+  return (
+    <DashboardLayout title="Create Your Store">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+        <Card className="p-6 sm:p-8">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-3">
+              <Store className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold">Welcome, reseller!</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Set up your storefront in a few seconds. You can update everything later.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold">Store URL slug</label>
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                placeholder="e.g. kojo-data"
+                className="mt-1"
+                style={{ fontSize: 16 }}
+              />
+              {previewUrl && (
+                <p className="text-xs text-muted-foreground mt-1 break-all">Your link: <span className="font-mono">{previewUrl}</span></p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Store / Business Name</label>
+              <Input
+                value={form.full_name}
+                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                placeholder="e.g. Kojo Data Hub"
+                className="mt-1"
+                style={{ fontSize: 16 }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">WhatsApp Number</label>
+              <Input
+                value={form.whatsapp}
+                onChange={(e) => setForm({ ...form, whatsapp: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                placeholder="0549358359"
+                inputMode="numeric"
+                className="mt-1"
+                style={{ fontSize: 16 }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Welcome Message <span className="text-xs text-muted-foreground font-normal">(shown on your store)</span></label>
+              <Textarea
+                value={form.store_message}
+                onChange={(e) => setForm({ ...form, store_message: e.target.value })}
+                placeholder="Welcome! Order any data bundle — fast delivery, low prices."
+                rows={3}
+                className="mt-1"
+                style={{ fontSize: 16 }}
+              />
+            </div>
+            <Button onClick={submit} disabled={submitting} className="w-full gradient-primary border-0" size="lg">
+              {submitting ? "Creating..." : "Create My Store"}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
