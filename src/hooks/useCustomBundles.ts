@@ -13,7 +13,7 @@ interface CustomBundle {
 
 export function useCustomBundles() {
   const [customBundles, setCustomBundles] = useState<CustomBundle[]>([]);
-  const { isHidden } = useHiddenBundles();
+  const { isHidden, isOffline } = useHiddenBundles();
 
   useEffect(() => {
     const fetchBundles = async () => {
