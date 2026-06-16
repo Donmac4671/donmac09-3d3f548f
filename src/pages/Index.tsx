@@ -22,7 +22,6 @@ export default function Index() {
         <WalletTopUp />
         <ClaimPayment />
         <DataBundles />
-        <MashupAirtime />
         
       </div>
     </DashboardLayout>
