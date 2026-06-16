@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, Shield, Lock, KeyRound } from "lucide-react";
+import { User, Mail, Phone, Lock, KeyRound } from "lucide-react";
 import ApiAccessCard from "@/components/profile/ApiAccessCard";
 
 export default function Profile() {
@@ -82,12 +82,6 @@ export default function Profile() {
             </span>
           </div>
           <h2 className="text-xl font-bold text-foreground">{profile.full_name || "User"}</h2>
-          {profile.agent_code ? (
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <Shield className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">{profile.agent_code}</span>
-            </div>
-          ) : null}
           <p className="text-sm text-muted-foreground mt-1">{profile.email}</p>
         </div>
 

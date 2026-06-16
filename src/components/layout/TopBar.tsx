@@ -126,7 +126,7 @@ export default function TopBar({ title }: { title: string }) {
               </div>
               <div>
                 <p className="font-semibold text-sm">{profile?.full_name || "User"}</p>
-                <p className="text-xs text-muted-foreground">{profile?.agent_code}</p>
+                <p className="text-xs text-muted-foreground">{profile?.email}</p>
               </div>
             </div>
             <DropdownMenuSeparator />

@@ -45,7 +45,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">{profile?.full_name || "User"}</p>
-            <p className="text-xs text-muted-foreground">{profile?.agent_code || "Agent"}</p>
+            <p className="text-xs text-muted-foreground">{profile?.email}</p>
           </div>
         </div>
       </div>
