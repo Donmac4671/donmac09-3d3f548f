@@ -1346,6 +1346,7 @@ export type Database = {
         }
         Returns: Json
       }
+      provision_my_profile: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
