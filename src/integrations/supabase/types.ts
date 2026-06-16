@@ -480,6 +480,7 @@ export type Database = {
           order_ref: string
           payment_method: string
           phone_number: string
+          profit_credited: boolean
           reseller_profit: number
           status: string
           store_id: string | null
@@ -496,6 +497,7 @@ export type Database = {
           order_ref: string
           payment_method?: string
           phone_number: string
+          profit_credited?: boolean
           reseller_profit?: number
           status?: string
           store_id?: string | null
@@ -512,6 +514,7 @@ export type Database = {
           order_ref?: string
           payment_method?: string
           phone_number?: string
+          profit_credited?: boolean
           reseller_profit?: number
           status?: string
           store_id?: string | null
