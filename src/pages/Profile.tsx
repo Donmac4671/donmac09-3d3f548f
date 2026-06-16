@@ -161,6 +161,8 @@ export default function Profile() {
             {updatingPwd ? "Updating..." : "Update Password"}
           </Button>
         </div>
+
+        <ApiAccessCard />
       </div>
     </DashboardLayout>
   );
