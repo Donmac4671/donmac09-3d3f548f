@@ -147,22 +147,7 @@ export default function MyStore() {
   }
 
   if (!store) {
-    return (
-      <DashboardLayout title="My Store">
-        <div className="p-6 max-w-2xl mx-auto">
-          <Card className="p-8 text-center">
-            <Store className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <h2 className="text-xl font-bold mb-2">No store yet</h2>
-            <p className="text-muted-foreground mb-4">
-              You don't have a reseller store. Contact admin on WhatsApp to get yours set up.
-            </p>
-            <Button asChild className="gradient-primary border-0">
-              <a href="https://wa.me/233549358359" target="_blank" rel="noreferrer">Message Admin</a>
-            </Button>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
+    return <CreateStoreOnboarding onCreated={loadAll} />;
   }
 
   const canWithdraw = Number(store.available_profit) >= 30;
