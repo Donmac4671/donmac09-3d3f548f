@@ -15,6 +15,34 @@ export interface Network {
 
 export const networks: Network[] = [
   {
+    id: "mtn-mashup-data",
+    name: "MTN MASHUP DATA",
+    color: "bg-purple-500",
+    gradient: "gradient-mtn",
+    bundles: [
+      { size: "1.7GB", sizeGB: 1.7, price: 6.00, generalPrice: 6.00 },
+      { size: "3.4GB", sizeGB: 3.4, price: 12.00, generalPrice: 12.00 },
+      { size: "5.1GB", sizeGB: 5.1, price: 18.00, generalPrice: 18.00 },
+      { size: "6.8GB", sizeGB: 6.8, price: 24.00, generalPrice: 24.00 },
+      { size: "8.5GB", sizeGB: 8.5, price: 30.00, generalPrice: 30.00 },
+      { size: "10.2GB", sizeGB: 10.2, price: 36.00, generalPrice: 36.00 },
+      { size: "15.3GB", sizeGB: 15.3, price: 54.00, generalPrice: 54.00 },
+      { size: "20.4GB", sizeGB: 20.4, price: 72.00, generalPrice: 72.00 },
+    ],
+  },
+  {
+    id: "mtn-mashup-minutes",
+    name: "MTN MASHUP MINUTES + DATA",
+    color: "bg-pink-500",
+    gradient: "gradient-mtn",
+    bundles: [
+      { size: "350min + 870MB", sizeGB: 0.87, price: 20.00, generalPrice: 20.00 },
+      { size: "700min + 1.6GB", sizeGB: 1.6, price: 30.00, generalPrice: 30.00 },
+      { size: "1000min + 2.6GB", sizeGB: 2.6, price: 40.00, generalPrice: 40.00 },
+      { size: "1400min + 3.5GB", sizeGB: 3.5, price: 50.00, generalPrice: 50.00 },
+    ],
+  },
+  {
     id: "mtn",
     name: "MTN",
     color: "bg-yellow-400",
@@ -43,15 +71,15 @@ export const networks: Network[] = [
     color: "bg-red-500",
     gradient: "gradient-telecel",
     bundles: [
-      { size: "2GB", sizeGB: 2, price: 10.20, generalPrice: 10.20 },
-      { size: "3GB", sizeGB: 3, price: 15.40, generalPrice: 15.40 },
-      { size: "5GB", sizeGB: 5, price: 22.00, generalPrice: 22.00 },
-      { size: "10GB", sizeGB: 10, price: 42.00, generalPrice: 42.00 },
-      { size: "15GB", sizeGB: 15, price: 60.00, generalPrice: 60.00 },
-      { size: "20GB", sizeGB: 20, price: 80.00, generalPrice: 80.00 },
-      { size: "25GB", sizeGB: 25, price: 98.00, generalPrice: 98.00 },
-      { size: "30GB", sizeGB: 30, price: 118.00, generalPrice: 118.00 },
-      { size: "40GB", sizeGB: 40, price: 158.00, generalPrice: 158.00 },
+      { size: "2GB", sizeGB: 2, price: 9.50, generalPrice: 9.50 },
+      { size: "3GB", sizeGB: 3, price: 14.20, generalPrice: 14.20 },
+      { size: "5GB", sizeGB: 5, price: 21.20, generalPrice: 21.20 },
+      { size: "10GB", sizeGB: 10, price: 40.00, generalPrice: 40.00 },
+      { size: "15GB", sizeGB: 15, price: 59.00, generalPrice: 59.00 },
+      { size: "20GB", sizeGB: 20, price: 79.00, generalPrice: 79.00 },
+      { size: "25GB", sizeGB: 25, price: 97.00, generalPrice: 97.00 },
+      { size: "30GB", sizeGB: 30, price: 116.00, generalPrice: 116.00 },
+      { size: "40GB", sizeGB: 40, price: 154.00, generalPrice: 154.00 },
       { size: "50GB", sizeGB: 50, price: 189.00, generalPrice: 189.00 },
     ],
   },
@@ -100,6 +128,12 @@ export const networks: Network[] = [
     ],
   },
 ];
+
+/** Network IDs that should NOT route to GHData (manual fulfillment by admin). */
+export const MANUAL_FULFILLMENT_NETWORKS = new Set<string>([
+  "mtn-mashup-data",
+  "mtn-mashup-minutes",
+]);
 
 export interface CartItem {
   id: string;
