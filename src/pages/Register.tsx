@@ -64,11 +64,11 @@ export default function Register() {
         variant: "destructive"
       });
     } else {
+      const storeSlug = (typeof window !== "undefined") ? localStorage.getItem("donmac_store_slug") : null;
       if (data?.session) {
         toast({ title: "Welcome!", description: "Account created successfully." });
-        // Wait a small moment for the trigger to finish profile creation
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate(storeSlug ? `/${storeSlug}` : "/dashboard");
         }, 1500);
       } else {
         setVerificationMode(true);

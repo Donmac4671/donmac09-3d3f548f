@@ -87,8 +87,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
-      // We rely on the database trigger 'handle_new_user' to create profiles.
-      // Client-side inserts cause 409 conflicts and race conditions.
+      // Self-heal: if the auth.users trigger didn't create a profile row,
+      // ask the server to provision it now so the dashboard / profile page
+      // don't get stuck on an infinite loader.
+      if (!profileData) {
+        try {
+          await supabase.rpc("provision_my_profile");
+          const retry = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", authUser.id)
+            .maybeSingle();
+          profileData = retry.data;
+        } catch (err) {
+          console.error("provision_my_profile failed:", err);
+        }
+      }
+
       setProfile((profileData as Profile) ?? null);
 
       const [rolesRes, storeRes, referralRes] = await Promise.all([
