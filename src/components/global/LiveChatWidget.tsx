@@ -120,7 +120,7 @@ function AiChatTab() {
                 ? "bg-primary text-primary-foreground rounded-br-sm"
                 : "bg-muted text-foreground rounded-bl-sm"
             }`}>
-              <p className="whitespace-pre-wrap break-words">{m.content}</p>
+              <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{m.content}</p>
             </div>
           </div>
         ))}
@@ -218,7 +218,7 @@ function LiveChatTab() {
               m.sender_role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
             }`}>
               {m.media_url && <ChatMedia value={m.media_url} />}
-              {m.message && m.message !== "📎 Media" && <p className="whitespace-pre-wrap break-words">{m.message}</p>}
+              {m.message && m.message !== "📎 Media" && <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{m.message}</p>}
               <p className={`text-[10px] mt-1 ${m.sender_role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                 {format(new Date(m.created_at), "h:mm a")}
               </p>
