@@ -241,6 +241,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_reseller_links: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          reseller_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          reseller_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          reseller_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -402,46 +423,46 @@ export type Database = {
       }
       profiles: {
         Row: {
-          agent_code: string
+          agent_code: string | null
           created_at: string
           email: string
           full_name: string
           id: string
           is_blocked: boolean
           phone: string
-          referral_code: string
+          referral_code: string | null
           tier: string
-          topup_reference_code: string
+          topup_reference_code: string | null
           updated_at: string
           user_id: string
           wallet_balance: number
         }
         Insert: {
-          agent_code?: string
+          agent_code?: string | null
           created_at?: string
           email?: string
           full_name?: string
-          id?: string
+          id: string
           is_blocked?: boolean
           phone?: string
-          referral_code?: string
+          referral_code?: string | null
           tier?: string
-          topup_reference_code?: string
+          topup_reference_code?: string | null
           updated_at?: string
           user_id: string
           wallet_balance?: number
         }
         Update: {
-          agent_code?: string
+          agent_code?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
           is_blocked?: boolean
           phone?: string
-          referral_code?: string
+          referral_code?: string | null
           tier?: string
-          topup_reference_code?: string
+          topup_reference_code?: string | null
           updated_at?: string
           user_id?: string
           wallet_balance?: number
@@ -638,7 +659,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           lifetime_profit?: number
-          slug: string
+          slug?: string
           store_message?: string
           updated_at?: string
           user_id: string
@@ -832,6 +853,24 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       verified_topups: {
         Row: {
           amount: number
@@ -982,6 +1021,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_reseller_profit_direct: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: number
+      }
       admin_approve_withdrawal: {
         Args: { p_id: string; p_notes?: string }
         Returns: undefined
@@ -990,11 +1033,11 @@ export type Database = {
         Args: {
           p_full_name: string
           p_slug: string
-          p_store_message?: string
+          p_store_message: string
           p_user_id: string
           p_whatsapp: string
         }
-        Returns: string
+        Returns: Json
       }
       admin_get_auto_deliver_minutes: { Args: never; Returns: number }
       admin_mark_withdrawal_paid: {
@@ -1055,6 +1098,16 @@ export type Database = {
         Args: { p_amount: number; p_reference: string; p_user_id: string }
         Returns: undefined
       }
+      create_user_profile: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_phone?: string
+          p_tier?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1062,6 +1115,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      force_update_reseller_profit: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
       }
       generate_topup_reference_code: { Args: never; Returns: string }
       has_role: {
@@ -1114,6 +1171,60 @@ export type Database = {
         Returns: string
       }
       process_pending_orders: { Args: never; Returns: undefined }
+      process_reseller_sale: {
+        Args: {
+          p_bundle_size: string
+          p_network_id: string
+          p_quantity?: number
+          p_reseller_email: string
+        }
+        Returns: {
+          admin_cost: number
+          admin_profit: number
+          customer_pays: number
+          reseller_earns: number
+          reseller_new_balance: number
+        }[]
+      }
+      process_reseller_sale_safe: {
+        Args: {
+          p_bundle_size: string
+          p_network_id: string
+          p_quantity?: number
+          p_reseller_email: string
+        }
+        Returns: {
+          message: string
+          new_balance: number
+          reseller_earned: number
+          success: boolean
+        }[]
+      }
+      process_sale_and_add_profit: {
+        Args: {
+          p_bundle_size: string
+          p_customer_email: string
+          p_network_id: string
+          p_quantity?: number
+          p_reseller_email: string
+        }
+        Returns: {
+          customer_paid: number
+          message: string
+          reseller_new_balance: number
+          reseller_profit: number
+          success: boolean
+        }[]
+      }
+      process_sale_final: {
+        Args: {
+          p_bundle_size: string
+          p_network_id: string
+          p_quantity?: number
+          p_reseller_email: string
+        }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -1135,6 +1246,10 @@ export type Database = {
         Returns: string
       }
       run_auto_deliver: { Args: never; Returns: number }
+      safe_update_reseller_profit: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "user"
