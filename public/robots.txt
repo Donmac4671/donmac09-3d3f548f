@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://donmacdatahub.com/sitemap.xml
+Sitemap: https://donmac09.lovable.app/sitemap.xml
