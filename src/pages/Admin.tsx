@@ -24,8 +24,6 @@ import AdminLiveChat from "@/components/admin/AdminLiveChat";
 import AdminMonthlyRankings from "@/components/admin/AdminMonthlyRankings";
 import AdminResellers from "@/components/admin/AdminResellers";
 import AdminWithdrawals from "@/components/admin/AdminWithdrawals";
-import { Switch } from "@/components/ui/switch";
-import { useProductToggles } from "@/hooks/useProductToggles";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -33,18 +31,7 @@ import { cn } from "@/lib/utils";
 export default function Admin() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
-  const { mashupEnabled, airtimeEnabled, vsEnabled, refresh: refreshToggles } = useProductToggles();
 
-  const handleToggleProduct = async (key: "mashup_enabled" | "airtime_enabled" | "vs_enabled", value: boolean) => {
-    const { error } = await supabase.from("app_settings").upsert({ key, value: value as any }, { onConflict: "key" });
-    if (error) {
-      toast({ title: "Update Failed", description: error.message, variant: "destructive" });
-      return;
-    }
-    const labels: Record<string, string> = { mashup_enabled: "MashUp", airtime_enabled: "Airtime", vs_enabled: "Telecel V+D+S" };
-    toast({ title: "Updated", description: `${labels[key]} ${value ? "enabled" : "disabled"}` });
-    refreshToggles();
-  };
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
