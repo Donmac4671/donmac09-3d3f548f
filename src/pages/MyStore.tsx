@@ -277,23 +277,7 @@ export default function MyStore() {
                   <ArrowDownToLine className="w-4 h-4 mr-1" />New Request
                 </Button>
               </div>
-              {requests.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No withdrawal requests yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {requests.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
-                      <div>
-                        <p className="font-semibold">{formatCurrency(Number(r.amount))} → {r.network} {r.momo_number}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
-                      </div>
-                      <Badge variant={r.status === "paid" ? "default" : r.status === "rejected" ? "destructive" : "secondary"}>
-                        {r.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <WithdrawalsList requests={requests} />
             </Card>
           </TabsContent>
         </Tabs>
