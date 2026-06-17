@@ -185,6 +185,8 @@ export default function AdminWithdrawals() {
                     <div className="text-xs font-mono text-primary">/{store?.slug || "?"}</div>
                   </TableCell>
                   <TableCell className="font-bold">{formatCurrency(Number(r.amount))}</TableCell>
+                  <TableCell className="text-destructive">{formatCurrency(Number(r.fee_amount || 0))}</TableCell>
+                  <TableCell className="font-semibold text-primary">{formatCurrency(Number(r.net_amount || r.amount))}</TableCell>
                   <TableCell>
                     <div className="text-sm">
                       <span className="font-semibold uppercase mr-2">{r.network}</span>
