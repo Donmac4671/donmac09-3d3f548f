@@ -125,6 +125,25 @@ export default function AdminWithdrawals() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-end gap-3 bg-muted/30 rounded-lg p-3">
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">From</label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[160px]" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">To</label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+            Clear dates
+          </Button>
+        )}
+        <div className="text-xs text-muted-foreground ml-auto self-center">
+          Showing {filtered.length} of {reqs.length} requests
+        </div>
+      </div>
+
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
