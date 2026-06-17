@@ -43,6 +43,8 @@ export default function AdminWithdrawals() {
   const [reqs, setReqs] = useState<WithdrawalReq[]>([]);
   const [stores, setStores] = useState<StoreLite[]>([]);
   const [filter, setFilter] = useState<(typeof STATUSES)[number] | "all">("pending");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
