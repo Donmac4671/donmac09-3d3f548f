@@ -19,8 +19,8 @@ export function useStoreBranding(): StoreBrand | null {
     const fetchStore = async () => {
       // Priority 1: Logged in user's referral store
       if (referredStoreId) {
-        const { data } = await supabase
-          .from("reseller_stores")
+        const { data } = await (supabase as any)
+          .from("public_reseller_stores")
           .select("slug, full_name, whatsapp")
           .eq("id", referredStoreId)
           .eq("is_active", true)
@@ -35,8 +35,8 @@ export function useStoreBranding(): StoreBrand | null {
       // Priority 2: localStorage slug
       const slug = typeof window !== "undefined" ? window.localStorage.getItem("donmac_store_slug") : null;
       if (slug) {
-        const { data } = await supabase
-          .from("reseller_stores")
+        const { data } = await (supabase as any)
+          .from("public_reseller_stores")
           .select("slug, full_name, whatsapp")
           .eq("slug", slug)
           .eq("is_active", true)

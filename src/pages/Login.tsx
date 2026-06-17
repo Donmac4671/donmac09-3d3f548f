@@ -21,12 +21,12 @@ export default function Login() {
 
   useEffect(() => {
     if (storeSlug) {
-      supabase
-        .from("reseller_stores")
+      (supabase as any)
+        .from("public_reseller_stores")
         .select("full_name")
         .eq("slug", storeSlug)
         .single()
-        .then(({ data }) => {
+        .then(({ data }: { data: { full_name: string } | null }) => {
           if (data) {
             setStoreBrand(data);
           }
