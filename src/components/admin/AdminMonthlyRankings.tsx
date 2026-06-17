@@ -34,12 +34,29 @@ export default function AdminMonthlyRankings({ users, orders }: AdminMonthlyRank
 
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase
-        .from("reseller_stores")
-        .select("id, user_id, slug, full_name, whatsapp, available_profit, lifetime_profit, is_active");
-      setStores(data || []);
+      const [{ data }, { data: profits }] = await Promise.all([
+        supabase
+          .from("reseller_stores")
+          .select("id, user_id, slug, full_name, whatsapp, is_active"),
+        supabase.rpc("admin_get_store_profits"),
+      ]);
+      const profitMap = new Map<string, { available_profit: number; lifetime_profit: number }>();
+      (profits as any[] | null)?.forEach((r) =>
+        profitMap.set(r.store_id, {
+          available_profit: Number(r.available_profit) || 0,
+          lifetime_profit: Number(r.lifetime_profit) || 0,
+        })
+      );
+      setStores(
+        ((data || []) as any[]).map((s) => ({
+          ...s,
+          available_profit: profitMap.get(s.id)?.available_profit ?? 0,
+          lifetime_profit: profitMap.get(s.id)?.lifetime_profit ?? 0,
+        }))
+      );
     })();
   }, []);
+
 
   const monthOptions = useMemo(() => {
     const opts: { key: string; label: string }[] = [];
