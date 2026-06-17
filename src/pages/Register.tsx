@@ -6,12 +6,14 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Tag, ArrowLeft } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Register() {
   useCanonical("/register");
+  usePageMeta({ title: "Create Account | Donmac Data Hub", description: "Create your Donmac Data Hub account to buy cheap data bundles or start reselling in Ghana.", path: "/register" });
   const [searchParams] = useSearchParams();
   const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
