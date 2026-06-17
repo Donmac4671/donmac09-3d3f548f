@@ -334,8 +334,8 @@ export default function MyStore() {
 }
 
 function WithdrawalsList({ requests }: { requests: any[] }) {
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [dateTo, setDateTo] = useState<string>(() => new Date().toISOString().split("T")[0]);
   const [status, setStatus] = useState<string>("all");
 
   const filtered = requests.filter((r) => {
