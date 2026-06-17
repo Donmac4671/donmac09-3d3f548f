@@ -21,7 +21,10 @@ function getNetworkVisual(networkId: string) {
   return { logo: null, bg: "bg-muted" };
 }
 
+import { usePageMeta } from "@/hooks/usePageMeta";
+
 export default function Cart() {
+  usePageMeta({ title: "Cart | Donmac Data Hub", description: "Review your data bundle cart and checkout with wallet on Donmac Data Hub.", path: "/cart" });
   const { items, removeItem, clearCart, total } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
