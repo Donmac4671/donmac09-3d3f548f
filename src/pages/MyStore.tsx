@@ -334,8 +334,8 @@ export default function MyStore() {
 }
 
 function WithdrawalsList({ requests }: { requests: any[] }) {
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [dateTo, setDateTo] = useState<string>(() => new Date().toISOString().split("T")[0]);
   const [status, setStatus] = useState<string>("all");
 
   const filtered = requests.filter((r) => {
@@ -375,9 +375,9 @@ function WithdrawalsList({ requests }: { requests: any[] }) {
             </SelectContent>
           </Select>
         </div>
-        {(dateFrom || dateTo || status !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setStatus("all"); }}>
-            Clear
+        {((dateFrom !== new Date().toISOString().split("T")[0]) || (dateTo !== new Date().toISOString().split("T")[0]) || status !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { const today = new Date().toISOString().split("T")[0]; setDateFrom(today); setDateTo(today); setStatus("all"); }}>
+            Reset to today
           </Button>
         )}
         <div className="text-xs text-muted-foreground ml-auto self-center">

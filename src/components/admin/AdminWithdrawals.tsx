@@ -45,8 +45,8 @@ export default function AdminWithdrawals() {
   const [reqs, setReqs] = useState<WithdrawalReq[]>([]);
   const [stores, setStores] = useState<StoreLite[]>([]);
   const [filter, setFilter] = useState<(typeof STATUSES)[number] | "all">("pending");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [dateTo, setDateTo] = useState<string>(() => new Date().toISOString().split("T")[0]);
 
   const load = async () => {
     setLoading(true);
@@ -140,9 +140,9 @@ export default function AdminWithdrawals() {
           <label className="text-xs font-semibold text-muted-foreground block mb-1">To</label>
           <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
         </div>
-        {(dateFrom || dateTo) && (
-          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>
-            Clear dates
+        {((dateFrom !== new Date().toISOString().split("T")[0]) || (dateTo !== new Date().toISOString().split("T")[0])) && (
+          <Button size="sm" variant="ghost" onClick={() => { const today = new Date().toISOString().split("T")[0]; setDateFrom(today); setDateTo(today); }}>
+            Reset to today
           </Button>
         )}
         <div className="text-xs text-muted-foreground ml-auto self-center">
