@@ -43,8 +43,8 @@ export default function Storefront() {
       if (!slug) return;
       setLoading(true);
       const cleaned = slug.trim().toLowerCase();
-      const { data, error } = await supabase
-        .from("public_reseller_stores" as any)
+      const { data, error } = await (supabase as any)
+        .from("public_reseller_stores")
         .select("id, user_id, slug, full_name, whatsapp, store_message, is_active")
         .eq("slug", cleaned)
         .eq("is_active", true)
