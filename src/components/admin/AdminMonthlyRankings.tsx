@@ -1,122 +1,45 @@
-import { useMemo, useState } from "react";
-import { Crown, Medal, Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Crown, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
 
 type AdminMonthlyRankingsProps = {
   users: any[];
   orders: any[];
 };
 
-type RankedUser = {
+type RankedReseller = {
   userId: string;
+  storeId: string;
+  slug: string;
   name: string;
-  phone: string;
-  tier: string;
-  amount: number;
-  capacityGb: number;
+  whatsapp: string;
+  monthlyProfit: number;
+  lifetimeProfit: number;
+  orderCount: number;
 };
 
-const parseCapacityGb = (bundleSize: string) => {
-  const match = String(bundleSize || "").match(/([\d.]+)\s*(GB|MB)/i);
-  if (!match) return 0;
-  const value = parseFloat(match[1]);
-  if (!Number.isFinite(value)) return 0;
-  return match[2].toUpperCase() === "MB" ? value / 1000 : value;
-};
-
-const formatCapacity = (gb: number) => {
-  if (gb >= 1) return `${gb.toFixed(gb % 1 === 0 ? 0 : 2)}GB`;
-  return `${Math.round(gb * 1000)}MB`;
-};
-
-const getMonthOrders = (orders: any[], year: number, month: number) => {
-  const monthStart = new Date(year, month, 1).getTime();
-  const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
-  return orders.filter((order) => {
-    const orderTime = new Date(order.created_at).getTime();
-    return order.status !== "failed" && orderTime >= monthStart && orderTime <= monthEnd;
-  });
-};
-
-const buildRankings = (users: any[], monthOrders: any[], tier: "agent" | "general") => {
-  const userMap = new Map(users.map((user) => [user.user_id, user]));
-  const grouped = new Map<string, RankedUser>();
-
-  monthOrders.forEach((order) => {
-    const user = userMap.get(order.user_id);
-    if (!user || user.tier !== tier) return;
-
-    const current = grouped.get(order.user_id) || {
-      userId: order.user_id,
-      name: user.full_name || "Unnamed user",
-      phone: user.phone || "—",
-      tier,
-      amount: 0,
-      capacityGb: 0,
-    };
-
-    current.amount += Number(order.amount || 0);
-    current.capacityGb += parseCapacityGb(order.bundle_size);
-    grouped.set(order.user_id, current);
-  });
-
-  return Array.from(grouped.values())
-    .sort((a, b) => b.capacityGb - a.capacityGb || b.amount - a.amount)
-    .slice(0, 3);
-};
-
-function RankingTable({ title, icon, rows }: { title: string; icon: React.ReactNode; rows: RankedUser[] }) {
-  return (
-    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h3 className="font-semibold text-foreground">{title}</h3>
-        </div>
-        <Badge variant="secondary">Monthly Top 3</Badge>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Rank</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Number</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Data Capacity</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                No purchases this month
-              </TableCell>
-            </TableRow>
-          ) : (
-            rows.map((row, index) => (
-              <TableRow key={row.userId}>
-                <TableCell>
-                  <Badge className="bg-primary text-primary-foreground">#{index + 1}</Badge>
-                </TableCell>
-                <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell>{row.phone}</TableCell>
-                <TableCell className="font-semibold">{formatCurrency(row.amount)}</TableCell>
-                <TableCell className="font-semibold text-primary">{formatCapacity(row.capacityGb)}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+const getMonthRange = (year: number, month: number) => ({
+  start: new Date(year, month, 1).getTime(),
+  end: new Date(year, month + 1, 0, 23, 59, 59, 999).getTime(),
+});
 
 export default function AdminMonthlyRankings({ users, orders }: AdminMonthlyRankingsProps) {
   const now = new Date();
   const [monthKey, setMonthKey] = useState(`${now.getFullYear()}-${now.getMonth()}`);
+  const [stores, setStores] = useState<any[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from("reseller_stores")
+        .select("id, user_id, slug, full_name, whatsapp, available_profit, lifetime_profit, is_active");
+      setStores(data || []);
+    })();
+  }, []);
 
   const monthOptions = useMemo(() => {
     const opts: { key: string; label: string }[] = [];
@@ -128,15 +51,47 @@ export default function AdminMonthlyRankings({ users, orders }: AdminMonthlyRank
       });
     }
     return opts;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [yStr, mStr] = monthKey.split("-");
   const year = parseInt(yStr, 10);
   const month = parseInt(mStr, 10);
-  const monthOrders = useMemo(() => getMonthOrders(orders, year, month), [orders, year, month]);
-  const agentRankings = useMemo(() => buildRankings(users, monthOrders, "agent"), [users, monthOrders]);
-  const generalRankings = useMemo(() => buildRankings(users, monthOrders, "general"), [users, monthOrders]);
+
+  const top3 = useMemo<RankedReseller[]>(() => {
+    const { start, end } = getMonthRange(year, month);
+    const userMap = new Map(users.map((u) => [u.user_id, u]));
+    const byStore = new Map<string, RankedReseller>();
+
+    stores.forEach((s) => {
+      byStore.set(s.id, {
+        userId: s.user_id,
+        storeId: s.id,
+        slug: s.slug || "",
+        name: s.full_name || userMap.get(s.user_id)?.full_name || "Unnamed reseller",
+        whatsapp: s.whatsapp || userMap.get(s.user_id)?.phone || "—",
+        monthlyProfit: 0,
+        lifetimeProfit: Number(s.lifetime_profit || 0),
+        orderCount: 0,
+      });
+    });
+
+    orders.forEach((o) => {
+      if (!o.store_id || !byStore.has(o.store_id)) return;
+      if (!["completed", "delivered"].includes(o.status)) return;
+      const t = new Date(o.created_at).getTime();
+      if (t < start || t > end) return;
+      const r = byStore.get(o.store_id)!;
+      r.monthlyProfit += Number(o.reseller_profit || 0);
+      r.orderCount += 1;
+    });
+
+    return Array.from(byStore.values())
+      .filter((r) => r.monthlyProfit > 0)
+      .sort((a, b) => b.monthlyProfit - a.monthlyProfit || b.orderCount - a.orderCount)
+      .slice(0, 3);
+  }, [stores, users, orders, year, month]);
+
   const monthLabel = monthOptions.find((o) => o.key === monthKey)?.label || "";
 
   return (
@@ -145,8 +100,8 @@ export default function AdminMonthlyRankings({ users, orders }: AdminMonthlyRank
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-primary" />
           <div>
-            <h2 className="text-lg font-bold text-foreground">Monthly Data Rankings</h2>
-            <p className="text-sm text-muted-foreground">Top buyers for {monthLabel}, ranked by total data capacity purchased.</p>
+            <h2 className="text-lg font-bold text-foreground">Top 3 Resellers</h2>
+            <p className="text-sm text-muted-foreground">Best storefronts for {monthLabel}, ranked by profit earned.</p>
           </div>
         </div>
         <Select value={monthKey} onValueChange={setMonthKey}>
@@ -158,9 +113,51 @@ export default function AdminMonthlyRankings({ users, orders }: AdminMonthlyRank
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <RankingTable title="Agent Ranking" icon={<Crown className="h-4 w-4 text-primary" />} rows={agentRankings} />
-        <RankingTable title="General User Ranking" icon={<Medal className="h-4 w-4 text-primary" />} rows={generalRankings} />
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Crown className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-foreground">Reseller Leaderboard</h3>
+          </div>
+          <Badge variant="secondary">Monthly Top 3</Badge>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rank</TableHead>
+              <TableHead>Reseller</TableHead>
+              <TableHead>Store</TableHead>
+              <TableHead>Orders</TableHead>
+              <TableHead>Monthly Profit</TableHead>
+              <TableHead>Lifetime</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {top3.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  No reseller profit recorded this month
+                </TableCell>
+              </TableRow>
+            ) : (
+              top3.map((row, index) => (
+                <TableRow key={row.storeId}>
+                  <TableCell>
+                    <Badge className="bg-primary text-primary-foreground">#{index + 1}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    <div>{row.name}</div>
+                    <div className="text-xs text-muted-foreground">{row.whatsapp}</div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-primary">/{row.slug}</TableCell>
+                  <TableCell>{row.orderCount}</TableCell>
+                  <TableCell className="font-semibold text-primary">{formatCurrency(row.monthlyProfit)}</TableCell>
+                  <TableCell className="font-semibold">{formatCurrency(row.lifetimeProfit)}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
     </section>
   );
