@@ -24,8 +24,6 @@ import AdminLiveChat from "@/components/admin/AdminLiveChat";
 import AdminMonthlyRankings from "@/components/admin/AdminMonthlyRankings";
 import AdminResellers from "@/components/admin/AdminResellers";
 import AdminWithdrawals from "@/components/admin/AdminWithdrawals";
-import { Switch } from "@/components/ui/switch";
-import { useProductToggles } from "@/hooks/useProductToggles";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -33,18 +31,7 @@ import { cn } from "@/lib/utils";
 export default function Admin() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
-  const { mashupEnabled, airtimeEnabled, vsEnabled, refresh: refreshToggles } = useProductToggles();
 
-  const handleToggleProduct = async (key: "mashup_enabled" | "airtime_enabled" | "vs_enabled", value: boolean) => {
-    const { error } = await supabase.from("app_settings").upsert({ key, value: value as any }, { onConflict: "key" });
-    if (error) {
-      toast({ title: "Update Failed", description: error.message, variant: "destructive" });
-      return;
-    }
-    const labels: Record<string, string> = { mashup_enabled: "MashUp", airtime_enabled: "Airtime", vs_enabled: "Telecel V+D+S" };
-    toast({ title: "Updated", description: `${labels[key]} ${value ? "enabled" : "disabled"}` });
-    refreshToggles();
-  };
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
@@ -568,29 +555,6 @@ export default function Admin() {
               </SelectContent>
             </Select>
           </div>
-          <div className="mb-4 rounded-xl border border-border bg-card p-3 flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-              <Switch checked={mashupEnabled} onCheckedChange={(v) => handleToggleProduct("mashup_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">MashUp</p>
-                <p className="text-xs text-muted-foreground">{mashupEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={airtimeEnabled} onCheckedChange={(v) => handleToggleProduct("airtime_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Airtime</p>
-                <p className="text-xs text-muted-foreground">{airtimeEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={vsEnabled} onCheckedChange={(v) => handleToggleProduct("vs_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Telecel V+D+S</p>
-                <p className="text-xs text-muted-foreground">{vsEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-          </div>
           <div className="mb-4 flex flex-wrap gap-3 items-end">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -620,10 +584,8 @@ export default function Admin() {
                 <SelectItem value="TELECEL">Telecel</SelectItem>
                 <SelectItem value="AT BIG TIME">AT Big Time</SelectItem>
                 <SelectItem value="AT PREMIUM">AT Premium</SelectItem>
-                <SelectItem value="MashUp">MashUp</SelectItem>
-                <SelectItem value="Telecel V+D+S">Telecel V+D+S</SelectItem>
-                <SelectItem value="Telecel V&S">Telecel V&S (legacy)</SelectItem>
-                <SelectItem value="Airtime">Airtime</SelectItem>
+                <SelectItem value="MTN MashUp Data">MTN MashUp Data</SelectItem>
+                <SelectItem value="MTN MashUp Minutes + Data">MTN MashUp Minutes + Data</SelectItem>
               </SelectContent>
             </Select>
             <Popover>
