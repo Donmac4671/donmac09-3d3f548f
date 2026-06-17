@@ -28,7 +28,7 @@ const benefits = [
   {
     icon: TrendingUp,
     title: "Set Your Own Prices",
-    desc: "Mark up data, airtime, mashup & Telecel V+D+S — keep 100% of the profit.",
+    desc: "Set your own prices — keep 100% of the profit.",
   },
   {
     icon: Wallet,
@@ -38,7 +38,7 @@ const benefits = [
   {
     icon: Store,
     title: "Your Own Storefront",
-    desc: "Get a personal link (e.g. donmac09.lovable.app/yourstore) with your name & WhatsApp.",
+    desc: "Get a personal link (e.g. donmacdatahubgh.com/yourstore) with your name & WhatsApp.",
   },
   {
     icon: Zap,
