@@ -28,8 +28,8 @@ export const networks: Network[] = [
       { size: "6.8GB", sizeGB: 6.8, price: 24.00, generalPrice: 24.00 },
       { size: "8.5GB", sizeGB: 8.5, price: 30.00, generalPrice: 30.00 },
       { size: "10.2GB", sizeGB: 10.2, price: 36.00, generalPrice: 36.00 },
-      { size: "15.3GB", sizeGB: 15.3, price: 54.00, generalPrice: 54.00 },
-      { size: "20.4GB", sizeGB: 20.4, price: 72.00, generalPrice: 72.00 },
+      { size: "15.3GB", sizeGB: 15.3, price: 50.00, generalPrice: 50.00 },
+      { size: "20.4GB", sizeGB: 20.4, price: 68.00, generalPrice: 68.00 },
     ],
   },
   {
