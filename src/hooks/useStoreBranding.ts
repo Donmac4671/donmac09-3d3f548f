@@ -8,31 +8,35 @@ export interface StoreBrand {
   whatsapp: string;
 }
 
-/** Reads from referredStoreId (if logged in) or localStorage and returns the matching active store. */
+/** For logged-in users: only the referredStoreId on their profile brands the app.
+ *  For anonymous visitors: fall back to the localStorage slug (set when visiting /<slug>). */
 export function useStoreBranding(): StoreBrand | null {
   const [store, setStore] = useState<StoreBrand | null>(null);
-  const { referredStoreId } = useAuth();
+  const { user, referredStoreId } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchStore = async () => {
-      // Priority 1: Logged in user's referral store
-      if (referredStoreId) {
-        const { data } = await (supabase as any)
-          .from("public_reseller_stores")
-          .select("slug, full_name, whatsapp")
-          .eq("id", referredStoreId)
-          .eq("is_active", true)
-          .maybeSingle();
-
-        if (!cancelled && data) {
-          setStore(data as StoreBrand);
+      // Logged-in user: brand strictly from their profile's referredStoreId.
+      // Do NOT fall back to localStorage — that leaks the last-visited store
+      // (e.g., an admin who previewed a reseller's storefront) into the main app.
+      if (user) {
+        if (referredStoreId) {
+          const { data } = await (supabase as any)
+            .from("public_reseller_stores")
+            .select("slug, full_name, whatsapp")
+            .eq("id", referredStoreId)
+            .eq("is_active", true)
+            .maybeSingle();
+          if (!cancelled) setStore((data as StoreBrand) || null);
           return;
         }
+        if (!cancelled) setStore(null);
+        return;
       }
 
-      // Priority 2: localStorage slug
+      // Anonymous visitor: use localStorage slug captured from /<slug> storefront.
       const slug = typeof window !== "undefined" ? window.localStorage.getItem("donmac_store_slug") : null;
       if (slug) {
         const { data } = await (supabase as any)
@@ -52,7 +56,7 @@ export function useStoreBranding(): StoreBrand | null {
 
     fetchStore();
     return () => { cancelled = true; };
-  }, [referredStoreId]);
+  }, [user, referredStoreId]);
 
   return store;
 }
