@@ -568,29 +568,6 @@ export default function Admin() {
               </SelectContent>
             </Select>
           </div>
-          <div className="mb-4 rounded-xl border border-border bg-card p-3 flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-              <Switch checked={mashupEnabled} onCheckedChange={(v) => handleToggleProduct("mashup_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">MashUp</p>
-                <p className="text-xs text-muted-foreground">{mashupEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={airtimeEnabled} onCheckedChange={(v) => handleToggleProduct("airtime_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Airtime</p>
-                <p className="text-xs text-muted-foreground">{airtimeEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={vsEnabled} onCheckedChange={(v) => handleToggleProduct("vs_enabled", v)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Telecel V+D+S</p>
-                <p className="text-xs text-muted-foreground">{vsEnabled ? "Visible to users" : "Hidden from users"}</p>
-              </div>
-            </div>
-          </div>
           <div className="mb-4 flex flex-wrap gap-3 items-end">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
