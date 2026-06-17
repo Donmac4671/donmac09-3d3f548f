@@ -555,6 +555,16 @@ ${broadcasts}
 PRICING for this user (tier: ${tierLabel}) — always use these EXACT figures (they reflect the latest admin updates and any active promotion). Never quote a different tier's price. If a promo is active and applies to this user, quote the discounted price and mention when the promo ends.
 ${pricing}
 
+MTN MASHUP COMBO PACKAGES (data + voice minutes, top-up style — found on the Mashup page):
+${MASHUP_PACKAGES.map((p) => `  - ₵${p.price.toFixed(2)} → ${p.label}`).join("\n")}
+
+NOTES ABOUT THE BUNDLE CATALOG:
+- "MTN MASHUP DATA" and "MTN MASHUP MINUTES + DATA" are MTN-only bundles (any MTN number can buy them).
+- AT BIG TIME has no expiry. AT PREMIUM = 60 days. MTN regular bundles = 90 days. Telecel = 90 days.
+- Mashup combo packages above are tiny voice+data top-ups, separate from the GB bundles.
+
+${platformStats}
+
 ${userContext}
 
 Respond in 1-3 short sentences unless the user clearly needs a longer answer. Be human, kind, and clear.`;
