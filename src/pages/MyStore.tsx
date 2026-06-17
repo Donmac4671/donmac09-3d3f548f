@@ -168,6 +168,7 @@ export default function MyStore() {
             >
               <ArrowDownToLine className="w-4 h-4 mr-1" /> Request Withdrawal
             </Button>
+            <p className="text-[11px] opacity-80 mt-1">1% platform fee applies to all withdrawals.</p>
             {!canWithdraw && (
               <p className="text-xs opacity-90 mt-1">Minimum ₵30 required to withdraw.</p>
             )}
