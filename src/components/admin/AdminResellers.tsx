@@ -122,14 +122,32 @@ export default function AdminResellers() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: s }, { data: p }] = await Promise.all([
-      supabase.from("reseller_stores").select("*").order("created_at", { ascending: false }),
+    const [{ data: s }, { data: p }, { data: profits }] = await Promise.all([
+      supabase
+        .from("reseller_stores")
+        .select("id, user_id, slug, full_name, whatsapp, store_message, is_active, created_at")
+        .order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, full_name, email, phone"),
+      supabase.rpc("admin_get_store_profits"),
     ]);
-    setStores((s || []) as ResellerStore[]);
+    const profitMap = new Map<string, { available_profit: number; lifetime_profit: number }>();
+    (profits as any[] | null)?.forEach((r) =>
+      profitMap.set(r.store_id, {
+        available_profit: Number(r.available_profit) || 0,
+        lifetime_profit: Number(r.lifetime_profit) || 0,
+      })
+    );
+    setStores(
+      ((s || []) as any[]).map((row) => ({
+        ...row,
+        available_profit: profitMap.get(row.id)?.available_profit ?? 0,
+        lifetime_profit: profitMap.get(row.id)?.lifetime_profit ?? 0,
+      })) as ResellerStore[]
+    );
     setProfiles((p || []) as ProfileLite[]);
     setLoading(false);
   };
+
 
   useEffect(() => {
     void load();

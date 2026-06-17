@@ -96,8 +96,9 @@ export default function Admin() {
       supabase.from("wallet_topups").select("*").order("created_at", { ascending: false }),
       supabase.from("complaints").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
-      supabase.from("reseller_stores").select("user_id, available_profit, lifetime_profit"),
+      supabase.rpc("admin_get_store_profits"),
     ]);
+
 
     // Fetch orders in chunks of 1000 since Supabase has a default limit
     let allOrders: any[] = [];

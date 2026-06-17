@@ -50,10 +50,17 @@ export default function MyStore() {
   const loadAll = async () => {
     if (!user) return;
     setLoading(true);
-    const { data: s } = await supabase.from("reseller_stores").select("*").eq("user_id", user.id).maybeSingle();
+    const { data: s } = await supabase
+      .from("reseller_stores")
+      .select("id, user_id, slug, full_name, whatsapp, store_message, is_active")
+      .eq("user_id", user.id)
+      .maybeSingle();
     if (!s) { setStore(null); setLoading(false); return; }
-    setStore(s as any);
+    const { data: profitRows } = await supabase.rpc("get_my_store_profit");
+    const profit = (profitRows as any[] | null)?.[0] ?? { available_profit: 0, lifetime_profit: 0 };
+    setStore({ ...(s as any), available_profit: Number(profit.available_profit) || 0, lifetime_profit: Number(profit.lifetime_profit) || 0 });
     setProfile({ full_name: s.full_name || "", whatsapp: s.whatsapp || "", store_message: s.store_message || "" });
+
 
     const { data: mk } = await supabase.from("reseller_markups").select("*").eq("store_id", s.id);
     const mkMap: Record<string, number> = { airtime: 0, mashup: 0, vs: 0 };

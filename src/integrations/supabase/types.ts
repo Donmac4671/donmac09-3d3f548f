@@ -1212,6 +1212,15 @@ export type Database = {
         Returns: Json
       }
       admin_get_auto_deliver_minutes: { Args: never; Returns: number }
+      admin_get_store_profits: {
+        Args: never
+        Returns: {
+          available_profit: number
+          lifetime_profit: number
+          store_id: string
+          user_id: string
+        }[]
+      }
       admin_mark_withdrawal_paid: {
         Args: { p_id: string; p_notes?: string }
         Returns: undefined
@@ -1315,6 +1324,13 @@ export type Database = {
         Returns: Json
       }
       generate_topup_reference_code: { Args: never; Returns: string }
+      get_my_store_profit: {
+        Args: never
+        Returns: {
+          available_profit: number
+          lifetime_profit: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
