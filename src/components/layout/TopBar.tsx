@@ -42,7 +42,7 @@ export default function TopBar({ title }: { title: string }) {
     <header className="flex items-center justify-between px-4 lg:px-6 py-3 bg-card border-b border-border">
       <div className="flex items-center gap-3">
         <Sheet>
-          <SheetTrigger className="lg:hidden">
+          <SheetTrigger className="lg:hidden" aria-label="Open navigation menu">
             <Menu className="w-5 h-5 text-muted-foreground" />
           </SheetTrigger>
           <SheetContent side="left" className="w-[260px] p-4">
