@@ -82,7 +82,18 @@ export default function AdminWithdrawals() {
     toast({ title: "Copied", description: text });
   };
 
-  const filtered = reqs.filter((r) => (filter === "all" ? true : r.status === filter));
+  const filtered = reqs.filter((r) => {
+    if (filter !== "all" && r.status !== filter) return false;
+    if (dateFrom) {
+      const fromTs = new Date(dateFrom + "T00:00:00").getTime();
+      if (new Date(r.created_at).getTime() < fromTs) return false;
+    }
+    if (dateTo) {
+      const toTs = new Date(dateTo + "T23:59:59").getTime();
+      if (new Date(r.created_at).getTime() > toTs) return false;
+    }
+    return true;
+  });
 
   const pendingCount = reqs.filter((r) => r.status === "pending").length;
   const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
