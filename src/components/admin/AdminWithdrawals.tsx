@@ -43,6 +43,8 @@ export default function AdminWithdrawals() {
   const [reqs, setReqs] = useState<WithdrawalReq[]>([]);
   const [stores, setStores] = useState<StoreLite[]>([]);
   const [filter, setFilter] = useState<(typeof STATUSES)[number] | "all">("pending");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
@@ -80,7 +82,18 @@ export default function AdminWithdrawals() {
     toast({ title: "Copied", description: text });
   };
 
-  const filtered = reqs.filter((r) => (filter === "all" ? true : r.status === filter));
+  const filtered = reqs.filter((r) => {
+    if (filter !== "all" && r.status !== filter) return false;
+    if (dateFrom) {
+      const fromTs = new Date(dateFrom + "T00:00:00").getTime();
+      if (new Date(r.created_at).getTime() < fromTs) return false;
+    }
+    if (dateTo) {
+      const toTs = new Date(dateTo + "T23:59:59").getTime();
+      if (new Date(r.created_at).getTime() > toTs) return false;
+    }
+    return true;
+  });
 
   const pendingCount = reqs.filter((r) => r.status === "pending").length;
   const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
@@ -109,6 +122,25 @@ export default function AdminWithdrawals() {
               {s}
             </Button>
           ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3 bg-muted/30 rounded-lg p-3">
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">From</label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[160px]" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">To</label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+            Clear dates
+          </Button>
+        )}
+        <div className="text-xs text-muted-foreground ml-auto self-center">
+          Showing {filtered.length} of {reqs.length} requests
         </div>
       </div>
 
