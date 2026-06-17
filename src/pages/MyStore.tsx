@@ -187,9 +187,8 @@ export default function MyStore() {
         </div>
 
         <Tabs defaultValue="profile">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="markups">Markups</TabsTrigger>
             <TabsTrigger value="prices">Bundle Prices</TabsTrigger>
             <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           </TabsList>
@@ -218,30 +217,6 @@ export default function MyStore() {
             </Card>
           </TabsContent>
 
-          {/* Markups */}
-          <TabsContent value="markups">
-            <Card className="p-5 space-y-4 max-w-2xl">
-              <p className="text-sm text-muted-foreground">
-                Add a percentage markup to Airtime, Mashup, and Telecel V+D+S. You earn this on every sale.
-              </p>
-              {MARKUP_KINDS.map((k) => (
-                <div key={k.key} className="flex items-center gap-3">
-                  <label className="text-sm font-semibold w-32">{k.label}</label>
-                  <div className="relative flex-1 max-w-xs">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={markups[k.key]}
-                      onChange={(e) => setMarkups({ ...markups, [k.key]: Number(e.target.value) || 0 })}
-                    />
-                    <Percent className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  </div>
-                </div>
-              ))}
-              <Button onClick={saveMarkups} className="gradient-primary border-0"><Save className="w-4 h-4 mr-2" />Save Markups</Button>
-            </Card>
-          </TabsContent>
 
           {/* Bundle prices */}
           <TabsContent value="prices">
