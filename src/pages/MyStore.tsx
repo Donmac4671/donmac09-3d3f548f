@@ -295,6 +295,12 @@ export default function MyStore() {
               <label className="text-sm font-semibold">Amount (₵)</label>
               <Input type="number" min="30" step="0.01" value={withdraw.amount} onChange={(e) => setWithdraw({ ...withdraw, amount: e.target.value })} placeholder="Min ₵30" />
               <p className="text-xs text-muted-foreground mt-1">Available: {formatCurrency(Number(store.available_profit))}</p>
+              {Number(withdraw.amount) >= 30 && (
+                <div className="text-xs mt-1 space-y-0.5">
+                  <p className="text-muted-foreground">1% platform fee: <span className="font-semibold text-destructive">-{formatCurrency(Number(withdraw.amount) * 0.01)}</span></p>
+                  <p className="text-foreground">You will receive: <span className="font-bold text-primary">{formatCurrency(Number(withdraw.amount) * 0.99)}</span></p>
+                </div>
+              )}
             </div>
             <div>
               <label className="text-sm font-semibold">Network</label>
@@ -387,6 +393,9 @@ function WithdrawalsList({ requests }: { requests: any[] }) {
               <div>
                 <p className="font-semibold">{formatCurrency(Number(r.amount))} → {r.network} {r.momo_number}</p>
                 <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+                {Number(r.fee_amount) > 0 && (
+                  <p className="text-xs text-muted-foreground">Fee: {formatCurrency(Number(r.fee_amount))} • Net: {formatCurrency(Number(r.net_amount))}</p>
+                )}
               </div>
               <Badge variant={r.status === "paid" ? "default" : r.status === "rejected" ? "destructive" : "secondary"}>
                 {r.status}

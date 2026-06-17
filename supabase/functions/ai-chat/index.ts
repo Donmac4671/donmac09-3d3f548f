@@ -534,7 +534,7 @@ ABOUT DONMAC DATA HUB:
 - Minimum top-up: ₵10.
 - Order delivery: MTN takes 3 minutes to 4 hours. Telecel and AT are instant.
 - Orders placed between 10pm and 5am UTC are queued and fulfilled at 5am.
-- Reseller model: every account is a reseller. Resellers have a personal storefront they can share to earn commission. Becoming a reseller is handled by admin via WhatsApp 0549358359.
+- Reseller model: every account is a reseller. Resellers have a personal storefront they can share to earn commission. Becoming a reseller is handled by admin via WhatsApp 0549358359. Reseller withdrawals have a 1% platform fee deducted from the gross amount (minimum ₵30).
 - Bundle validity: AT Big Time has no expiry. AT Premium = 60 days. MTN = 90 days. Telecel = 90 days.
 - Bundle validity: AT Big Time has no expiry. AT Premium = 60 days. MTN = 90 days. Telecel = 90 days.
 - Referrals: General users earn ₵0.50 when their referral makes their first purchase. Agents earn ₵10 when their referral becomes an agent.

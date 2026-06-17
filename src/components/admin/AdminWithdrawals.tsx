@@ -21,6 +21,8 @@ interface WithdrawalReq {
   store_id: string;
   user_id: string;
   amount: number;
+  fee_amount: number;
+  net_amount: number;
   momo_number: string;
   momo_name: string;
   network: string;
@@ -96,7 +98,8 @@ export default function AdminWithdrawals() {
   });
 
   const pendingCount = reqs.filter((r) => r.status === "pending").length;
-  const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
+  const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.net_amount || r.amount), 0);
+  const totalFees = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.fee_amount || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -108,6 +111,9 @@ export default function AdminWithdrawals() {
           </h2>
           <p className="text-sm text-muted-foreground">
             Lifetime paid out: <span className="font-semibold text-foreground">{formatCurrency(totalPaid)}</span>
+            {totalFees > 0 && (
+              <span className="ml-2 text-xs">(fees collected: <span className="font-semibold text-destructive">{formatCurrency(totalFees)}</span>)</span>
+            )}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -150,7 +156,9 @@ export default function AdminWithdrawals() {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Store</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Gross</TableHead>
+              <TableHead>Fee (1%)</TableHead>
+              <TableHead>Net</TableHead>
               <TableHead>MoMo Details</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -159,12 +167,12 @@ export default function AdminWithdrawals() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-6">Loading…</TableCell>
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-6">Loading…</TableCell>
               </TableRow>
             )}
             {!loading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
                   No {filter === "all" ? "" : filter} requests.
                 </TableCell>
               </TableRow>
@@ -181,6 +189,8 @@ export default function AdminWithdrawals() {
                     <div className="text-xs font-mono text-primary">/{store?.slug || "?"}</div>
                   </TableCell>
                   <TableCell className="font-bold">{formatCurrency(Number(r.amount))}</TableCell>
+                  <TableCell className="text-destructive">{formatCurrency(Number(r.fee_amount || 0))}</TableCell>
+                  <TableCell className="font-semibold text-primary">{formatCurrency(Number(r.net_amount || r.amount))}</TableCell>
                   <TableCell>
                     <div className="text-sm">
                       <span className="font-semibold uppercase mr-2">{r.network}</span>

@@ -1044,9 +1044,11 @@ export type Database = {
           admin_notes: string
           amount: number
           created_at: string
+          fee_amount: number
           id: string
           momo_name: string
           momo_number: string
+          net_amount: number
           network: string
           status: string
           store_id: string
@@ -1057,9 +1059,11 @@ export type Database = {
           admin_notes?: string
           amount: number
           created_at?: string
+          fee_amount?: number
           id?: string
           momo_name?: string
           momo_number: string
+          net_amount?: number
           network?: string
           status?: string
           store_id: string
@@ -1070,9 +1074,11 @@ export type Database = {
           admin_notes?: string
           amount?: number
           created_at?: string
+          fee_amount?: number
           id?: string
           momo_name?: string
           momo_number?: string
+          net_amount?: number
           network?: string
           status?: string
           store_id?: string
