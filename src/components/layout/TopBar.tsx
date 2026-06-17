@@ -42,7 +42,7 @@ export default function TopBar({ title }: { title: string }) {
     <header className="flex items-center justify-between px-4 lg:px-6 py-3 bg-card border-b border-border">
       <div className="flex items-center gap-3">
         <Sheet>
-          <SheetTrigger className="lg:hidden">
+          <SheetTrigger className="lg:hidden" aria-label="Open navigation menu">
             <Menu className="w-5 h-5 text-muted-foreground" />
           </SheetTrigger>
           <SheetContent side="left" className="w-[260px] p-4">
@@ -96,7 +96,7 @@ export default function TopBar({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Link to="/cart" className="relative p-2 rounded-lg hover:bg-accent transition-colors">
+        <Link to="/cart" aria-label={`Cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`} className="relative p-2 rounded-lg hover:bg-accent transition-colors">
           <ShoppingCart className="w-5 h-5 text-muted-foreground" />
           {itemCount > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 gradient-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
@@ -114,7 +114,7 @@ export default function TopBar({ title }: { title: string }) {
         </div>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="p-2 rounded-lg hover:bg-accent transition-colors">
+          <DropdownMenuTrigger aria-label="Open user menu" className="p-2 rounded-lg hover:bg-accent transition-colors">
             <User className="w-5 h-5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

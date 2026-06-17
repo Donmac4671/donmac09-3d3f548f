@@ -82,6 +82,61 @@ export default function Storefront() {
     void supabase.rpc("register_store_referral", { p_slug: store.slug }).then(() => undefined, () => undefined);
   }, [authLoading, user, store]);
 
+  // Per-page title, canonical, og:url, and LocalBusiness JSON-LD
+  useEffect(() => {
+    if (!store) return;
+    const url = `https://donmacdatahub.com/${store.slug}`;
+    const title = `${store.full_name} – Buy Data Bundles | Donmac Data Hub`;
+    const prevTitle = document.title;
+    document.title = title;
+
+    const upsertMeta = (selector: string, attr: string, key: string, value: string) => {
+      let el = document.head.querySelector<HTMLMetaElement>(selector);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", value);
+      return el;
+    };
+    const ogTitle = upsertMeta('meta[property="og:title"]', "property", "og:title", title);
+    const ogUrl = upsertMeta('meta[property="og:url"]', "property", "og:url", url);
+    const twTitle = upsertMeta('meta[name="twitter:title"]', "name", "twitter:title", title);
+
+    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const prevCanonical = canonical?.href;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = url;
+
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.id = "storefront-jsonld";
+    ld.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: store.full_name,
+      url,
+      telephone: store.whatsapp,
+      description: store.store_message || `Buy MTN, Telecel and AirtelTigo data bundles from ${store.full_name}.`,
+    });
+    document.getElementById("storefront-jsonld")?.remove();
+    document.head.appendChild(ld);
+
+    return () => {
+      document.title = prevTitle;
+      if (prevCanonical && canonical) canonical.href = prevCanonical;
+      document.getElementById("storefront-jsonld")?.remove();
+      ogTitle.setAttribute("content", "Donmac Data Hub – Cheap Data Bundles & Reselling in Ghana");
+      twTitle.setAttribute("content", "Donmac Data Hub – Cheap Data Bundles & Reselling in Ghana");
+      ogUrl.setAttribute("content", "https://donmacdatahub.com");
+    };
+  }, [store]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

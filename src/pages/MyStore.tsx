@@ -32,7 +32,10 @@ const MARKUP_KINDS = [
   { key: "vs", label: "Telecel V+D+S" },
 ] as const;
 
+import { usePageMeta } from "@/hooks/usePageMeta";
+
 export default function MyStore() {
+  usePageMeta({ title: "My Store | Donmac Data Hub", description: "Manage your reseller storefront, pricing, and withdrawals on Donmac Data Hub.", path: "/mystore" });
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
