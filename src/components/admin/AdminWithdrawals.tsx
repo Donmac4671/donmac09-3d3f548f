@@ -152,7 +152,9 @@ export default function AdminWithdrawals() {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Store</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Gross</TableHead>
+              <TableHead>Fee (1%)</TableHead>
+              <TableHead>Net</TableHead>
               <TableHead>MoMo Details</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -161,12 +163,12 @@ export default function AdminWithdrawals() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-6">Loading…</TableCell>
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-6">Loading…</TableCell>
               </TableRow>
             )}
             {!loading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
                   No {filter === "all" ? "" : filter} requests.
                 </TableCell>
               </TableRow>
