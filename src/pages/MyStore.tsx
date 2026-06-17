@@ -393,6 +393,9 @@ function WithdrawalsList({ requests }: { requests: any[] }) {
               <div>
                 <p className="font-semibold">{formatCurrency(Number(r.amount))} → {r.network} {r.momo_number}</p>
                 <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+                {Number(r.fee_amount) > 0 && (
+                  <p className="text-xs text-muted-foreground">Fee: {formatCurrency(Number(r.fee_amount))} • Net: {formatCurrency(Number(r.net_amount))}</p>
+                )}
               </div>
               <Badge variant={r.status === "paid" ? "default" : r.status === "rejected" ? "destructive" : "secondary"}>
                 {r.status}
