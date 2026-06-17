@@ -326,6 +326,79 @@ export default function MyStore() {
   );
 }
 
+function WithdrawalsList({ requests }: { requests: any[] }) {
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [status, setStatus] = useState<string>("all");
+
+  const filtered = requests.filter((r) => {
+    if (status !== "all" && r.status !== status) return false;
+    if (dateFrom) {
+      const fromTs = new Date(dateFrom + "T00:00:00").getTime();
+      if (new Date(r.created_at).getTime() < fromTs) return false;
+    }
+    if (dateTo) {
+      const toTs = new Date(dateTo + "T23:59:59").getTime();
+      if (new Date(r.created_at).getTime() > toTs) return false;
+    }
+    return true;
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end gap-3 bg-muted/30 rounded-lg p-3">
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">From</label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[150px]" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">To</label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[150px]" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground block mb-1">Status</label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(dateFrom || dateTo || status !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setStatus("all"); }}>
+            Clear
+          </Button>
+        )}
+        <div className="text-xs text-muted-foreground ml-auto self-center">
+          {filtered.length} of {requests.length}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No withdrawal requests match your filters.</p>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((r) => (
+            <div key={r.id} className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+              <div>
+                <p className="font-semibold">{formatCurrency(Number(r.amount))} → {r.network} {r.momo_number}</p>
+                <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+              </div>
+              <Badge variant={r.status === "paid" ? "default" : r.status === "rejected" ? "destructive" : "secondary"}>
+                {r.status}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CreateStoreOnboarding({ onCreated }: { onCreated: () => void }) {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
