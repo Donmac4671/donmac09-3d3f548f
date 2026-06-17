@@ -21,6 +21,8 @@ interface WithdrawalReq {
   store_id: string;
   user_id: string;
   amount: number;
+  fee_amount: number;
+  net_amount: number;
   momo_number: string;
   momo_name: string;
   network: string;
