@@ -325,6 +325,45 @@ async function getActiveSiteMessage(supabase: any): Promise<string> {
   }
 }
 
+async function getPlatformStats(supabase: any): Promise<string> {
+  try {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const [
+      { count: userCount },
+      { count: resellerStoreCount },
+      { count: ordersTodayCount },
+      { data: topStores },
+    ] = await Promise.all([
+      supabase.from("profiles").select("user_id", { count: "exact", head: true }),
+      supabase.from("reseller_stores").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", since24h),
+      supabase
+        .from("reseller_stores")
+        .select("slug, full_name, lifetime_profit")
+        .eq("is_active", true)
+        .order("lifetime_profit", { ascending: false })
+        .limit(3),
+    ]);
+
+    const topLines = Array.isArray(topStores) && topStores.length
+      ? topStores.map((s: any, i: number) => `  ${i + 1}. ${s.full_name || "Reseller"} (/${s.slug}) — ₵${Number(s.lifetime_profit || 0).toFixed(2)} lifetime profit`).join("\n")
+      : "  (No active stores yet)";
+
+    return `PLATFORM STATS:
+- Total registered users: ${userCount ?? "?"}
+- Active reseller storefronts: ${resellerStoreCount ?? "?"}
+- Orders in last 24h: ${ordersTodayCount ?? "?"}
+
+TOP 3 RESELLERS BY LIFETIME PROFIT:
+${topLines}`;
+  } catch (e) {
+    console.error("getPlatformStats failed:", e);
+    return "PLATFORM STATS: unavailable.";
+  }
+}
+
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
