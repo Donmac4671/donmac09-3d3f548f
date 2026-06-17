@@ -12,17 +12,16 @@ export interface StoreBrand {
  *  For anonymous visitors: fall back to the localStorage slug (set when visiting /<slug>). */
 export function useStoreBranding(): StoreBrand | null {
   const [store, setStore] = useState<StoreBrand | null>(null);
-  const { user, referredStoreId } = useAuth();
+  const { user, referredStoreId, isAdmin, isReseller } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchStore = async () => {
       // Logged-in user: brand strictly from their profile's referredStoreId.
-      // Do NOT fall back to localStorage — that leaks the last-visited store
-      // (e.g., an admin who previewed a reseller's storefront) into the main app.
+      // Admins and resellers must NEVER be branded as another store's customer.
       if (user) {
-        if (referredStoreId) {
+        if (referredStoreId && !isAdmin && !isReseller) {
           const { data } = await (supabase as any)
             .from("public_reseller_stores")
             .select("slug, full_name, whatsapp")
@@ -56,7 +55,7 @@ export function useStoreBranding(): StoreBrand | null {
 
     fetchStore();
     return () => { cancelled = true; };
-  }, [user, referredStoreId]);
+  }, [user, referredStoreId, isAdmin, isReseller]);
 
   return store;
 }
