@@ -700,6 +700,13 @@ export type Database = {
             foreignKeyName: "reseller_bundle_prices_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
+            referencedRelation: "public_reseller_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_bundle_prices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
             referencedRelation: "reseller_stores"
             referencedColumns: ["id"]
           },
@@ -731,6 +738,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reseller_markups_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_reseller_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reseller_markups_store_id_fkey"
             columns: ["store_id"]
@@ -829,6 +843,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "store_referrals_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_reseller_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_referrals_store_id_fkey"
             columns: ["store_id"]
@@ -1090,6 +1111,13 @@ export type Database = {
             foreignKeyName: "withdrawal_requests_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
+            referencedRelation: "public_reseller_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
             referencedRelation: "reseller_stores"
             referencedColumns: ["id"]
           },
@@ -1124,6 +1152,42 @@ export type Database = {
           id?: string | null
           network_id?: string | null
           size_gb?: number | null
+        }
+        Relationships: []
+      }
+      public_reseller_stores: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          slug: string | null
+          store_message: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          slug?: string | null
+          store_message?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          slug?: string | null
+          store_message?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
