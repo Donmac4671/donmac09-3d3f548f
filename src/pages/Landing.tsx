@@ -109,10 +109,10 @@ export default function Landing() {
       "@context": "https://schema.org",
       "@type": "Organization",
       name: "Donmac Data Hub",
-      url: "https://donmac09.lovable.app",
+      url: "https://donmacdatahub.com",
       description:
         "Donmac Data Hub — Ghana's reseller platform for cheap MTN, Telecel & AirtelTigo data bundles. Become a reseller and earn.",
-      logo: "https://donmac09.lovable.app/favicon.png",
+      logo: "https://donmacdatahub.com/favicon.png",
     });
     document.head.appendChild(script);
     return () => {
