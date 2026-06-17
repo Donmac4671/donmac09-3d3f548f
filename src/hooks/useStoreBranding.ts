@@ -55,7 +55,7 @@ export function useStoreBranding(): StoreBrand | null {
 
     fetchStore();
     return () => { cancelled = true; };
-  }, [user, referredStoreId]);
+  }, [user, referredStoreId, isAdmin, isReseller]);
 
   return store;
 }
