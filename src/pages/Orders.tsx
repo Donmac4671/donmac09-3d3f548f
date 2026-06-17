@@ -134,9 +134,8 @@ export default function Orders() {
               <option value="TELECEL">Telecel</option>
               <option value="AT BIG TIME">AT Big Time</option>
               <option value="AT PREMIUM">AT Premium</option>
-              <option value="MashUp">MashUp</option>
-              <option value="Airtime">Airtime</option>
-              <option value="Telecel V+D+S">Telecel V+D+S</option>
+              <option value="MTN MashUp Data">MTN MashUp Data</option>
+              <option value="MTN MashUp Minutes + Data">MTN MashUp Minutes + Data</option>
             </select>
             {selectedDate && (
               <Button variant="ghost" size="sm" onClick={() => setSelectedDate(undefined)}>Clear</Button>
