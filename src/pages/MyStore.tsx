@@ -375,9 +375,9 @@ function WithdrawalsList({ requests }: { requests: any[] }) {
             </SelectContent>
           </Select>
         </div>
-        {(dateFrom || dateTo || status !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setStatus("all"); }}>
-            Clear
+        {((dateFrom !== new Date().toISOString().split("T")[0]) || (dateTo !== new Date().toISOString().split("T")[0]) || status !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { const today = new Date().toISOString().split("T")[0]; setDateFrom(today); setDateTo(today); setStatus("all"); }}>
+            Reset to today
           </Button>
         )}
         <div className="text-xs text-muted-foreground ml-auto self-center">
