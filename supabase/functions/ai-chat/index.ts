@@ -440,12 +440,13 @@ ${complaintsText}`;
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
     );
 
-    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage] = await Promise.all([
+    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage, platformStats] = await Promise.all([
       buildLiveNetworks(adminClient),
       getActivePromo(adminClient, userTier),
       getPromoHistory(adminClient),
       getRecentBroadcasts(adminClient),
       getActiveSiteMessage(adminClient),
+      getPlatformStats(adminClient),
     ]);
 
     const pricing = buildPricingText(
