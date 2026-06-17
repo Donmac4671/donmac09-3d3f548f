@@ -48,11 +48,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), { status: 400, headers: jsonHeaders });
     }
 
+    const user_type = String(body.user_type ?? "reseller");
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name, phone, tier: 'reseller' },
+      user_metadata: { full_name, phone, user_type, tier: user_type },
     });
 
     if (createErr) {
