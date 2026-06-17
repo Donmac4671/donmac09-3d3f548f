@@ -98,7 +98,8 @@ export default function AdminWithdrawals() {
   });
 
   const pendingCount = reqs.filter((r) => r.status === "pending").length;
-  const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
+  const totalPaid = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.net_amount || r.amount), 0);
+  const totalFees = reqs.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.fee_amount || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -110,6 +111,9 @@ export default function AdminWithdrawals() {
           </h2>
           <p className="text-sm text-muted-foreground">
             Lifetime paid out: <span className="font-semibold text-foreground">{formatCurrency(totalPaid)}</span>
+            {totalFees > 0 && (
+              <span className="ml-2 text-xs">(fees collected: <span className="font-semibold text-destructive">{formatCurrency(totalFees)}</span>)</span>
+            )}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
