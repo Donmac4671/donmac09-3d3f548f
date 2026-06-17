@@ -151,7 +151,9 @@ export default function Login() {
     setLoading(true);
 
     const cleanEmail = email.trim().toLowerCase();
-    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {});
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
 
     setLoading(false);
     if (error) {
