@@ -117,7 +117,7 @@ const App = () => (
                 path="/"
                 element={
                   <PublicRoute>
-                    <Landing />
+                    <Login />
                   </PublicRoute>
                 }
               />
