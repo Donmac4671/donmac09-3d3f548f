@@ -13,6 +13,7 @@ import RealtimeNotifications from "@/components/global/RealtimeNotifications";
 import EnableNotificationsBanner from "@/components/global/EnableNotificationsBanner";
 import SiteMessagePopup from "@/components/global/SiteMessagePopup";
 import SiteMessageBanner from "@/components/global/SiteMessageBanner";
+import CustomerLockout from "@/components/global/CustomerLockout";
 import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Orders from "./pages/Orders";
@@ -104,6 +105,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <RecoveryRedirect />
+            <CustomerLockout />
             <RealtimeNotifications />
             <EnableNotificationsBanner />
             <SiteMessagePopup />
