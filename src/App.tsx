@@ -105,6 +105,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <RecoveryRedirect />
+            <CustomerLockout />
             <RealtimeNotifications />
             <EnableNotificationsBanner />
             <SiteMessagePopup />
