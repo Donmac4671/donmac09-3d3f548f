@@ -754,6 +754,51 @@ export type Database = {
           },
         ]
       }
+      reseller_prices: {
+        Row: {
+          bundle_size: string
+          created_at: string | null
+          id: string
+          network: string
+          price: number
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          bundle_size: string
+          created_at?: string | null
+          id?: string
+          network: string
+          price: number
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          bundle_size?: string
+          created_at?: string | null
+          id?: string
+          network?: string
+          price?: number
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_prices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_reseller_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_prices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reseller_stores: {
         Row: {
           available_profit: number
