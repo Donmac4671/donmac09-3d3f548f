@@ -40,7 +40,8 @@ function NetworkIcon({ network }: { network: Network }) {
 function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getResellerPrice }: { bundle: DataBundle; network: Network; tier: string; onSelect: () => void; applyDiscount?: (price: number) => number; getResellerPrice: (netId: string, size: string, base: number) => number }) {
   const gradientClass = network.gradient;
   const wholesalePrice = getBundlePrice(bundle, tier);
-  const basePrice = tier === "customer" ? getResellerPrice(network.id, bundle.size, wholesalePrice) : wholesalePrice;
+  const isPrivilegedTier = tier === "reseller" || tier === "agent" || tier === "admin";
+  const basePrice = isPrivilegedTier ? wholesalePrice : getResellerPrice(network.id, bundle.size, wholesalePrice);
   const displayPrice = applyDiscount ? applyDiscount(basePrice) : basePrice;
   const hasDiscount = displayPrice < basePrice;
 
@@ -109,7 +110,7 @@ export default function DataBundles() {
   const userTier = profile?.tier || "customer";
 
   const getResellerPrice = (netId: string, size: string, base: number) => {
-    if (isAdmin || userTier === "reseller") return base;
+    if (isAdmin || userTier === "reseller" || userTier === "agent" || userTier === "admin") return base;
     return calculateResellerPrice(netId, size, base);
   };
   const { promo, applyDiscount } = useActivePromo(userTier);
@@ -171,7 +172,8 @@ export default function DataBundles() {
       return;
     }
     const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
-    let effectivePrice = userTier === "customer" || referredStoreId ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
+    const isPrivilegedTier = userTier === "reseller" || userTier === "agent" || userTier === "admin";
+    let effectivePrice = isPrivilegedTier ? wholesalePrice : getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice);
     if (promo) {
       effectivePrice = applyDiscount(effectivePrice);
     }
@@ -267,7 +269,8 @@ export default function DataBundles() {
               {(() => {
                 if (!selectedBundle) return null;
                 const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
-                const base = userTier === "customer" || referredStoreId ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
+                const isPrivilegedTier = userTier === "reseller" || userTier === "agent" || userTier === "admin";
+                const base = isPrivilegedTier ? wholesalePrice : getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice);
                 const final = promo ? applyDiscount(base) : base;
                 const hasDiscount = final < base;
                 return (
