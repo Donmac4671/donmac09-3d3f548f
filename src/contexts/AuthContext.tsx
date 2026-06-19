@@ -104,8 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      setProfile((profileData as Profile) ?? null);
-
       const [rolesRes, storeRes, referralRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", authUser.id),
         supabase.from("reseller_stores").select("id").eq("user_id", authUser.id).maybeSingle(),
@@ -113,11 +111,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (rolesRes.error) console.error("Role fetch error:", rolesRes.error.message);
+      // Set referral / role state BEFORE profile so route guards and
+      // CustomerLockout see the reseller link in the same render that
+      // gets the profile (avoids a flash-of-no-referral that signs the
+      // customer out or pushes them to the main dashboard).
       setIsAdmin(rolesRes.data?.some((r) => r.role === "admin") ?? false);
       setIsReseller(Boolean(storeRes.data));
       setIsReferredCustomer(Boolean(referralRes.data));
       setReferredStoreId((referralRes.data as any)?.store_id ?? null);
       setReferredStoreSlug((referralRes.data as any)?.reseller_stores?.slug ?? null);
+      setProfile((profileData as Profile) ?? null);
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
