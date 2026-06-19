@@ -28,6 +28,15 @@ export default function CustomerLockout() {
     if (isPrivileged) return;
     if (referredStoreSlug) return; // they have a reseller, handled by routing
 
+    // If a storefront slug is cached locally, the referral is mid-attribution
+    // (e.g. user just signed up via a reseller link). Don't sign them out —
+    // routing will send them to /:slug once the referral row is written.
+    try {
+      if (typeof window !== "undefined" && window.localStorage.getItem("donmac_store_slug")) {
+        return;
+      }
+    } catch { /* ignore */ }
+
     actedRef.current = true;
     void (async () => {
       try {
