@@ -182,6 +182,42 @@ export default function AdminResellers() {
     void load();
   };
 
+  const openPrices = async (store: ResellerStore) => {
+    setPriceStore(store);
+    setPriceOpen(true);
+    setPriceLoading(true);
+    const { data, error } = await supabase
+      .from("reseller_bundle_prices")
+      .select("network_id, bundle_size, price")
+      .eq("store_id", store.id);
+    if (error) {
+      toast({ title: "Could not load prices", description: error.message, variant: "destructive" });
+    } else {
+      const map: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        map[`${row.network_id}|${row.bundle_size}`] = Number(row.price);
+      });
+      setStorePrices(map);
+    }
+    setPriceLoading(false);
+  };
+
+  const saveStorePrice = async (networkId: string, bundleSize: string, basePrice: number, price: number) => {
+    if (!priceStore) return;
+    if (!Number.isFinite(price) || price < basePrice) {
+      toast({ title: "Too low", description: `Minimum ${formatCurrency(basePrice)}`, variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("reseller_bundle_prices").upsert(
+      { store_id: priceStore.id, network_id: networkId, bundle_size: bundleSize, price },
+      { onConflict: "store_id,network_id,bundle_size" }
+    );
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    setStorePrices((prev) => ({ ...prev, [`${networkId}|${bundleSize}`]: price }));
+    toast({ title: "Price saved" });
+    void load();
+  };
+
   const toggleActive = async (store: ResellerStore) => {
     const { error } = await supabase
       .from("reseller_stores")
