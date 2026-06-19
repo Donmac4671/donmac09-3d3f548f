@@ -44,15 +44,25 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isReferredCustomer, referredStoreSlug, profile, isAdmin, isReseller } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  
   // Reseller's referred customers should always shop at their reseller's storefront
   const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
   const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : getCachedStoreSlug());
+  
   if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
+    // Clear the session redirect after use
+    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
     return <Navigate to={`/${referredStoreSlug}`} replace />;
   }
+  
   if (targetSlug && !isPrivilegedUser && !referredStoreSlug) {
+    // Clear the session redirect after use
+    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
     return <Navigate to={`/${targetSlug}`} replace />;
   }
+  
+  // Clear any pending redirect
+  try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
   return <>{children}</>;
 }
 
@@ -63,9 +73,22 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
     const cachedSlug = getCachedStoreSlug();
     const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : cachedSlug);
+    
+    // If user is a referred customer OR has a stored store slug, send them to the storefront
+    if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
+      // Clear the session redirect after use
+      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
+      return <Navigate to={`/${referredStoreSlug}`} replace />;
+    }
+    
     if (targetSlug && !isPrivilegedUser) {
+      // Clear the session redirect after use
+      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
       return <Navigate to={`/${targetSlug}`} replace />;
     }
+    
+    // Clear any pending redirect
+    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
     return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;
