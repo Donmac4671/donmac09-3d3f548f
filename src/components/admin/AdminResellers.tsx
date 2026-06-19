@@ -354,6 +354,9 @@ export default function AdminResellers() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => openPrices(s)} title="Edit prices">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => toggleActive(s)} title={s.is_active ? "Disable" : "Enable"}>
                         {s.is_active ? <ToggleRight className="w-4 h-4 text-primary" /> : <ToggleLeft className="w-4 h-4" />}
                       </Button>
@@ -430,6 +433,49 @@ export default function AdminResellers() {
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} className="gradient-primary border-0">Create Store</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={priceOpen} onOpenChange={setPriceOpen}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Store Prices {priceStore ? `/${priceStore.slug}` : ""}</DialogTitle>
+            <DialogDescription>Set the prices customers see on this reseller's storefront.</DialogDescription>
+          </DialogHeader>
+          {priceLoading ? (
+            <div className="py-8 text-center text-muted-foreground">Loading prices…</div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-2">
+              {networks.map((network) => (
+                <div key={network.id} className="space-y-2">
+                  <h3 className="font-bold">{network.name}</h3>
+                  {network.bundles.map((bundle) => {
+                    const key = `${network.id}|${bundle.size}`;
+                    const current = storePrices[key];
+                    return (
+                      <div key={key} className="flex items-center gap-2">
+                        <span className="text-sm font-medium w-20">{bundle.size}</span>
+                        <span className="text-xs text-muted-foreground w-20">Base {formatCurrency(bundle.price)}</span>
+                        <Input
+                          type="number"
+                          min={bundle.price}
+                          step="0.01"
+                          defaultValue={current ?? ""}
+                          placeholder={bundle.price.toFixed(2)}
+                          onBlur={(e) => {
+                            const nextPrice = Number(e.target.value);
+                            if (!nextPrice || nextPrice === current) return;
+                            void saveStorePrice(network.id, bundle.size, bundle.price, nextPrice);
+                          }}
+                          className="flex-1"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
