@@ -28,9 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/data";
+import { formatCurrency, networks } from "@/lib/data";
 import { format } from "date-fns";
-import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus } from "lucide-react";
+import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus, DollarSign } from "lucide-react";
 
 interface ResellerStore {
   id: string;
@@ -70,6 +70,10 @@ export default function AdminResellers() {
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [newUser, setNewUser] = useState({ full_name: "", email: "", phone: "", password: "" });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [priceStore, setPriceStore] = useState<ResellerStore | null>(null);
+  const [storePrices, setStorePrices] = useState<Record<string, number>>({});
+  const [priceLoading, setPriceLoading] = useState(false);
 
   const handleAddUser = async () => {
     if (!newUser.full_name || !newUser.email || !newUser.phone || !newUser.password) {
