@@ -65,18 +65,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return provider === "anonymous" || (authUser as User & { is_anonymous?: boolean }).is_anonymous === true;
   };
 
-  // FIXED: Helper function to get store slug from URL or localStorage
+  // Helper function to get store slug from URL only when it's a store-specific path
   const getStoreSlugFromUrl = () => {
     if (typeof window === "undefined") return null;
     try {
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const pathname = window.location.pathname;
+      // Remove leading and trailing slashes and split
+      const segments = pathname.replace(/^\/|\/$/g, '').split('/');
+      
       // Check if the path matches /:slug/login or /:slug/register
-      if (pathSegments.length >= 2) {
-        const possibleSlug = pathSegments[0];
-        const possibleAction = pathSegments[1];
-        // If the second segment is 'login' or 'register', the first segment is the slug
-        if (possibleAction === 'login' || possibleAction === 'register') {
-          return possibleSlug;
+      // The pattern should be: [slug, 'login'] or [slug, 'register']
+      if (segments.length === 2) {
+        const possibleSlug = segments[0];
+        const possibleAction = segments[1];
+        // Only return the slug if the second segment is 'login' or 'register'
+        if ((possibleAction === 'login' || possibleAction === 'register') && possibleSlug) {
+          // Make sure the slug isn't actually a reserved path
+          const reservedPaths = ['login', 'register', 'dashboard', 'admin', 'reset-password', 'flyer', 'api-docs', 'mystore'];
+          if (!reservedPaths.includes(possibleSlug)) {
+            return possibleSlug;
+          }
         }
       }
       return null;
@@ -88,7 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const attributeStoreReferral = async () => {
     if (typeof window === "undefined") return;
     try {
-      // FIXED: Try to get slug from URL first, then localStorage
       const slugFromUrl = getStoreSlugFromUrl();
       const slug = slugFromUrl || window.localStorage.getItem(STOREFRONT_KEY);
       if (!slug) return;
@@ -272,7 +279,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // After successful sign in, check if there's a stored store slug
     if (!error && data.user) {
       try {
-        // FIXED: Try to get slug from URL first, then localStorage
         const slugFromUrl = getStoreSlugFromUrl();
         const storeSlug = slugFromUrl || localStorage.getItem(STOREFRONT_KEY);
         if (storeSlug) {
@@ -289,7 +295,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const cleanEmail = email.trim().toLowerCase();
     
-    // FIXED: Try to get store slug from URL first, then localStorage
     const slugFromUrl = getStoreSlugFromUrl();
     const storeSlug = slugFromUrl || (typeof window !== "undefined" ? localStorage.getItem(STOREFRONT_KEY) : null);
     
@@ -300,7 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { 
           full_name: fullName, 
           phone,
-          referred_by_store: storeSlug || null // Store in user metadata
+          referred_by_store: storeSlug || null
         },
       },
     });
