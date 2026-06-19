@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Mail, Lock, User, Phone, Tag, ArrowLeft } from "lucide-react";
@@ -11,10 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useStoreBranding } from "@/hooks/useStoreBranding";
 
+const STOREFRONT_KEY = "donmac_store_slug";
+
 export default function Register() {
   useCanonical("/register");
   usePageMeta({ title: "Create Account | Donmac Data Hub", description: "Create your Donmac Data Hub account to buy cheap data bundles or start reselling in Ghana.", path: "/register" });
   const [searchParams] = useSearchParams();
+  const { slug } = useParams<{ slug: string }>(); // FIXED: Get store slug from URL params
   const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
@@ -30,6 +33,11 @@ export default function Register() {
   const { signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // FIXED: Get the store slug from URL params or localStorage
+  const getStoreSlug = () => {
+    return slug || localStorage.getItem(STOREFRONT_KEY) || undefined;
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +59,13 @@ export default function Register() {
     }
     setLoading(true);
 
+    // FIXED: Store the slug for redirect after registration
+    const storeSlug = getStoreSlug();
+    if (storeSlug) {
+      sessionStorage.setItem("redirect_to_store", storeSlug);
+      localStorage.setItem(STOREFRONT_KEY, storeSlug);
+    }
+
     // Phone uniqueness is enforced by the database trigger prevent_duplicate_phone.
 
     const { error, data } = await signUp(email, password, name, phone);
@@ -66,7 +81,6 @@ export default function Register() {
         variant: "destructive"
       });
     } else {
-      const storeSlug = (typeof window !== "undefined") ? localStorage.getItem("donmac_store_slug") : null;
       if (data?.session) {
         toast({ title: "Welcome!", description: "Account created successfully." });
         setTimeout(() => {
@@ -99,7 +113,9 @@ export default function Register() {
       toast({ title: "Verification Failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Email Verified!", description: "You can now sign in to your account." });
-      navigate("/login");
+      // FIXED: After verification, redirect to the store if there is one
+      const storeSlug = getStoreSlug();
+      navigate(storeSlug ? `/${storeSlug}` : "/login");
     }
   };
 
@@ -186,7 +202,10 @@ export default function Register() {
               </form>
               <p className="text-center text-sm text-muted-foreground mt-3">
                 Already have an account?{" "}
-                <Link to="/login" className="text-primary font-medium hover:underline">Sign In</Link>
+                {/* FIXED: Link to store-specific login if we have a slug */}
+                <Link to={slug ? `/${slug}/login` : "/login"} className="text-primary font-medium hover:underline">
+                  Sign In
+                </Link>
               </p>
             </>
           ) : (
