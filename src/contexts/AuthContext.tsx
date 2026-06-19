@@ -65,39 +65,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return provider === "anonymous" || (authUser as User & { is_anonymous?: boolean }).is_anonymous === true;
   };
 
-  // Helper function to get store slug from URL only when it's a store-specific path
+  // FIXED: Get store slug from URL path if not in localStorage
   const getStoreSlugFromUrl = () => {
     if (typeof window === "undefined") return null;
-    try {
-      const pathname = window.location.pathname;
-      // Remove leading and trailing slashes and split
-      const segments = pathname.replace(/^\/|\/$/g, '').split('/');
-      
-      // Check if the path matches /:slug/login or /:slug/register
-      // The pattern should be: [slug, 'login'] or [slug, 'register']
-      if (segments.length === 2) {
-        const possibleSlug = segments[0];
-        const possibleAction = segments[1];
-        // Only return the slug if the second segment is 'login' or 'register'
-        if ((possibleAction === 'login' || possibleAction === 'register') && possibleSlug) {
-          // Make sure the slug isn't actually a reserved path
-          const reservedPaths = ['login', 'register', 'dashboard', 'admin', 'reset-password', 'flyer', 'api-docs', 'mystore'];
-          if (!reservedPaths.includes(possibleSlug)) {
-            return possibleSlug;
-          }
-        }
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    // Check if the path matches /:slug/login or /:slug/register
+    if (pathSegments.length >= 2) {
+      const slug = pathSegments[0];
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      if (['login', 'register'].includes(lastSegment)) {
+        return slug;
       }
-      return null;
-    } catch {
-      return null;
     }
+    return null;
   };
 
   const attributeStoreReferral = async () => {
     if (typeof window === "undefined") return;
     try {
-      const slugFromUrl = getStoreSlugFromUrl();
-      const slug = slugFromUrl || window.localStorage.getItem(STOREFRONT_KEY);
+      // FIXED: Try URL first, then localStorage
+      const slug = getStoreSlugFromUrl() || window.localStorage.getItem(STOREFRONT_KEY);
       if (!slug) return;
       await supabase.rpc("register_store_referral", { p_slug: slug });
       window.localStorage.removeItem(STOREFRONT_KEY);
@@ -156,7 +143,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // AFTER profile is set, check if we need to redirect to a store
       // Check for redirect from sessionStorage (set during signin/signup)
       try {
-        const redirectSlug = sessionStorage.getItem("redirect_to_store");
+        // FIXED: Check sessionStorage first, then URL, then localStorage
+        let redirectSlug = sessionStorage.getItem("redirect_to_store");
+        if (!redirectSlug) {
+          redirectSlug = getStoreSlugFromUrl();
+        }
+        if (!redirectSlug) {
+          redirectSlug = localStorage.getItem(STOREFRONT_KEY);
+        }
+        
         if (redirectSlug && !isAdmin && !storeRes.data) {
           // Don't redirect admins/resellers
           // Store the slug in localStorage to maintain the referral
@@ -279,8 +274,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // After successful sign in, check if there's a stored store slug
     if (!error && data.user) {
       try {
-        const slugFromUrl = getStoreSlugFromUrl();
-        const storeSlug = slugFromUrl || localStorage.getItem(STOREFRONT_KEY);
+        // FIXED: Try URL first, then localStorage
+        let storeSlug = getStoreSlugFromUrl();
+        if (!storeSlug) {
+          storeSlug = localStorage.getItem(STOREFRONT_KEY);
+        }
         if (storeSlug) {
           // Store it in sessionStorage so we can redirect after profile loads
           sessionStorage.setItem("redirect_to_store", storeSlug);
@@ -295,8 +293,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const cleanEmail = email.trim().toLowerCase();
     
-    const slugFromUrl = getStoreSlugFromUrl();
-    const storeSlug = slugFromUrl || (typeof window !== "undefined" ? localStorage.getItem(STOREFRONT_KEY) : null);
+    // FIXED: Get store slug from URL first, then localStorage
+    let storeSlug = typeof window !== "undefined" ? getStoreSlugFromUrl() : null;
+    if (!storeSlug && typeof window !== "undefined") {
+      storeSlug = localStorage.getItem(STOREFRONT_KEY);
+    }
     
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
@@ -305,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { 
           full_name: fullName, 
           phone,
-          referred_by_store: storeSlug || null
+          referred_by_store: storeSlug || null // Store in user metadata
         },
       },
     });
