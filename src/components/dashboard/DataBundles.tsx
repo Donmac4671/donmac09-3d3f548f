@@ -103,7 +103,7 @@ export default function DataBundles() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile, isAdmin } = useAuth();
+  const { profile, isAdmin, referredStoreId } = useAuth();
   const { networks: mergedNetworks } = useCustomBundles();
   const { getResellerPrice: calculateResellerPrice, loading: pricesLoading } = useResellerPrices();
   const userTier = profile?.tier || "customer";
@@ -171,7 +171,7 @@ export default function DataBundles() {
       return;
     }
     const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
-    let effectivePrice = userTier === "customer" ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
+    let effectivePrice = userTier === "customer" || referredStoreId ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
     if (promo) {
       effectivePrice = applyDiscount(effectivePrice);
     }
@@ -267,7 +267,7 @@ export default function DataBundles() {
               {(() => {
                 if (!selectedBundle) return null;
                 const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
-                const base = userTier === "customer" ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
+                const base = userTier === "customer" || referredStoreId ? getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice) : wholesalePrice;
                 const final = promo ? applyDiscount(base) : base;
                 const hasDiscount = final < base;
                 return (
