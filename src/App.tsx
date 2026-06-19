@@ -174,7 +174,7 @@ const App = () => (
               />
               
               {/* Store-specific routes - for customers */}
-              {/* FIXED: Added routes for store-specific login and register */}
+              {/* These must come BEFORE the /:slug route but AFTER the main routes */}
               <Route path="/:slug/login" element={<Login />} />
               <Route path="/:slug/register" element={<Register />} />
               
@@ -270,7 +270,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              {/* Storefront route - must come after the nested routes */}
+              {/* Storefront route - must come LAST */}
               <Route path="/:slug" element={<Storefront />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
