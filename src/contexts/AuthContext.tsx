@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
+const STOREFRONT_KEY = "donmac_store_slug";
+
 interface Profile {
   id: string;
   user_id: string;
@@ -66,10 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const attributeStoreReferral = async () => {
     if (typeof window === "undefined") return;
     try {
-      const slug = window.localStorage.getItem("donmac_store_slug");
+      const slug = window.localStorage.getItem(STOREFRONT_KEY);
       if (!slug) return;
       await supabase.rpc("register_store_referral", { p_slug: slug });
-      window.localStorage.removeItem("donmac_store_slug");
+      window.localStorage.removeItem(STOREFRONT_KEY);
     } catch (err) {
       console.warn("Store referral attribution skipped:", err);
     }
@@ -121,6 +123,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setReferredStoreId((referralRes.data as any)?.store_id ?? null);
       setReferredStoreSlug((referralRes.data as any)?.reseller_stores?.slug ?? null);
       setProfile((profileData as Profile) ?? null);
+
+      // AFTER profile is set, check if we need to redirect to a store
+      // Check for redirect from sessionStorage (set during signin/signup)
+      try {
+        const redirectSlug = sessionStorage.getItem("redirect_to_store");
+        if (redirectSlug && !isAdmin && !storeRes.data) {
+          // Don't redirect admins/resellers
+          // Store the slug in localStorage to maintain the referral
+          localStorage.setItem(STOREFRONT_KEY, redirectSlug);
+          // We'll let the ProtectedRoute handle the actual navigation
+        }
+      } catch { /* ignore */ }
+
     } catch (error) {
       console.error("Auth profile load failed:", error);
       setProfile(null);
@@ -231,18 +246,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+    
+    // After successful sign in, check if there's a stored store slug
+    if (!error && data.user) {
+      try {
+        const storeSlug = localStorage.getItem(STOREFRONT_KEY);
+        if (storeSlug) {
+          // Store it in sessionStorage so we can redirect after profile loads
+          sessionStorage.setItem("redirect_to_store", storeSlug);
+        }
+      } catch { /* ignore */ }
+    }
+    
     return { error, data };
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const cleanEmail = email.trim().toLowerCase();
+    
+    // Get store slug before signup
+    const storeSlug = typeof window !== "undefined" ? localStorage.getItem(STOREFRONT_KEY) : null;
+    
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
-        data: { full_name: fullName, phone },
+        data: { 
+          full_name: fullName, 
+          phone,
+          referred_by_store: storeSlug || null // Store in user metadata
+        },
       },
     });
+    
+    // If signup successful and we have a store slug, store it for redirect
+    if (!error && data.user && storeSlug) {
+      try {
+        sessionStorage.setItem("redirect_to_store", storeSlug);
+      } catch { /* ignore */ }
+    }
+    
     return { error, data };
   };
 
@@ -260,6 +303,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setReferredStoreId(null);
       setReferredStoreSlug(null);
       clearStoredSession();
+      // Clear any pending redirects
+      try {
+        sessionStorage.removeItem("redirect_to_store");
+      } catch { /* ignore */ }
     }
   };
 
