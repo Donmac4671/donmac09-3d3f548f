@@ -65,11 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return provider === "anonymous" || (authUser as User & { is_anonymous?: boolean }).is_anonymous === true;
   };
 
-  // FIXED: Get store slug from URL path if not in localStorage
   const getStoreSlugFromUrl = () => {
     if (typeof window === "undefined") return null;
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    // Check if the path matches /:slug/login or /:slug/register
     if (pathSegments.length >= 2) {
       const slug = pathSegments[0];
       const lastSegment = pathSegments[pathSegments.length - 1];
@@ -83,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const attributeStoreReferral = async () => {
     if (typeof window === "undefined") return;
     try {
-      // FIXED: Try URL first, then localStorage
       const slug = getStoreSlugFromUrl() || window.localStorage.getItem(STOREFRONT_KEY);
       if (!slug) return;
       await supabase.rpc("register_store_referral", { p_slug: slug });
@@ -105,9 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Profile fetch error:", profileError.message);
       }
 
-      // Self-heal: if the auth.users trigger didn't create a profile row,
-      // ask the server to provision it now so the dashboard / profile page
-      // don't get stuck on an infinite loader.
       if (!profileData) {
         try {
           await supabase.rpc("provision_my_profile");
@@ -122,28 +116,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const [rolesRes, storeRes, referralRes] = await Promise.all([
+      const [rolesRes, storeRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", authUser.id),
-        supabase.from("reseller_stores").select("id").eq("user_id", authUser.id).maybeSingle(),
-        supabase.from("store_referrals").select("id, store_id, reseller_stores(slug)").eq("user_id", authUser.id).maybeSingle()
+        supabase.from("reseller_stores").select("id").eq("user_id", authUser.id).maybeSingle()
       ]);
 
       if (rolesRes.error) console.error("Role fetch error:", rolesRes.error.message);
-      // Set referral / role state BEFORE profile so route guards and
-      // CustomerLockout see the reseller link in the same render that
-      // gets the profile (avoids a flash-of-no-referral that signs the
-      // customer out or pushes them to the main dashboard).
+      
+      // FIXED: Get referral separately with a cleaner query
+      let referralData = null;
+      let referralError = null;
+      try {
+        const result = await supabase
+          .from("store_referrals")
+          .select("store_id")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        referralData = result.data;
+        referralError = result.error;
+      } catch (err) {
+        console.error("Referral fetch error:", err);
+      }
+
+      // FIXED: If referral exists, get the store slug separately
+      let referredSlug = null;
+      if (referralData && !referralError) {
+        try {
+          const { data: storeData } = await supabase
+            .from("reseller_stores")
+            .select("slug")
+            .eq("id", referralData.store_id)
+            .maybeSingle();
+          if (storeData) {
+            referredSlug = storeData.slug;
+          }
+        } catch (err) {
+          console.error("Store slug fetch error:", err);
+        }
+      }
+
       setIsAdmin(rolesRes.data?.some((r) => r.role === "admin") ?? false);
       setIsReseller(Boolean(storeRes.data));
-      setIsReferredCustomer(Boolean(referralRes.data));
-      setReferredStoreId((referralRes.data as any)?.store_id ?? null);
-      setReferredStoreSlug((referralRes.data as any)?.reseller_stores?.slug ?? null);
+      setIsReferredCustomer(Boolean(referralData));
+      setReferredStoreId(referralData?.store_id ?? null);
+      setReferredStoreSlug(referredSlug);
       setProfile((profileData as Profile) ?? null);
 
       // AFTER profile is set, check if we need to redirect to a store
-      // Check for redirect from sessionStorage (set during signin/signup)
       try {
-        // FIXED: Check sessionStorage first, then URL, then localStorage
         let redirectSlug = sessionStorage.getItem("redirect_to_store");
         if (!redirectSlug) {
           redirectSlug = getStoreSlugFromUrl();
@@ -153,10 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         if (redirectSlug && !isAdmin && !storeRes.data) {
-          // Don't redirect admins/resellers
-          // Store the slug in localStorage to maintain the referral
           localStorage.setItem(STOREFRONT_KEY, redirectSlug);
-          // We'll let the ProtectedRoute handle the actual navigation
         }
       } catch { /* ignore */ }
 
@@ -271,16 +288,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
     
-    // After successful sign in, check if there's a stored store slug
     if (!error && data.user) {
       try {
-        // FIXED: Try URL first, then localStorage
         let storeSlug = getStoreSlugFromUrl();
         if (!storeSlug) {
           storeSlug = localStorage.getItem(STOREFRONT_KEY);
         }
         if (storeSlug) {
-          // Store it in sessionStorage so we can redirect after profile loads
           sessionStorage.setItem("redirect_to_store", storeSlug);
           localStorage.setItem(STOREFRONT_KEY, storeSlug);
         }
@@ -293,7 +307,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const cleanEmail = email.trim().toLowerCase();
     
-    // FIXED: Get store slug from URL first, then localStorage
     let storeSlug = typeof window !== "undefined" ? getStoreSlugFromUrl() : null;
     if (!storeSlug && typeof window !== "undefined") {
       storeSlug = localStorage.getItem(STOREFRONT_KEY);
@@ -306,12 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { 
           full_name: fullName, 
           phone,
-          referred_by_store: storeSlug || null // Store in user metadata
+          referred_by_store: storeSlug || null
         },
       },
     });
     
-    // If signup successful and we have a store slug, store it for redirect
     if (!error && data.user && storeSlug) {
       try {
         sessionStorage.setItem("redirect_to_store", storeSlug);
@@ -336,7 +348,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setReferredStoreId(null);
       setReferredStoreSlug(null);
       clearStoredSession();
-      // Clear any pending redirects
       try {
         sessionStorage.removeItem("redirect_to_store");
       } catch { /* ignore */ }
