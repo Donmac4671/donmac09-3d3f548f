@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,14 +11,17 @@ import { useCanonical } from "@/hooks/useCanonical";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
+const STOREFRONT_KEY = "donmac_store_slug";
+
 export default function Login() {
   useCanonical("/login");
   usePageMeta({ title: "Sign In | Donmac Data Hub", description: "Sign in to your Donmac Data Hub account to buy data, manage your store, and view orders.", path: "/login" });
   const [searchParams] = useSearchParams();
+  const { slug } = useParams<{ slug: string }>(); // FIXED: Get store slug from URL params
 
-  // Get store info from localStorage (set by Storefront)
+  // Get store info from localStorage (set by Storefront) or from URL param
   const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
-  const storeSlug = localStorage.getItem("donmac_store_slug");
+  const storeSlug = slug || localStorage.getItem(STOREFRONT_KEY); // FIXED: Use URL slug first, then localStorage
   const [loadingBrand, setLoadingBrand] = useState(true);
 
   useEffect(() => {
@@ -31,7 +34,14 @@ export default function Login() {
         .then(({ data }: { data: { full_name: string } | null }) => {
           if (data) {
             setStoreBrand(data);
+            // Store in localStorage for future use
+            try {
+              localStorage.setItem(STOREFRONT_KEY, storeSlug);
+            } catch { /* ignore */ }
           }
+          setLoadingBrand(false);
+        })
+        .catch(() => {
           setLoadingBrand(false);
         });
     } else {
@@ -61,8 +71,8 @@ export default function Login() {
   useEffect(() => {
     if (authLoading || !user || !profile) return;
 
-    const localSlug = typeof window !== "undefined" ? localStorage.getItem("donmac_store_slug") : null;
-    const targetSlug = referredStoreSlug || localSlug;
+    const localSlug = typeof window !== "undefined" ? localStorage.getItem(STOREFRONT_KEY) : null;
+    const targetSlug = referredStoreSlug || localSlug || slug; // FIXED: Check slug from URL params too
 
     // Customer arriving from a reseller's storefront → send them to that store
     if (targetSlug && profile.tier !== "reseller" && profile.tier !== "agent" && !isReseller) {
@@ -75,7 +85,7 @@ export default function Login() {
       return;
     }
     navigate("/dashboard", { replace: true });
-  }, [user, profile, authLoading, referredStoreSlug, isReseller, navigate, toast]);
+  }, [user, profile, authLoading, referredStoreSlug, isReseller, navigate, toast, slug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +95,12 @@ export default function Login() {
       sessionStorage.setItem("donmac_no_persist", "1");
     } else {
       sessionStorage.removeItem("donmac_no_persist");
+    }
+
+    // FIXED: Store the slug for redirect after login
+    const storeSlugForRedirect = slug || localStorage.getItem(STOREFRONT_KEY);
+    if (storeSlugForRedirect) {
+      sessionStorage.setItem("redirect_to_store", storeSlugForRedirect);
     }
 
     const { error } = await signIn(email, password);
