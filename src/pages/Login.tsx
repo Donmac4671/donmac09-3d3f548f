@@ -24,6 +24,7 @@ export default function Login() {
   
   // Only use the slug from URL params if we're on a store page
   const storeSlug = isStorePage ? slug : null;
+  
   const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
   const [loadingBrand, setLoadingBrand] = useState(true);
 
@@ -34,6 +35,7 @@ export default function Login() {
         .from("public_reseller_stores")
         .select("full_name")
         .eq("slug", storeSlug)
+        .eq("is_active", true)
         .single()
         .then(({ data }: { data: { full_name: string } | null }) => {
           if (data) {
@@ -42,10 +44,13 @@ export default function Login() {
             try {
               localStorage.setItem(STOREFRONT_KEY, storeSlug);
             } catch { /* ignore */ }
+          } else {
+            setStoreBrand(null);
           }
           setLoadingBrand(false);
         })
         .catch(() => {
+          setStoreBrand(null);
           setLoadingBrand(false);
         });
     } else {
