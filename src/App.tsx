@@ -35,14 +35,23 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function getCachedStoreSlug() {
+  if (typeof window === "undefined") return null;
+  try { return window.localStorage.getItem("donmac_store_slug"); } catch { return null; }
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isReferredCustomer, referredStoreSlug, profile, isAdmin, isReseller } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   // Reseller's referred customers should always shop at their reseller's storefront
   const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
+  const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : getCachedStoreSlug());
   if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
     return <Navigate to={`/${referredStoreSlug}`} replace />;
+  }
+  if (targetSlug && !isPrivilegedUser && !referredStoreSlug) {
+    return <Navigate to={`/${targetSlug}`} replace />;
   }
   return <>{children}</>;
 }
@@ -52,8 +61,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (user) {
     const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
-    if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
-      return <Navigate to={`/${referredStoreSlug}`} replace />;
+    const cachedSlug = getCachedStoreSlug();
+    const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : cachedSlug);
+    if (targetSlug && !isPrivilegedUser) {
+      return <Navigate to={`/${targetSlug}`} replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
