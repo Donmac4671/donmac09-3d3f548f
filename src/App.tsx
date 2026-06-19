@@ -147,6 +147,7 @@ const App = () => (
             <FloatingCartButton />
             <LiveChatWidget />
             <Routes>
+              {/* Main site routes - for admins and resellers */}
               <Route
                 path="/"
                 element={
@@ -171,6 +172,12 @@ const App = () => (
                   </PublicRoute>
                 }
               />
+              
+              {/* Store-specific routes - for customers */}
+              {/* FIXED: Added routes for store-specific login and register */}
+              <Route path="/:slug/login" element={<Login />} />
+              <Route path="/:slug/register" element={<Register />} />
+              
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/dashboard"
@@ -263,6 +270,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              {/* Storefront route - must come after the nested routes */}
               <Route path="/:slug" element={<Storefront />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
