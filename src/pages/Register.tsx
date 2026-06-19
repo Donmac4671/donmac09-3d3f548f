@@ -17,10 +17,19 @@ export default function Register() {
   useCanonical("/register");
   usePageMeta({ title: "Create Account | Donmac Data Hub", description: "Create your Donmac Data Hub account to buy cheap data bundles or start reselling in Ghana.", path: "/register" });
   const [searchParams] = useSearchParams();
-  const { slug } = useParams<{ slug: string }>(); // FIXED: Get store slug from URL params
+  const { slug } = useParams<{ slug: string }>();
+
+  // Check if we're on a store-specific page (has a slug from URL params)
+  const isStorePage = Boolean(slug);
+  
+  // Only use the slug from URL params if we're on a store page
+  const storeSlug = isStorePage ? slug : null;
+  
+  // Use the store branding hook - it will handle the fetching
   const storeBrand = useStoreBranding();
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,10 +43,14 @@ export default function Register() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // FIXED: Get the store slug from URL params or localStorage
-  const getStoreSlug = () => {
-    return slug || localStorage.getItem(STOREFRONT_KEY) || undefined;
-  };
+  // Only store the slug if we're on a store page
+  useEffect(() => {
+    if (isStorePage && storeSlug) {
+      try {
+        localStorage.setItem(STOREFRONT_KEY, storeSlug);
+      } catch { /* ignore */ }
+    }
+  }, [isStorePage, storeSlug]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +72,7 @@ export default function Register() {
     }
     setLoading(true);
 
-    // FIXED: Store the slug for redirect after registration
-    const storeSlug = getStoreSlug();
+    // Store the slug for redirect after registration
     if (storeSlug) {
       sessionStorage.setItem("redirect_to_store", storeSlug);
       localStorage.setItem(STOREFRONT_KEY, storeSlug);
@@ -113,8 +125,6 @@ export default function Register() {
       toast({ title: "Verification Failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Email Verified!", description: "You can now sign in to your account." });
-      // FIXED: After verification, redirect to the store if there is one
-      const storeSlug = getStoreSlug();
       navigate(storeSlug ? `/${storeSlug}` : "/login");
     }
   };
@@ -202,8 +212,7 @@ export default function Register() {
               </form>
               <p className="text-center text-sm text-muted-foreground mt-3">
                 Already have an account?{" "}
-                {/* FIXED: Link to store-specific login if we have a slug */}
-                <Link to={slug ? `/${slug}/login` : "/login"} className="text-primary font-medium hover:underline">
+                <Link to={isStorePage && storeSlug ? `/${storeSlug}/login` : "/login"} className="text-primary font-medium hover:underline">
                   Sign In
                 </Link>
               </p>
