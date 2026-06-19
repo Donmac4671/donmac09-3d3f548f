@@ -104,7 +104,7 @@ export default function DataBundles() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const { addItem } = useCart();
   const { toast } = useToast();
-  const { profile, isAdmin, referredStoreId } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const { networks: mergedNetworks } = useCustomBundles();
   const { getResellerPrice: calculateResellerPrice, loading: pricesLoading } = useResellerPrices();
   const userTier = profile?.tier || "customer";
