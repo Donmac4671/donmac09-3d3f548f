@@ -28,9 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/data";
+import { formatCurrency, networks } from "@/lib/data";
 import { format } from "date-fns";
-import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus } from "lucide-react";
+import { Store, Plus, ExternalLink, ToggleLeft, ToggleRight, Trash2, UserPlus, DollarSign } from "lucide-react";
 
 interface ResellerStore {
   id: string;
@@ -70,6 +70,10 @@ export default function AdminResellers() {
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [newUser, setNewUser] = useState({ full_name: "", email: "", phone: "", password: "" });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [priceStore, setPriceStore] = useState<ResellerStore | null>(null);
+  const [storePrices, setStorePrices] = useState<Record<string, number>>({});
+  const [priceLoading, setPriceLoading] = useState(false);
 
   const handleAddUser = async () => {
     if (!newUser.full_name || !newUser.email || !newUser.phone || !newUser.password) {
@@ -175,6 +179,42 @@ export default function AdminResellers() {
     toast({ title: "Store created", description: `/${cleanSlug} is live.` });
     setCreateOpen(false);
     setForm({ user_id: "", slug: "", full_name: "", whatsapp: "", store_message: "" });
+    void load();
+  };
+
+  const openPrices = async (store: ResellerStore) => {
+    setPriceStore(store);
+    setPriceOpen(true);
+    setPriceLoading(true);
+    const { data, error } = await supabase
+      .from("reseller_bundle_prices")
+      .select("network_id, bundle_size, price")
+      .eq("store_id", store.id);
+    if (error) {
+      toast({ title: "Could not load prices", description: error.message, variant: "destructive" });
+    } else {
+      const map: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        map[`${row.network_id}|${row.bundle_size}`] = Number(row.price);
+      });
+      setStorePrices(map);
+    }
+    setPriceLoading(false);
+  };
+
+  const saveStorePrice = async (networkId: string, bundleSize: string, basePrice: number, price: number) => {
+    if (!priceStore) return;
+    if (!Number.isFinite(price) || price < basePrice) {
+      toast({ title: "Too low", description: `Minimum ${formatCurrency(basePrice)}`, variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("reseller_bundle_prices").upsert(
+      { store_id: priceStore.id, network_id: networkId, bundle_size: bundleSize, price },
+      { onConflict: "store_id,network_id,bundle_size" }
+    );
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    setStorePrices((prev) => ({ ...prev, [`${networkId}|${bundleSize}`]: price }));
+    toast({ title: "Price saved" });
     void load();
   };
 
@@ -314,6 +354,9 @@ export default function AdminResellers() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => openPrices(s)} title="Edit prices">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => toggleActive(s)} title={s.is_active ? "Disable" : "Enable"}>
                         {s.is_active ? <ToggleRight className="w-4 h-4 text-primary" /> : <ToggleLeft className="w-4 h-4" />}
                       </Button>
@@ -390,6 +433,49 @@ export default function AdminResellers() {
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} className="gradient-primary border-0">Create Store</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={priceOpen} onOpenChange={setPriceOpen}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Store Prices {priceStore ? `/${priceStore.slug}` : ""}</DialogTitle>
+            <DialogDescription className="sr-only">Set customer-facing store bundle prices</DialogDescription>
+          </DialogHeader>
+          {priceLoading ? (
+            <div className="py-8 text-center text-muted-foreground">Loading prices…</div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-2">
+              {networks.map((network) => (
+                <div key={network.id} className="space-y-2">
+                  <h3 className="font-bold">{network.name}</h3>
+                  {network.bundles.map((bundle) => {
+                    const key = `${network.id}|${bundle.size}`;
+                    const current = storePrices[key];
+                    return (
+                      <div key={key} className="flex items-center gap-2">
+                        <span className="text-sm font-medium w-20">{bundle.size}</span>
+                        <span className="text-xs text-muted-foreground w-20">Base {formatCurrency(bundle.price)}</span>
+                        <Input
+                          type="number"
+                          min={bundle.price}
+                          step="0.01"
+                          defaultValue={current ?? ""}
+                          placeholder={bundle.price.toFixed(2)}
+                          onBlur={(e) => {
+                            const nextPrice = Number(e.target.value);
+                            if (!nextPrice || nextPrice === current) return;
+                            void saveStorePrice(network.id, bundle.size, bundle.price, nextPrice);
+                          }}
+                          className="flex-1"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

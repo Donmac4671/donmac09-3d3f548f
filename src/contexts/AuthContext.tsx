@@ -78,13 +78,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  const resolveStoreSlug = async (slug: string) => {
+    const { data } = await (supabase as any)
+      .from("public_reseller_stores")
+      .select("id, slug")
+      .eq("slug", slug.trim().toLowerCase())
+      .eq("is_active", true)
+      .maybeSingle();
+    return data as { id: string; slug: string } | null;
+  };
+
   const attributeStoreReferral = async () => {
     if (typeof window === "undefined") return;
     try {
       const slug = getStoreSlugFromUrl() || window.localStorage.getItem(STOREFRONT_KEY);
       if (!slug) return;
       await supabase.rpc("register_store_referral", { p_slug: slug });
-      window.localStorage.removeItem(STOREFRONT_KEY);
     } catch (err) {
       console.warn("Store referral attribution skipped:", err);
     }
@@ -124,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (rolesRes.error) console.error("Role fetch error:", rolesRes.error.message);
       
       // FIXED: Get referral separately with a cleaner query
-      let referralData = null;
+      let referralData: { store_id: string } | null = null;
       let referralError = null;
       try {
         const result = await supabase
@@ -136,6 +145,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         referralError = result.error;
       } catch (err) {
         console.error("Referral fetch error:", err);
+      }
+
+      const pendingStoreSlug = typeof window !== "undefined"
+        ? getStoreSlugFromUrl() || window.localStorage.getItem(STOREFRONT_KEY)
+        : null;
+      if (!referralData && pendingStoreSlug && !rolesRes.data?.some((r) => r.role === "admin") && !storeRes.data) {
+        const resolvedStore = await resolveStoreSlug(pendingStoreSlug);
+        if (resolvedStore) {
+          referralData = { store_id: resolvedStore.id };
+        }
       }
 
       // FIXED: If referral exists, get the store slug separately
@@ -153,6 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           console.error("Store slug fetch error:", err);
         }
+      }
+
+      if (!referredSlug && pendingStoreSlug && referralData) {
+        referredSlug = pendingStoreSlug.trim().toLowerCase();
       }
 
       setIsAdmin(rolesRes.data?.some((r) => r.role === "admin") ?? false);
