@@ -440,7 +440,7 @@ export default function AdminResellers() {
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Store Prices {priceStore ? `/${priceStore.slug}` : ""}</DialogTitle>
-            <DialogDescription>Set the prices customers see on this reseller's storefront.</DialogDescription>
+            <DialogDescription className="sr-only">Set customer-facing store bundle prices</DialogDescription>
           </DialogHeader>
           {priceLoading ? (
             <div className="py-8 text-center text-muted-foreground">Loading prices…</div>
