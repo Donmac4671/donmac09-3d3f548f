@@ -9,7 +9,6 @@ import { useCanonical } from "@/hooks/useCanonical";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 const STOREFRONT_KEY = "donmac_store_slug";
 
@@ -25,11 +24,45 @@ export default function Register() {
   // Only use the slug from URL params if we're on a store page
   const storeSlug = isStorePage ? slug : null;
   
-  // Use the store branding hook - it will handle the fetching
-  const storeBrand = useStoreBranding();
+  const [storeBrand, setStoreBrand] = useState<{ full_name: string } | null>(null);
+  const [loadingBrand, setLoadingBrand] = useState(true);
+
+  // Fetch store info only if we're on a store page
+  useEffect(() => {
+    if (isStorePage && storeSlug) {
+      (supabase as any)
+        .from("public_reseller_stores")
+        .select("full_name")
+        .eq("slug", storeSlug)
+        .eq("is_active", true)
+        .single()
+        .then(({ data }: { data: { full_name: string } | null }) => {
+          if (data) {
+            setStoreBrand(data);
+            // Store in localStorage for future use
+            try {
+              localStorage.setItem(STOREFRONT_KEY, storeSlug);
+            } catch { /* ignore */ }
+          } else {
+            // Store not found - show default branding
+            setStoreBrand(null);
+          }
+          setLoadingBrand(false);
+        })
+        .catch(() => {
+          setStoreBrand(null);
+          setLoadingBrand(false);
+        });
+    } else {
+      // Not on a store page - show default Donmac branding
+      setStoreBrand(null);
+      setLoadingBrand(false);
+    }
+  }, [isStorePage, storeSlug]);
+
   const displayName = storeBrand?.full_name || "Donmac Data Hub";
   const initial = displayName.charAt(0).toUpperCase() || "D";
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -42,15 +75,6 @@ export default function Register() {
   const { signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Only store the slug if we're on a store page
-  useEffect(() => {
-    if (isStorePage && storeSlug) {
-      try {
-        localStorage.setItem(STOREFRONT_KEY, storeSlug);
-      } catch { /* ignore */ }
-    }
-  }, [isStorePage, storeSlug]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +167,16 @@ export default function Register() {
       toast({ title: "Code Resent", description: "Please check your email for the new code." });
     }
   };
+
+  if (loadingBrand) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-2xl">D</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
