@@ -55,8 +55,6 @@ export default function Storefront() {
         setStore(null);
       } else {
         setStore(data as StoreInfo);
-        // Remember which store the visitor came from so we can attribute
-        // them on registration / sign-in.
         try {
           localStorage.setItem(STOREFRONT_KEY, data.slug);
         } catch {
@@ -70,19 +68,14 @@ export default function Storefront() {
     };
   }, [slug]);
 
-  // Quietly attribute the referral for signed-in visitors but DO NOT redirect.
-  // The storefront landing must remain visible so the reseller can show it to
-  // customers and so customers can register/sign in from this page.
   useEffect(() => {
     if (authLoading || !user || !store) return;
-    // Don't attribute referral if the user is the store owner
     const isOwner = store.user_id === user.id;
     if (isOwner) return;
 
     void supabase.rpc("register_store_referral", { p_slug: store.slug }).then(() => undefined, () => undefined);
   }, [authLoading, user, store]);
 
-  // Per-page title, canonical, og:url, and LocalBusiness JSON-LD
   useEffect(() => {
     if (!store) return;
     const url = `https://donmacdatahub.com/${store.slug}`;
@@ -197,13 +190,11 @@ export default function Storefront() {
               </Button>
             ) : (
               <>
-                {/* FIXED: Added store slug to the register link */}
                 <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
                   <Link to={`/${store.slug}/register`}>
                     Create Account <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
-                {/* FIXED: Added store slug to the login link */}
                 <Button
                   asChild
                   size="lg"
@@ -291,7 +282,6 @@ export default function Storefront() {
           <p className="text-muted-foreground mb-5">
             Create an account in seconds — you'll be linked to {store.full_name}'s store automatically.
           </p>
-          {/* FIXED: Added store slug to the get started link */}
           <Button asChild size="lg" className="gradient-primary border-0 text-base font-bold px-8">
             <Link to={`/${store.slug}/register`}>
               Get Started <ArrowRight className="w-4 h-4 ml-2" />
