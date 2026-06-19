@@ -197,18 +197,20 @@ export default function Storefront() {
               </Button>
             ) : (
               <>
+                {/* FIXED: Added store slug to the register link */}
                 <Button asChild size="lg" variant="secondary" className="text-base font-bold px-8 shadow-lg">
-                  <Link to="/register">
+                  <Link to={`/${store.slug}/register`}>
                     Create Account <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
+                {/* FIXED: Added store slug to the login link */}
                 <Button
                   asChild
                   size="lg"
                   variant="outline"
                   className="text-base font-bold px-8 bg-white/10 text-primary-foreground border-white/40 hover:bg-white/20 hover:text-primary-foreground"
                 >
-                  <Link to="/login">Sign In</Link>
+                  <Link to={`/${store.slug}/login`}>Sign In</Link>
                 </Button>
               </>
             )}
@@ -289,8 +291,9 @@ export default function Storefront() {
           <p className="text-muted-foreground mb-5">
             Create an account in seconds — you'll be linked to {store.full_name}'s store automatically.
           </p>
+          {/* FIXED: Added store slug to the get started link */}
           <Button asChild size="lg" className="gradient-primary border-0 text-base font-bold px-8">
-            <Link to="/register">
+            <Link to={`/${store.slug}/register`}>
               Get Started <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
