@@ -45,17 +45,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   
-  // Reseller's referred customers should always shop at their reseller's storefront
-  const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
-  const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : getCachedStoreSlug());
+  // FIXED: Check if user is privileged FIRST
+  const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent" || profile?.tier === "admin";
   
-  if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
+  // If privileged user, go to dashboard - NO storefront redirect
+  if (isPrivilegedUser) {
+    // Clear any pending redirects for privileged users
+    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
+    return <>{children}</>;
+  }
+  
+  // Only apply storefront redirect for regular customers
+  const targetSlug = referredStoreSlug || getCachedStoreSlug();
+  
+  if (isReferredCustomer && referredStoreSlug) {
     // Clear the session redirect after use
     try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
     return <Navigate to={`/${referredStoreSlug}`} replace />;
   }
   
-  if (targetSlug && !isPrivilegedUser && !referredStoreSlug) {
+  if (targetSlug && !referredStoreSlug) {
     // Clear the session redirect after use
     try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
     return <Navigate to={`/${targetSlug}`} replace />;
@@ -70,18 +79,28 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isReferredCustomer, referredStoreSlug, profile, isAdmin, isReseller } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (user) {
-    const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent";
+    // FIXED: Check if user is privileged FIRST
+    const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent" || profile?.tier === "admin";
+    
+    // If privileged user, go to dashboard - NO storefront redirect
+    if (isPrivilegedUser) {
+      // Clear any pending redirects for privileged users
+      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    // Only apply storefront redirect for regular customers
     const cachedSlug = getCachedStoreSlug();
-    const targetSlug = referredStoreSlug || (isPrivilegedUser ? null : cachedSlug);
+    const targetSlug = referredStoreSlug || cachedSlug;
     
     // If user is a referred customer OR has a stored store slug, send them to the storefront
-    if (isReferredCustomer && referredStoreSlug && !isPrivilegedUser) {
+    if (isReferredCustomer && referredStoreSlug) {
       // Clear the session redirect after use
       try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
       return <Navigate to={`/${referredStoreSlug}`} replace />;
     }
     
-    if (targetSlug && !isPrivilegedUser) {
+    if (targetSlug) {
       // Clear the session redirect after use
       try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
       return <Navigate to={`/${targetSlug}`} replace />;
@@ -174,7 +193,6 @@ const App = () => (
               />
               
               {/* Store-specific routes - for customers */}
-              {/* These must come BEFORE the /:slug route but AFTER the main routes */}
               <Route path="/:slug/login" element={<Login />} />
               <Route path="/:slug/register" element={<Register />} />
               
@@ -270,7 +288,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              {/* Storefront route - must come LAST */}
+              {/* Storefront route - must come after the nested routes */}
               <Route path="/:slug" element={<Storefront />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
