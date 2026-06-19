@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: jsonHeaders });
 
     const body = await req.json().catch(() => ({}));
-    console.log("Request body:", JSON.stringify(body));
 
     const full_name = String(body.full_name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
@@ -63,23 +62,31 @@ Deno.serve(async (req) => {
 
     const userId = created.user?.id;
 
-    // Small poll to ensure trigger has finished creating the profile
-    // before we return success to the admin UI.
-    let profileCreated = false;
-    for (let i = 0; i < 5; i++) {
-      const { data: p } = await admin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-      if (p) {
-        profileCreated = true;
-        break;
-      }
-      await new Promise((r) => setTimeout(r, 500));
+    const { error: profileErr } = await admin.from("profiles").upsert(
+      {
+        id: userId,
+        user_id: userId,
+        full_name,
+        email,
+        phone,
+        tier: user_type,
+        wallet_balance: 0,
+        is_blocked: false,
+      },
+      { onConflict: "user_id" },
+    );
+    if (profileErr) {
+      console.error("Profile upsert error:", profileErr.message);
+      return new Response(JSON.stringify({ error: profileErr.message }), { status: 400, headers: jsonHeaders });
     }
 
-    if (!profileCreated) {
-      console.warn(`Profile for ${userId} not created within 2.5s`);
-    }
+    const { error: roleErr } = await admin.from("user_roles").upsert(
+      { user_id: userId, role: "user" },
+      { onConflict: "user_id,role" },
+    );
+    if (roleErr) console.warn("Role upsert skipped:", roleErr.message);
 
-    return new Response(JSON.stringify({ success: true, user_id: userId, profile_verified: profileCreated }), { status: 200, headers: jsonHeaders });
+    return new Response(JSON.stringify({ success: true, user_id: userId, profile_verified: true }), { status: 200, headers: jsonHeaders });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: jsonHeaders });
