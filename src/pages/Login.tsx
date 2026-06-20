@@ -82,21 +82,15 @@ export default function Login() {
   useEffect(() => {
     if (authLoading || !user || !profile) return;
 
-    const localSlug = typeof window !== "undefined" ? localStorage.getItem(STOREFRONT_KEY) : null;
-    const targetSlug = referredStoreSlug || localSlug || storeSlug;
-
-    // Customer arriving from a reseller's storefront → send them to that store
-    if (targetSlug && profile.tier !== "reseller" && profile.tier !== "agent" && !isReseller) {
-      navigate(`/${targetSlug}`, { replace: true });
-      return;
-    }
     // Reseller without a store yet → onboarding
     if (profile.tier === "reseller" && !isReseller) {
       navigate("/mystore", { replace: true });
       return;
     }
+
+    // Everyone else (including customers and admins) goes to the dashboard
     navigate("/dashboard", { replace: true });
-  }, [user, profile, authLoading, referredStoreSlug, isReseller, navigate, toast, storeSlug]);
+  }, [user, profile, authLoading, isReseller, navigate, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

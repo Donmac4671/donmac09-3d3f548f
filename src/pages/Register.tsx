@@ -120,7 +120,7 @@ export default function Register() {
       if (data?.session) {
         toast({ title: "Welcome!", description: "Account created successfully." });
         setTimeout(() => {
-          navigate(storeSlug ? `/${storeSlug}` : "/dashboard");
+          navigate("/dashboard");
         }, 1500);
       } else {
         setVerificationMode(true);
@@ -149,7 +149,7 @@ export default function Register() {
       toast({ title: "Verification Failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Email Verified!", description: "You can now sign in to your account." });
-      navigate(storeSlug ? `/${storeSlug}` : "/login");
+      navigate("/login");
     }
   };
 

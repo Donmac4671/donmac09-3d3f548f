@@ -41,73 +41,20 @@ function getCachedStoreSlug() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isReferredCustomer, referredStoreSlug, profile, isAdmin, isReseller } = useAuth();
+  const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   
-  // FIXED: Check if user is privileged FIRST
-  const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent" || profile?.tier === "admin";
-  
-  // If privileged user, go to dashboard - NO storefront redirect
-  if (isPrivilegedUser) {
-    // Clear any pending redirects for privileged users
-    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-    return <>{children}</>;
-  }
-  
-  // Only apply storefront redirect for regular customers
-  const targetSlug = referredStoreSlug || getCachedStoreSlug();
-  
-  if (isReferredCustomer && referredStoreSlug) {
-    // Clear the session redirect after use
-    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-    return <Navigate to={`/${referredStoreSlug}`} replace />;
-  }
-  
-  if (targetSlug && !referredStoreSlug) {
-    // Clear the session redirect after use
-    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-    return <Navigate to={`/${targetSlug}`} replace />;
-  }
-  
-  // Clear any pending redirect
+  // Clear any pending redirects now that we are in a protected area
   try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isReferredCustomer, referredStoreSlug, profile, isAdmin, isReseller } = useAuth();
+  const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (user) {
-    // FIXED: Check if user is privileged FIRST
-    const isPrivilegedUser = isAdmin || isReseller || profile?.tier === "reseller" || profile?.tier === "agent" || profile?.tier === "admin";
-    
-    // If privileged user, go to dashboard - NO storefront redirect
-    if (isPrivilegedUser) {
-      // Clear any pending redirects for privileged users
-      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-      return <Navigate to="/dashboard" replace />;
-    }
-    
-    // Only apply storefront redirect for regular customers
-    const cachedSlug = getCachedStoreSlug();
-    const targetSlug = referredStoreSlug || cachedSlug;
-    
-    // If user is a referred customer OR has a stored store slug, send them to the storefront
-    if (isReferredCustomer && referredStoreSlug) {
-      // Clear the session redirect after use
-      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-      return <Navigate to={`/${referredStoreSlug}`} replace />;
-    }
-    
-    if (targetSlug) {
-      // Clear the session redirect after use
-      try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
-      return <Navigate to={`/${targetSlug}`} replace />;
-    }
-    
-    // Clear any pending redirect
-    try { sessionStorage.removeItem("redirect_to_store"); } catch { /* ignore */ }
+    // Authenticated users should always land on the dashboard
     return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;
