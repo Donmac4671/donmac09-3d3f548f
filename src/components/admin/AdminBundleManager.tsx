@@ -128,6 +128,7 @@ export default function AdminBundleManager() {
       size_gb: parseFloat(formSizeGB),
       agent_price: parseFloat(formAgentPrice),
       general_price: parseFloat(formGeneralPrice),
+      cost_price: formCostPrice === "" ? null : parseFloat(formCostPrice),
     };
 
     if (editingBundle) {
