@@ -101,16 +101,18 @@ export default function AdminBundleManager() {
     setFormSizeGB("");
     setFormAgentPrice("");
     setFormGeneralPrice("");
+    setFormCostPrice("");
     setShowDialog(true);
   };
 
-  const openEditDialog = (networkId: string, bundle: { size: string; sizeGB: number; agentPrice: number; generalPrice: number }) => {
+  const openEditDialog = (networkId: string, bundle: { size: string; sizeGB: number; agentPrice: number; generalPrice: number; costPrice: number | null }) => {
     setEditingBundle({ networkId, size: bundle.size });
     setFormNetworkId(networkId);
     setFormSize(bundle.size);
     setFormSizeGB(bundle.sizeGB.toString());
     setFormAgentPrice(bundle.agentPrice.toString());
     setFormGeneralPrice(bundle.generalPrice.toString());
+    setFormCostPrice(bundle.costPrice != null ? bundle.costPrice.toString() : "");
     setShowDialog(true);
   };
 
