@@ -264,13 +264,15 @@ export default function AdminAnalytics({ users, orders, topups, complaints }: Ad
 
   useEffect(() => {
     const fetchCustomCosts = async () => {
-      const { data } = await supabase.from("custom_bundles").select("network_id, bundle_size, agent_price");
+      const { data } = await supabase.from("custom_bundles").select("network_id, bundle_size, agent_price, cost_price");
       if (!data) return;
       const map: Record<string, Record<string, number>> = {};
-      for (const row of data) {
+      for (const row of data as any[]) {
         const networkName = NETWORK_ID_TO_NAME[row.network_id] ?? row.network_id?.toUpperCase();
         if (!map[networkName]) map[networkName] = {};
-        map[networkName][row.bundle_size] = Number(row.agent_price);
+        // Prefer admin-set cost_price; fall back to agent_price for backward compatibility
+        const cost = row.cost_price != null ? Number(row.cost_price) : Number(row.agent_price);
+        map[networkName][row.bundle_size] = cost;
       }
       setCustomCostMap(map);
     };
