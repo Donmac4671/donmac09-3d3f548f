@@ -182,10 +182,6 @@ function getOrderCostForDisplay(order: any, customCostMap?: Record<string, Recor
   if (typeof originalCost === "number") {
     return originalCost;
   }
-  const fallbackCost = customCostMap?.[order.network]?.[order.bundle_size];
-  if (typeof fallbackCost === "number") {
-    return fallbackCost;
-  }
   return 0;
 }
 
