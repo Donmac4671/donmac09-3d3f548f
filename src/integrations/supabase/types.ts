@@ -311,6 +311,7 @@ export type Database = {
         Row: {
           agent_price: number
           bundle_size: string
+          cost_price: number | null
           created_at: string
           general_price: number
           id: string
@@ -320,6 +321,7 @@ export type Database = {
         Insert: {
           agent_price: number
           bundle_size: string
+          cost_price?: number | null
           created_at?: string
           general_price: number
           id?: string
@@ -329,6 +331,7 @@ export type Database = {
         Update: {
           agent_price?: number
           bundle_size?: string
+          cost_price?: number | null
           created_at?: string
           general_price?: number
           id?: string
