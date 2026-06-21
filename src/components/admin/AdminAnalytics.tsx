@@ -147,15 +147,14 @@ function calculateOrderProfit(order: any, customCostMap?: Record<string, Record<
   }
 
   // Data bundles - Profit = selling price - cost price
+  // Prefer admin-set cost (custom_bundles.cost_price) over hardcoded defaults
   let cost = 0;
-  const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
-  if (typeof originalCost === "number") {
-    cost = originalCost;
+  const adminCost = customCostMap?.[order.network]?.[order.bundle_size];
+  if (typeof adminCost === "number") {
+    cost = adminCost;
   } else {
-    const fallbackCost = customCostMap?.[order.network]?.[order.bundle_size];
-    if (typeof fallbackCost === "number") {
-      cost = fallbackCost;
-    }
+    const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
+    if (typeof originalCost === "number") cost = originalCost;
   }
 
   return amount - cost;
@@ -174,7 +173,11 @@ function getOrderCostForDisplay(order: any, customCostMap?: Record<string, Recor
     return Number(order.amount);
   }
 
-  // Data bundles - get actual cost
+  // Data bundles - admin-set cost takes precedence
+  const adminCost = customCostMap?.[order.network]?.[order.bundle_size];
+  if (typeof adminCost === "number") {
+    return adminCost;
+  }
   const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
   if (typeof originalCost === "number") {
     return originalCost;
