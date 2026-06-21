@@ -147,15 +147,14 @@ function calculateOrderProfit(order: any, customCostMap?: Record<string, Record<
   }
 
   // Data bundles - Profit = selling price - cost price
+  // Prefer admin-set cost (custom_bundles.cost_price) over hardcoded defaults
   let cost = 0;
-  const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
-  if (typeof originalCost === "number") {
-    cost = originalCost;
+  const adminCost = customCostMap?.[order.network]?.[order.bundle_size];
+  if (typeof adminCost === "number") {
+    cost = adminCost;
   } else {
-    const fallbackCost = customCostMap?.[order.network]?.[order.bundle_size];
-    if (typeof fallbackCost === "number") {
-      cost = fallbackCost;
-    }
+    const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
+    if (typeof originalCost === "number") cost = originalCost;
   }
 
   return amount - cost;
@@ -174,14 +173,14 @@ function getOrderCostForDisplay(order: any, customCostMap?: Record<string, Recor
     return Number(order.amount);
   }
 
-  // Data bundles - get actual cost
+  // Data bundles - admin-set cost takes precedence
+  const adminCost = customCostMap?.[order.network]?.[order.bundle_size];
+  if (typeof adminCost === "number") {
+    return adminCost;
+  }
   const originalCost = ORIGINAL_PRICES[order.network]?.[order.bundle_size];
   if (typeof originalCost === "number") {
     return originalCost;
-  }
-  const fallbackCost = customCostMap?.[order.network]?.[order.bundle_size];
-  if (typeof fallbackCost === "number") {
-    return fallbackCost;
   }
   return 0;
 }
@@ -264,13 +263,15 @@ export default function AdminAnalytics({ users, orders, topups, complaints }: Ad
 
   useEffect(() => {
     const fetchCustomCosts = async () => {
-      const { data } = await supabase.from("custom_bundles").select("network_id, bundle_size, agent_price");
+      const { data } = await supabase.from("custom_bundles").select("network_id, bundle_size, agent_price, cost_price");
       if (!data) return;
       const map: Record<string, Record<string, number>> = {};
-      for (const row of data) {
+      for (const row of data as any[]) {
         const networkName = NETWORK_ID_TO_NAME[row.network_id] ?? row.network_id?.toUpperCase();
         if (!map[networkName]) map[networkName] = {};
-        map[networkName][row.bundle_size] = Number(row.agent_price);
+        // Prefer admin-set cost_price; fall back to agent_price for backward compatibility
+        const cost = row.cost_price != null ? Number(row.cost_price) : Number(row.agent_price);
+        map[networkName][row.bundle_size] = cost;
       }
       setCustomCostMap(map);
     };

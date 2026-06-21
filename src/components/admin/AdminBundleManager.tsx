@@ -17,6 +17,7 @@ interface CustomBundle {
   size_gb: number;
   agent_price: number;
   general_price: number;
+  cost_price: number | null;
 }
 
 export default function AdminBundleManager() {
@@ -32,6 +33,7 @@ export default function AdminBundleManager() {
   const [formSizeGB, setFormSizeGB] = useState("");
   const [formAgentPrice, setFormAgentPrice] = useState("");
   const [formGeneralPrice, setFormGeneralPrice] = useState("");
+  const [formCostPrice, setFormCostPrice] = useState("");
 
   const makeKey = (networkId: string, bundleSize: string) => `${networkId}::${bundleSize}`;
 
@@ -56,14 +58,14 @@ export default function AdminBundleManager() {
     const network = networks.find((n) => n.id === networkId);
     if (!network) return [];
 
-    const bundleMap = new Map<string, { size: string; sizeGB: number; agentPrice: number; generalPrice: number; isCustom: boolean }>();
+    const bundleMap = new Map<string, { size: string; sizeGB: number; agentPrice: number; generalPrice: number; costPrice: number | null; isCustom: boolean }>();
 
     for (const b of network.bundles) {
-      bundleMap.set(b.size, { size: b.size, sizeGB: b.sizeGB, agentPrice: b.price, generalPrice: b.generalPrice, isCustom: false });
+      bundleMap.set(b.size, { size: b.size, sizeGB: b.sizeGB, agentPrice: b.price, generalPrice: b.generalPrice, costPrice: null, isCustom: false });
     }
 
     for (const c of customBundles.filter((cb) => cb.network_id === networkId)) {
-      bundleMap.set(c.bundle_size, { size: c.bundle_size, sizeGB: c.size_gb, agentPrice: c.agent_price, generalPrice: c.general_price, isCustom: true });
+      bundleMap.set(c.bundle_size, { size: c.bundle_size, sizeGB: c.size_gb, agentPrice: c.agent_price, generalPrice: c.general_price, costPrice: c.cost_price, isCustom: true });
     }
 
     return Array.from(bundleMap.values()).sort((a, b) => a.sizeGB - b.sizeGB);
@@ -99,16 +101,18 @@ export default function AdminBundleManager() {
     setFormSizeGB("");
     setFormAgentPrice("");
     setFormGeneralPrice("");
+    setFormCostPrice("");
     setShowDialog(true);
   };
 
-  const openEditDialog = (networkId: string, bundle: { size: string; sizeGB: number; agentPrice: number; generalPrice: number }) => {
+  const openEditDialog = (networkId: string, bundle: { size: string; sizeGB: number; agentPrice: number; generalPrice: number; costPrice: number | null }) => {
     setEditingBundle({ networkId, size: bundle.size });
     setFormNetworkId(networkId);
     setFormSize(bundle.size);
     setFormSizeGB(bundle.sizeGB.toString());
     setFormAgentPrice(bundle.agentPrice.toString());
     setFormGeneralPrice(bundle.generalPrice.toString());
+    setFormCostPrice(bundle.costPrice != null ? bundle.costPrice.toString() : "");
     setShowDialog(true);
   };
 
@@ -124,6 +128,7 @@ export default function AdminBundleManager() {
       size_gb: parseFloat(formSizeGB),
       agent_price: parseFloat(formAgentPrice),
       general_price: parseFloat(formGeneralPrice),
+      cost_price: formCostPrice === "" ? null : parseFloat(formCostPrice),
     };
 
     if (editingBundle) {
@@ -187,6 +192,7 @@ export default function AdminBundleManager() {
                       <span className="font-semibold text-foreground w-16">{bundle.size}</span>
                       <span className="text-sm text-muted-foreground">
                         Agent: {formatCurrency(bundle.agentPrice)} · General: {formatCurrency(bundle.generalPrice)}
+                        {bundle.costPrice != null && <> · Cost: {formatCurrency(bundle.costPrice)}</>}
                       </span>
                       {isHidden && <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">Hidden</Badge>}
                       {isOffline && <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 text-xs">Offline</Badge>}
@@ -267,6 +273,17 @@ export default function AdminBundleManager() {
                   step="0.01"
                 />
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Cost Price (₵) — for admin profit</label>
+              <Input
+                type="number"
+                placeholder="e.g. 95"
+                value={formCostPrice}
+                onChange={(e) => setFormCostPrice(e.target.value)}
+                step="0.01"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Optional. What you actually pay the supplier. Leave blank to use the built-in default.</p>
             </div>
             <Button className="w-full gradient-primary border-0" onClick={handleSaveBundle}>
               {editingBundle ? "Update" : "Add"} Bundle

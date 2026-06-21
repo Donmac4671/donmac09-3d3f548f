@@ -1,0 +1,1 @@
+ALTER TABLE public.custom_bundles ADD COLUMN IF NOT EXISTS cost_price numeric;
