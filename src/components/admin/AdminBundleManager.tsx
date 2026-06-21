@@ -274,6 +274,17 @@ export default function AdminBundleManager() {
                 />
               </div>
             </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Cost Price (₵) — for admin profit</label>
+              <Input
+                type="number"
+                placeholder="e.g. 95"
+                value={formCostPrice}
+                onChange={(e) => setFormCostPrice(e.target.value)}
+                step="0.01"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Optional. What you actually pay the supplier. Leave blank to use the built-in default.</p>
+            </div>
             <Button className="w-full gradient-primary border-0" onClick={handleSaveBundle}>
               {editingBundle ? "Update" : "Add"} Bundle
             </Button>
