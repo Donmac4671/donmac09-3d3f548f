@@ -796,6 +796,13 @@ export default function Admin() {
           <AdminBundleManager />
         </TabsContent>
 
+        {/* COST PRICES TAB */}
+        <TabsContent value="cost-prices">
+          <AdminCostPrices />
+        </TabsContent>
+
+
+
         {/* PROMOS TAB */}
         <TabsContent value="promos">
           <AdminPromoManager />
