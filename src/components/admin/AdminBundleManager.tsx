@@ -33,6 +33,7 @@ export default function AdminBundleManager() {
   const [formSizeGB, setFormSizeGB] = useState("");
   const [formAgentPrice, setFormAgentPrice] = useState("");
   const [formGeneralPrice, setFormGeneralPrice] = useState("");
+  const [formCostPrice, setFormCostPrice] = useState("");
 
   const makeKey = (networkId: string, bundleSize: string) => `${networkId}::${bundleSize}`;
 
