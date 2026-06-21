@@ -16,6 +16,7 @@ import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-
 import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine } from "lucide-react";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminBundleManager from "@/components/admin/AdminBundleManager";
+import AdminCostPrices from "@/components/admin/AdminCostPrices";
 import AdminPromoManager from "@/components/admin/AdminPromoManager";
 import AdminVerifiedTopups from "@/components/admin/AdminVerifiedTopups";
 import AdminSiteMessage from "@/components/admin/AdminSiteMessage";
@@ -35,7 +36,7 @@ export default function Admin() {
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
-    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals"];
+    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "cost-prices", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals"];
     return validTabs.includes(hash) ? hash : "analytics";
   };
 
@@ -364,6 +365,7 @@ export default function Admin() {
           </TabsList>
           <TabsList className="w-full h-auto flex flex-nowrap overflow-x-auto justify-start gap-1">
             <TabsTrigger value="bundles" className="gap-2 justify-center whitespace-nowrap"><Wifi className="w-4 h-4" /> Bundles</TabsTrigger>
+            <TabsTrigger value="cost-prices" className="gap-2 justify-center whitespace-nowrap"><DollarSign className="w-4 h-4" /> Cost Prices</TabsTrigger>
             <TabsTrigger value="promos" className="gap-2 justify-center whitespace-nowrap"><Percent className="w-4 h-4" /> Promos</TabsTrigger>
             <TabsTrigger value="resellers" className="gap-2 justify-center whitespace-nowrap"><Store className="w-4 h-4" /> Resellers</TabsTrigger>
             <TabsTrigger value="withdrawals" className="gap-2 justify-center whitespace-nowrap"><ArrowDownToLine className="w-4 h-4" /> Withdrawals</TabsTrigger>
@@ -793,6 +795,13 @@ export default function Admin() {
         <TabsContent value="bundles">
           <AdminBundleManager />
         </TabsContent>
+
+        {/* COST PRICES TAB */}
+        <TabsContent value="cost-prices">
+          <AdminCostPrices />
+        </TabsContent>
+
+
 
         {/* PROMOS TAB */}
         <TabsContent value="promos">
