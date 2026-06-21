@@ -16,6 +16,7 @@ import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-
 import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine } from "lucide-react";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminBundleManager from "@/components/admin/AdminBundleManager";
+import AdminCostPrices from "@/components/admin/AdminCostPrices";
 import AdminPromoManager from "@/components/admin/AdminPromoManager";
 import AdminVerifiedTopups from "@/components/admin/AdminVerifiedTopups";
 import AdminSiteMessage from "@/components/admin/AdminSiteMessage";
