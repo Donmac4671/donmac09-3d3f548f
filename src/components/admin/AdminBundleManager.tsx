@@ -58,14 +58,14 @@ export default function AdminBundleManager() {
     const network = networks.find((n) => n.id === networkId);
     if (!network) return [];
 
-    const bundleMap = new Map<string, { size: string; sizeGB: number; agentPrice: number; generalPrice: number; isCustom: boolean }>();
+    const bundleMap = new Map<string, { size: string; sizeGB: number; agentPrice: number; generalPrice: number; costPrice: number | null; isCustom: boolean }>();
 
     for (const b of network.bundles) {
-      bundleMap.set(b.size, { size: b.size, sizeGB: b.sizeGB, agentPrice: b.price, generalPrice: b.generalPrice, isCustom: false });
+      bundleMap.set(b.size, { size: b.size, sizeGB: b.sizeGB, agentPrice: b.price, generalPrice: b.generalPrice, costPrice: null, isCustom: false });
     }
 
     for (const c of customBundles.filter((cb) => cb.network_id === networkId)) {
-      bundleMap.set(c.bundle_size, { size: c.bundle_size, sizeGB: c.size_gb, agentPrice: c.agent_price, generalPrice: c.general_price, isCustom: true });
+      bundleMap.set(c.bundle_size, { size: c.bundle_size, sizeGB: c.size_gb, agentPrice: c.agent_price, generalPrice: c.general_price, costPrice: c.cost_price, isCustom: true });
     }
 
     return Array.from(bundleMap.values()).sort((a, b) => a.sizeGB - b.sizeGB);
