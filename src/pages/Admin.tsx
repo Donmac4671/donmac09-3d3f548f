@@ -365,6 +365,7 @@ export default function Admin() {
           </TabsList>
           <TabsList className="w-full h-auto flex flex-nowrap overflow-x-auto justify-start gap-1">
             <TabsTrigger value="bundles" className="gap-2 justify-center whitespace-nowrap"><Wifi className="w-4 h-4" /> Bundles</TabsTrigger>
+            <TabsTrigger value="cost-prices" className="gap-2 justify-center whitespace-nowrap"><DollarSign className="w-4 h-4" /> Cost Prices</TabsTrigger>
             <TabsTrigger value="promos" className="gap-2 justify-center whitespace-nowrap"><Percent className="w-4 h-4" /> Promos</TabsTrigger>
             <TabsTrigger value="resellers" className="gap-2 justify-center whitespace-nowrap"><Store className="w-4 h-4" /> Resellers</TabsTrigger>
             <TabsTrigger value="withdrawals" className="gap-2 justify-center whitespace-nowrap"><ArrowDownToLine className="w-4 h-4" /> Withdrawals</TabsTrigger>
