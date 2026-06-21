@@ -17,6 +17,7 @@ interface CustomBundle {
   size_gb: number;
   agent_price: number;
   general_price: number;
+  cost_price: number | null;
 }
 
 export default function AdminBundleManager() {
