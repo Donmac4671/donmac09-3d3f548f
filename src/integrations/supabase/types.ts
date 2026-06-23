@@ -1066,7 +1066,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email?: string | null
-          id: string
+          id?: string
         }
         Update: {
           created_at?: string | null
@@ -1419,6 +1419,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      kill_idle_connections: { Args: never; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
