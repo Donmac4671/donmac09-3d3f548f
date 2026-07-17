@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Send, Search, MessageCircle, Paperclip } from "lucide-react";
+import { Send, Search, MessageCircle, Paperclip, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ChatMedia from "@/components/chat/ChatMedia";
 
