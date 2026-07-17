@@ -5,18 +5,38 @@ const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 
 const readableError = (error: unknown, fallback = "Failed to create user") => {
   if (!error) return fallback;
-  if (error instanceof Error && error.message) return error.message;
   if (typeof error === "string") return error;
   const record = error as Record<string, unknown>;
-  for (const key of ["message", "msg", "error_description", "error", "code", "statusText"]) {
+  const msg = typeof record.message === "string" && record.message.trim() ? record.message : "";
+  const name = typeof record.name === "string" ? record.name : "";
+  if (msg) return name && name !== "Error" ? `${name}: ${msg}` : msg;
+  for (const key of ["msg", "error_description", "error", "code", "statusText"]) {
     const value = record[key];
     if (typeof value === "string" && value.trim()) return value;
   }
-  const details = Object.fromEntries(
-    Object.getOwnPropertyNames(error as object).map((key) => [key, record[key]]),
-  );
-  const serialized = JSON.stringify(details);
-  return serialized && serialized !== "{}" ? serialized : fallback;
+  if (name === "AuthRetryableFetchError") {
+    return "Auth service is temporarily unavailable. Please retry in a moment.";
+  }
+  if (name) return name;
+  return fallback;
+};
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const createUserWithRetry = async (
+  admin: ReturnType<typeof createClient>,
+  payload: { email: string; password: string; email_confirm: boolean; user_metadata: Record<string, string> },
+) => {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await admin.auth.admin.createUser(payload);
+    if (!error) return { data, error: null as unknown };
+    lastError = error;
+    const name = (error as { name?: string })?.name ?? "";
+    if (name !== "AuthRetryableFetchError") break;
+    await sleep(300 * (attempt + 1));
+  }
+  return { data: null, error: lastError };
 };
 
 const findAuthUserByEmail = async (admin: ReturnType<typeof createClient>, email: string) => {
