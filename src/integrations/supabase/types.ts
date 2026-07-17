@@ -907,39 +907,6 @@ export type Database = {
           },
         ]
       }
-      stores: {
-        Row: {
-          address: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          reseller_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          reseller_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          reseller_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       suppressed_emails: {
         Row: {
           created_at: string
