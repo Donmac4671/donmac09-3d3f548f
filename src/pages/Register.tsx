@@ -90,6 +90,15 @@ export default function Register() {
       toast({ title: "Invalid Phone", description: "Phone number must be exactly 10 digits with no spaces.", variant: "destructive" });
       return;
     }
+    if (/(^|[^a-z])admin([^a-z]|$)/i.test(trimmedName)) {
+      toast({ title: "Reserved Name", description: 'The name "Admin" is reserved and cannot be used.', variant: "destructive" });
+      return;
+    }
+    const emailLower = trimmedEmail.toLowerCase();
+    if (emailLower.includes("admin") || emailLower.includes("donmacdatahub")) {
+      toast({ title: "Reserved Email", description: "This email address is reserved and cannot be used to register.", variant: "destructive" });
+      return;
+    }
     if (password !== confirmPassword) {
       toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
       return;
