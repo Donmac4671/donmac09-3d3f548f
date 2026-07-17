@@ -175,6 +175,44 @@ export default function AdminLiveChat() {
       t.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Search all users when query doesn't match existing threads
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) { setUserSearchResults([]); return; }
+    const threadIds = new Set(threads.map((t) => t.user_id));
+    let cancelled = false;
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`)
+        .limit(20);
+      if (cancelled) return;
+      setUserSearchResults((data || []).filter((p) => !threadIds.has(p.user_id)));
+      setSearching(false);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [search, threads]);
+
+  const startChatWithUser = (u: { user_id: string; full_name: string; email: string }) => {
+    // Optimistically add a thread entry so header renders
+    setThreads((prev) => {
+      if (prev.some((t) => t.user_id === u.user_id)) return prev;
+      return [{
+        user_id: u.user_id,
+        full_name: u.full_name || "Unknown",
+        email: u.email || "",
+        last_message: "",
+        last_at: new Date().toISOString(),
+        unread: 0,
+      }, ...prev];
+    });
+    setUserSearchResults([]);
+    setSearch("");
+    selectThread(u.user_id);
+  };
+
   const selectedProfile = threads.find((t) => t.user_id === selectedUser);
 
   return (
@@ -184,12 +222,14 @@ export default function AdminLiveChat() {
         <div className="p-2 border-b border-border">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 text-sm h-9" />
+            <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 text-sm h-9" />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {filteredThreads.length === 0 && (
-            <p className="text-center text-muted-foreground text-xs mt-8">No conversations yet</p>
+          {filteredThreads.length === 0 && userSearchResults.length === 0 && (
+            <p className="text-center text-muted-foreground text-xs mt-8">
+              {search.trim().length >= 2 ? (searching ? "Searching…" : "No users found") : "No conversations yet"}
+            </p>
           )}
           {filteredThreads.map((t) => (
             <button
@@ -211,8 +251,27 @@ export default function AdminLiveChat() {
               <p className="text-[10px] text-muted-foreground">{format(new Date(t.last_at), "MMM d, h:mm a")}</p>
             </button>
           ))}
+          {userSearchResults.length > 0 && (
+            <div className="px-3 py-1.5 text-[10px] font-semibold uppercase text-muted-foreground bg-muted/40 border-b border-border">
+              Start new chat
+            </div>
+          )}
+          {userSearchResults.map((u) => (
+            <button
+              key={u.user_id}
+              onClick={() => startChatWithUser(u)}
+              className="w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="font-medium text-sm truncate">{u.full_name || "Unknown"}</span>
+              </div>
+              <p className="text-xs text-muted-foreground truncate mt-0.5 ml-5">{u.email}</p>
+            </button>
+          ))}
         </div>
       </div>
+
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
