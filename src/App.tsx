@@ -29,7 +29,7 @@ import Complaints from "./pages/Complaints";
 import ResetPassword from "./pages/ResetPassword";
 import Flyer from "./pages/Flyer";
 import MyStore from "./pages/MyStore";
-import ApiDocs from "./pages/ApiDocs";
+
 import Storefront from "./pages/Storefront";
 import NotFound from "./pages/NotFound";
 
@@ -217,14 +217,6 @@ const App = () => (
                 }
               />
               <Route path="/flyer" element={<Flyer />} />
-              <Route
-                path="/api-docs"
-                element={
-                  <ProtectedRoute>
-                    <ApiDocs />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="/mystore"
                 element={
