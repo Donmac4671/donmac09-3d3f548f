@@ -599,7 +599,11 @@ ${siteMessage}
 
 ${broadcasts}
 
-PRICING for this user (tier: ${tierLabel}) — always use these EXACT figures (they reflect the latest admin updates and any active promotion). Never quote a different tier's price. If a promo is active and applies to this user, quote the discounted price and mention when the promo ends.
+${storeContext
+  ? `STORE CONTEXT: The signed-in user is ${storeContext.ownedByUser ? `the OWNER (reseller) of the "${storeContext.storeName}" storefront` : `a customer of the "${storeContext.storeName}" reseller storefront`}. The PRICING below already reflects THIS store's custom prices (reseller overrides applied where set; other bundles fall back to the platform price). Quote these figures directly — do NOT mention "wholesale", "admin", "base", or any other store's prices.`
+  : `STORE CONTEXT: No reseller storefront is linked to this user. Use the platform's standard prices below.`}
+
+PRICING for this user (tier: ${tierLabel}) — always use these EXACT figures (they reflect the latest admin updates, this user's reseller store overrides if any, and any active promotion). Never quote a different tier's or another store's price. If a promo is active and applies to this user, quote the discounted price and mention when the promo ends.
 ${pricing}
 
 MTN MASHUP COMBO PACKAGES (data + voice minutes, top-up style — found on the Mashup page):
