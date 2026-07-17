@@ -428,6 +428,7 @@ serve(async (req) => {
 
     let userContext = "User is not signed in.";
     let userTier: "agent" | "general" | "guest" = "guest";
+    let signedInUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       try {
