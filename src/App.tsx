@@ -113,6 +113,7 @@ const App = () => (
 
             <FloatingCartButton />
             <LiveChatWidget />
+            <FloatingWhatsAppButton />
             <Routes>
               {/* Main site routes - for admins and resellers */}
               <Route
