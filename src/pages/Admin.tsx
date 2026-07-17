@@ -79,12 +79,14 @@ export default function Admin() {
   const [complaintDateTo, setComplaintDateTo] = useState<Date | undefined>(today);
 
   const fetchData = async () => {
-    const [{ data: u }, { data: t }, { data: c }, { data: ur }, { data: stores }] = await Promise.all([
+    const [{ data: u }, { data: t }, { data: c }, { data: ur }, { data: stores }, { data: refs }, { data: rStores }] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallet_topups").select("*").order("created_at", { ascending: false }),
       supabase.from("complaints").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
       supabase.rpc("admin_get_store_profits"),
+      supabase.from("store_referrals").select("user_id, store_id"),
+      supabase.from("reseller_stores").select("id, slug, full_name, user_id"),
     ]);
 
 
@@ -122,10 +124,22 @@ export default function Admin() {
         lifetime: Number(s.lifetime_profit) || 0,
       });
     });
+
+    // Build customer -> reseller store map
+    const storeById = new Map<string, { slug: string; full_name: string }>();
+    (rStores as any[] | null)?.forEach((s) => storeById.set(s.id, { slug: s.slug, full_name: s.full_name }));
+    const referralMap = new Map<string, { slug: string; full_name: string }>();
+    (refs as any[] | null)?.forEach((r) => {
+      const st = storeById.get(r.store_id);
+      if (st) referralMap.set(r.user_id, st);
+    });
+
     const enrichedUsers = (u || []).map((row: any) => ({
       ...row,
       reseller_available_profit: profitMap.get(row.user_id)?.available ?? 0,
       reseller_lifetime_profit: profitMap.get(row.user_id)?.lifetime ?? 0,
+      referred_by_slug: referralMap.get(row.user_id)?.slug ?? null,
+      referred_by_name: referralMap.get(row.user_id)?.full_name ?? null,
     }));
 
     setUsers(enrichedUsers);
@@ -408,15 +422,16 @@ export default function Admin() {
                   <TableHead>Phone</TableHead>
                   <TableHead>Wallet</TableHead>
                   <TableHead>Reseller Profit</TableHead>
+                  <TableHead>Belongs To</TableHead>
                   <TableHead>Tier</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                 ) : filteredUsers.map((u) => {
                   const isUserAdmin = adminUserIds.has(u.user_id);
                   return (
@@ -433,6 +448,18 @@ export default function Admin() {
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {u.referred_by_slug ? (
+                        <div className="flex flex-col leading-tight">
+                          <Badge variant="outline" className="w-fit bg-primary/10 text-primary border-primary/20">
+                            <Store className="w-3 h-3 mr-1" />/{u.referred_by_slug}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground mt-0.5">{u.referred_by_name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Main site</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -466,13 +493,13 @@ export default function Admin() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setWalletDialog({ user: u, type: "credit" })}>Credit</Button>
-                        <Button size="sm" variant="outline" onClick={() => setWalletDialog({ user: u, type: "debit" })}>Debit</Button>
-                        <Button size="sm" variant={u.is_blocked ? "default" : "destructive"} onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
-                          {u.is_blocked ? "Unblock" : "Block"}
+                      <div className="flex flex-wrap justify-end gap-1.5 min-w-[220px]">
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setWalletDialog({ user: u, type: "credit" })}>Credit</Button>
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setWalletDialog({ user: u, type: "debit" })}>Debit</Button>
+                        <Button size="sm" className="h-8" variant={u.is_blocked ? "default" : "destructive"} onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
+                          <Ban className="w-3.5 h-3.5 mr-1" />{u.is_blocked ? "Unblock" : "Block"}
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteUser(u.user_id, u.full_name || u.email)} title="Permanently delete account">
+                        <Button size="sm" variant="destructive" className="h-8 w-8 p-0" onClick={() => handleDeleteUser(u.user_id, u.full_name || u.email)} title="Permanently delete account">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

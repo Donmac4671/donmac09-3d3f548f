@@ -178,7 +178,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         referredSlug = pendingStoreSlug.trim().toLowerCase();
       }
 
-      setIsAdmin(rolesRes.data?.some((r) => r.role === "admin") ?? false);
+      const isUserAdmin = rolesRes.data?.some((r) => r.role === "admin") ?? false;
+
+      // Enforce admin block: force sign-out non-admin users whose profile is blocked.
+      if (profileData?.is_blocked && !isUserAdmin) {
+        try {
+          await supabase.auth.signOut({ scope: "global" });
+        } catch { /* ignore */ }
+        clearStoredSession();
+        setUser(null);
+        setProfile(null);
+        setIsAdmin(false);
+        setIsReseller(false);
+        setIsReferredCustomer(false);
+        setReferredStoreId(null);
+        setReferredStoreSlug(null);
+        if (typeof window !== "undefined") {
+          alert("Your account has been blocked. Please contact support.");
+          window.location.href = "/login";
+        }
+        return;
+      }
+
+      setIsAdmin(isUserAdmin);
       setIsReseller(Boolean(storeRes.data));
       setIsReferredCustomer(Boolean(referralData));
       setReferredStoreId(referralData?.store_id ?? null);
