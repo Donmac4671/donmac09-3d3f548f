@@ -43,7 +43,7 @@ const benefits = [
   {
     icon: Zap,
     title: "Instant Fulfillment",
-    desc: "Orders go straight to our servers. Mashup & airtime are instant, MTN 3–30 minutes.",
+    desc: "Orders go straight to our servers. MTN delivered within 3–30 minutes.",
   },
   {
     icon: Shield,
@@ -76,8 +76,6 @@ const steps = [
 ];
 
 const networkCardGradients: Record<string, string> = {
-  "mtn-mashup-data": "bg-gradient-to-br from-purple-600 to-purple-800",
-  "mtn-mashup-minutes": "bg-gradient-to-br from-pink-600 to-rose-700",
   mtn: "bg-gradient-to-br from-yellow-400 to-yellow-600",
   telecel: "bg-gradient-to-br from-red-500 to-red-700",
   "at-bigtime": "bg-gradient-to-br from-sky-500 to-sky-700",
@@ -89,12 +87,9 @@ const networkCardTextColors: Record<string, string> = {
   telecel: "text-white",
   "at-bigtime": "text-white",
   "at-premium": "text-white",
-  "mtn-mashup-data": "text-white",
-  "mtn-mashup-minutes": "text-white",
 };
 
-function networkIcon(id: string) {
-  if (id.includes("mashup")) return Clock;
+function networkIcon(_id: string) {
   return Smartphone;
 }
 
@@ -229,9 +224,7 @@ export default function Landing() {
             Browse Available Packages
           </h2>
           <p className="text-center text-muted-foreground mb-8">
-            New bundles added — MTN Mashup Data, MTN Mashup Minutes + Data, and
-            more. All prices are general user prices; resellers get even lower
-            wholesale rates.
+            All prices are general user prices; resellers get even lower wholesale rates.
           </p>
           <div className="space-y-8">
             {networks.map((net) => {

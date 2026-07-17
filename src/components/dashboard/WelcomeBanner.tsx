@@ -4,6 +4,14 @@ import { useStoreBranding } from "@/hooks/useStoreBranding";
 import { CalendarDays, Clock } from "lucide-react";
 import { format } from "date-fns";
 
+function getGreeting(date: Date) {
+  const h = date.getHours();
+  if (h < 12) return { text: "Good morning", emoji: "🌅" };
+  if (h < 17) return { text: "Good afternoon", emoji: "☀️" };
+  if (h < 21) return { text: "Good evening", emoji: "🌆" };
+  return { text: "Good night", emoji: "🌙" };
+}
+
 export default function WelcomeBanner() {
   const { profile } = useAuth();
   const storeBrand = useStoreBranding();
@@ -16,13 +24,14 @@ export default function WelcomeBanner() {
 
   const firstName = profile?.full_name?.split(" ")[0] || "User";
   const storeName = storeBrand?.full_name || "Donmac Data Hub";
+  const greeting = getGreeting(now);
 
   return (
     <div className="rounded-xl gradient-primary p-4 text-primary-foreground">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg">👋</span>
+        <span className="text-lg">{greeting.emoji}</span>
         <span className="font-bold text-sm">
-          Welcome to {storeName}, {firstName}!
+          {greeting.text}, {firstName}! Welcome to {storeName}
         </span>
       </div>
       <div className="flex items-center gap-4 mt-2">

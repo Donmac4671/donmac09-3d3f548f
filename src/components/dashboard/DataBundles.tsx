@@ -22,8 +22,6 @@ import airteltigoLogo from "@/assets/networks/airteltigo.png";
 
 const networkLogos: Record<string, string> = {
   mtn: mtnLogo,
-  "mtn-mashup-data": mtnLogo,
-  "mtn-mashup-minutes": mtnLogo,
   telecel: telecelLogo,
   "at-bigtime": airteltigoLogo,
   "at-premium": airteltigoLogo,
@@ -45,29 +43,11 @@ function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getReselle
   const displayPrice = applyDiscount ? applyDiscount(basePrice) : basePrice;
   const hasDiscount = displayPrice < basePrice;
 
-  // Mtn Mashup Minutes + Data uses a different label format ("350min + 870MB")
-  const isMashupMinutes = network.id === "mtn-mashup-minutes";
-  const minutesMatch = isMashupMinutes ? bundle.size.match(/^(\d+)\s*min\s*\+\s*(.+)$/i) : null;
-  const minutesLabel = minutesMatch ? `${minutesMatch[1]} mins` : null;
-  const dataLabel = minutesMatch ? minutesMatch[2] : null;
-
   return (
     <div className={`flex flex-col items-center ${bundle.isOffline ? "opacity-60" : ""}`}>
       <div className={`${gradientClass} rounded-2xl p-3 w-full aspect-square flex flex-col items-center justify-center text-white relative transition-all duration-200 ${bundle.isOffline ? "grayscale" : "hover:shadow-lg hover:-translate-y-1 hover:scale-105"}`}>
-        {isMashupMinutes && minutesMatch ? (
-          <div className="flex flex-col items-center text-center leading-tight">
-            <span className="text-lg sm:text-xl font-extrabold">{minutesLabel}</span>
-            <span className="text-[10px] uppercase tracking-wide opacity-80">minutes</span>
-            <span className="mt-1 text-[10px] uppercase opacity-80">+</span>
-            <span className="text-base sm:text-lg font-bold">{dataLabel}</span>
-            <span className="text-[10px] uppercase opacity-80">data</span>
-          </div>
-        ) : (
-          <>
-            <span className="text-3xl lg:text-4xl font-bold">{bundle.sizeGB}</span>
-            <span className="text-xs font-medium uppercase">Gigabytes</span>
-          </>
-        )}
+        <span className="text-3xl lg:text-4xl font-bold">{bundle.sizeGB}</span>
+        <span className="text-xs font-medium uppercase">Gigabytes</span>
         {/* Online / Offline status badge */}
         {bundle.isOffline ? (
           <span className="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
@@ -145,13 +125,11 @@ export default function DataBundles() {
     const selectedId = selectedBundle.network.id;
     // AirtelTigo networks share prefixes
     if ((selectedId === "at-bigtime" || selectedId === "at-premium") && (detectedNetwork === "at-bigtime" || detectedNetwork === "at-premium")) return false;
-    // MTN Mashup variants are MTN-only
-    if ((selectedId === "mtn-mashup-data" || selectedId === "mtn-mashup-minutes") && detectedNetwork === "mtn") return false;
     return detectedNetwork !== selectedId;
   }, [detectedNetwork, selectedBundle]);
 
   const getExpectedNetworkName = (networkId: string) => {
-    if (networkId === "mtn" || networkId === "mtn-mashup-data" || networkId === "mtn-mashup-minutes") return "MTN";
+    if (networkId === "mtn") return "MTN";
     if (networkId === "telecel") return "Telecel";
     if (networkId === "at-bigtime" || networkId === "at-premium") return "AirtelTigo";
     return networkId;

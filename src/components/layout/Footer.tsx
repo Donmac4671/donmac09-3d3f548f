@@ -1,12 +1,9 @@
 import { ExternalLink } from "lucide-react";
-import GuideVideos from "@/components/dashboard/GuideVideos";
 
-export default function Footer({ showGuides = false }: { showGuides?: boolean }) {
+export default function Footer(_props: { showGuides?: boolean } = {}) {
   return (
     <footer className="border-t border-border bg-card mt-8">
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {showGuides && <GuideVideos />}
-
         <div className="flex flex-col items-center gap-3 pt-2">
           <a
             href="https://wa.me/233549358359"

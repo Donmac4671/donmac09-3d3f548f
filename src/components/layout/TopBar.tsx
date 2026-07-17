@@ -4,6 +4,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreBranding } from "@/hooks/useStoreBranding";
 import { formatCurrency } from "@/lib/data";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +97,7 @@ export default function TopBar({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <Link to="/cart" aria-label={`Cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`} className="relative p-2 rounded-lg hover:bg-accent transition-colors">
           <ShoppingCart className="w-5 h-5 text-muted-foreground" />
           {itemCount > 0 && (
