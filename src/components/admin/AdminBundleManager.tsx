@@ -191,7 +191,7 @@ export default function AdminBundleManager() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-semibold text-foreground w-16">{bundle.size}</span>
                       <span className="text-sm text-muted-foreground">
-                        Agent: {formatCurrency(bundle.agentPrice)} · General: {formatCurrency(bundle.generalPrice)}
+                        Price: {formatCurrency(bundle.generalPrice)}
                         {bundle.costPrice != null && <> · Cost: {formatCurrency(bundle.costPrice)}</>}
                       </span>
                       {isHidden && <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">Hidden</Badge>}
@@ -252,27 +252,18 @@ export default function AdminBundleManager() {
                 onChange={(e) => setFormSizeGB(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Agent Price (₵)</label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 100"
-                  value={formAgentPrice}
-                  onChange={(e) => setFormAgentPrice(e.target.value)}
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">General Price (₵)</label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 105"
-                  value={formGeneralPrice}
-                  onChange={(e) => setFormGeneralPrice(e.target.value)}
-                  step="0.01"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Price (₵)</label>
+              <Input
+                type="number"
+                placeholder="e.g. 4.10"
+                value={formGeneralPrice}
+                onChange={(e) => {
+                  setFormGeneralPrice(e.target.value);
+                  setFormAgentPrice(e.target.value);
+                }}
+                step="0.01"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Cost Price (₵) — for admin profit</label>

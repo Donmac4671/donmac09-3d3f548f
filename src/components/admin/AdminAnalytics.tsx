@@ -30,6 +30,7 @@ interface AdminAnalyticsProps {
   orders: any[];
   topups: any[];
   complaints: any[];
+  adminUserIds?: Set<string>;
 }
 
 const orderChartConfig: ChartConfig = {
@@ -233,7 +234,7 @@ function DateFilter({
   );
 }
 
-export default function AdminAnalytics({ users, orders, topups, complaints }: AdminAnalyticsProps) {
+export default function AdminAnalytics({ users, orders, topups, complaints, adminUserIds }: AdminAnalyticsProps) {
   const today = new Date();
   const [dateFrom, setDateFrom] = useState<Date | undefined>(today);
   const [dateTo, setDateTo] = useState<Date | undefined>(today);
@@ -315,7 +316,9 @@ export default function AdminAnalytics({ users, orders, topups, complaints }: Ad
     const completedOrders = filteredOrders.filter((o) => o.status === "completed" || o.status === "delivered").length;
     const failedOrders = filteredOrders.filter((o) => o.status === "failed").length;
     const openComplaints = filteredComplaints.filter((c) => c.status === "open").length;
-    const totalWalletBalance = users.reduce((sum, u) => sum + Number(u.wallet_balance), 0);
+    const totalWalletBalance = users
+      .filter((u) => !adminUserIds || !adminUserIds.has(u.user_id))
+      .reduce((sum, u) => sum + Number(u.wallet_balance), 0);
     const blockedUsers = users.filter((u) => u.is_blocked).length;
     const pendingTopups = filteredTopups.filter((t) => t.status === "pending").length;
 
@@ -352,7 +355,7 @@ export default function AdminAnalytics({ users, orders, topups, complaints }: Ad
       totalProfit,
       totalCapacityGB,
     };
-  }, [users, filteredOrders, filteredTopups, filteredComplaints, customCostMap]);
+  }, [users, filteredOrders, filteredTopups, filteredComplaints, customCostMap, adminUserIds]);
 
   // Profit per day (last 7 days)
   const profitPerDay = useMemo(() => {

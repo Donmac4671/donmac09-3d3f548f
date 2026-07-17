@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Send, Search, MessageCircle, Paperclip } from "lucide-react";
+import { Send, Search, MessageCircle, Paperclip, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ChatMedia from "@/components/chat/ChatMedia";
 
@@ -24,15 +24,19 @@ export default function AdminLiveChat() {
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [userTyping, setUserTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const typingChannelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<any>(null);
+  const lastTypingSentRef = useRef<number>(0);
 
   useEffect(() => {
     fetchThreads();
 
     const channel = supabase
       .channel("admin-chat")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => {
         fetchThreads();
         if (selectedUser) fetchMessages(selectedUser);
       })
@@ -41,9 +45,36 @@ export default function AdminLiveChat() {
     return () => { supabase.removeChannel(channel); };
   }, [selectedUser]);
 
+  // Typing indicator broadcast channel scoped to the selected user
+  useEffect(() => {
+    if (!selectedUser) return;
+    const ch = supabase.channel(`chat-typing-${selectedUser}`, { config: { broadcast: { self: false } } });
+    ch.on("broadcast", { event: "typing" }, (payload: any) => {
+      if (payload?.payload?.role === "user") {
+        setUserTyping(true);
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setUserTyping(false), 2500);
+      }
+    }).subscribe();
+    typingChannelRef.current = ch;
+    return () => {
+      clearTimeout(typingTimeoutRef.current);
+      setUserTyping(false);
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+    };
+  }, [selectedUser]);
+
+  const emitTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { role: "admin" } });
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, userTyping]);
 
   const fetchThreads = async () => {
     const { data: allMessages } = await supabase
@@ -198,7 +229,20 @@ export default function AdminLiveChat() {
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.sender_role === "admin" ? "justify-end" : "justify-start"}`}>
+                <div key={m.id} className={`group flex ${m.sender_role === "admin" ? "justify-end" : "justify-start"} items-end gap-1`}>
+                  {m.sender_role === "admin" && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this message?")) return;
+                        await supabase.from("chat_messages").delete().eq("id", m.id);
+                        setMessages((prev) => prev.filter((x) => x.id !== m.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-destructive"
+                      aria-label="Delete message"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <div
                     className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
                       m.sender_role === "admin"
@@ -214,8 +258,28 @@ export default function AdminLiveChat() {
                       {format(new Date(m.created_at), "h:mm a")}
                     </p>
                   </div>
+                  {m.sender_role !== "admin" && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this message?")) return;
+                        await supabase.from("chat_messages").delete().eq("id", m.id);
+                        setMessages((prev) => prev.filter((x) => x.id !== m.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-destructive"
+                      aria-label="Delete message"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
+              {userTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-muted px-3 py-2 rounded-xl rounded-bl-sm">
+                    <span className="text-xs text-muted-foreground animate-pulse">User is typing…</span>
+                  </div>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
             <div className="p-2 border-t border-border flex gap-1.5 items-center">
@@ -225,7 +289,7 @@ export default function AdminLiveChat() {
               </Button>
               <Input
                 value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
+                onChange={(e) => { setNewMsg(e.target.value); emitTyping(); }}
                 placeholder={uploading ? "Uploading..." : "Type a reply..."}
                 className="text-sm h-9"
                 onKeyDown={(e) => e.key === "Enter" && sendReply()}
