@@ -75,6 +75,33 @@ export default function AdminResellers() {
   const [storePrices, setStorePrices] = useState<Record<string, number>>({});
   const [priceLoading, setPriceLoading] = useState(false);
 
+  const requireFreshAdminSession = async () => {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    let session = sessionData.session;
+
+    if (sessionError || !session) {
+      throw new Error("Your admin session has expired. Please sign in again.");
+    }
+
+    const expiresSoon = session.expires_at ? session.expires_at * 1000 < Date.now() + 60_000 : false;
+    if (expiresSoon) {
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshData.session) {
+        await supabase.auth.signOut().catch(() => undefined);
+        throw new Error("Your admin session has expired. Please sign in again.");
+      }
+      session = refreshData.session;
+    }
+
+    const { data: userData, error: userError } = await supabase.auth.getUser(session.access_token);
+    if (userError || !userData.user) {
+      await supabase.auth.signOut().catch(() => undefined);
+      throw new Error("Your admin session has expired. Please sign in again.");
+    }
+
+    return session.access_token;
+  };
+
   const handleAddUser = async () => {
     if (!newUser.full_name || !newUser.email || !newUser.phone || !newUser.password) {
       toast({ title: "Missing fields", description: "All fields are required.", variant: "destructive" });
@@ -82,7 +109,9 @@ export default function AdminResellers() {
     }
     setCreatingUser(true);
     try {
+      const accessToken = await requireFreshAdminSession();
       const { data, error } = await supabase.functions.invoke("admin-create-user", {
+        headers: { Authorization: `Bearer ${accessToken}` },
         body: {
           full_name: newUser.full_name,
           email: newUser.email,
@@ -169,6 +198,12 @@ export default function AdminResellers() {
   const handleCreate = async () => {
     if (!form.user_id || !form.slug || !form.full_name) {
       toast({ title: "Missing fields", description: "User, slug and name are required.", variant: "destructive" });
+      return;
+    }
+    try {
+      await requireFreshAdminSession();
+    } catch (err: any) {
+      toast({ title: "Session expired", description: err.message, variant: "destructive" });
       return;
     }
     const cleanSlug = form.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
