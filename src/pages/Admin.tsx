@@ -422,15 +422,16 @@ export default function Admin() {
                   <TableHead>Phone</TableHead>
                   <TableHead>Wallet</TableHead>
                   <TableHead>Reseller Profit</TableHead>
+                  <TableHead>Belongs To</TableHead>
                   <TableHead>Tier</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                 ) : filteredUsers.map((u) => {
                   const isUserAdmin = adminUserIds.has(u.user_id);
                   return (
@@ -447,6 +448,18 @@ export default function Admin() {
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {u.referred_by_slug ? (
+                        <div className="flex flex-col leading-tight">
+                          <Badge variant="outline" className="w-fit bg-primary/10 text-primary border-primary/20">
+                            <Store className="w-3 h-3 mr-1" />/{u.referred_by_slug}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground mt-0.5">{u.referred_by_name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Main site</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -480,13 +493,13 @@ export default function Admin() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setWalletDialog({ user: u, type: "credit" })}>Credit</Button>
-                        <Button size="sm" variant="outline" onClick={() => setWalletDialog({ user: u, type: "debit" })}>Debit</Button>
-                        <Button size="sm" variant={u.is_blocked ? "default" : "destructive"} onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
-                          {u.is_blocked ? "Unblock" : "Block"}
+                      <div className="flex flex-wrap justify-end gap-1.5 min-w-[220px]">
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setWalletDialog({ user: u, type: "credit" })}>Credit</Button>
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setWalletDialog({ user: u, type: "debit" })}>Debit</Button>
+                        <Button size="sm" className="h-8" variant={u.is_blocked ? "default" : "destructive"} onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
+                          <Ban className="w-3.5 h-3.5 mr-1" />{u.is_blocked ? "Unblock" : "Block"}
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteUser(u.user_id, u.full_name || u.email)} title="Permanently delete account">
+                        <Button size="sm" variant="destructive" className="h-8 w-8 p-0" onClick={() => handleDeleteUser(u.user_id, u.full_name || u.email)} title="Permanently delete account">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
