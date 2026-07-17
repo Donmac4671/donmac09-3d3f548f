@@ -248,7 +248,7 @@ export default function Storefront() {
 
       <section className="max-w-4xl mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold text-foreground text-center mb-8">
-          Reseller Store Prices
+          Store Prices
         </h2>
         <div className="space-y-6">
           {networks.map((net) => (
