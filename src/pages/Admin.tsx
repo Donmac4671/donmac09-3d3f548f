@@ -378,7 +378,7 @@ export default function Admin() {
 
         {/* ANALYTICS TAB */}
         <TabsContent value="analytics">
-          <AdminAnalytics users={users} orders={orders} topups={topups} complaints={complaints} />
+          <AdminAnalytics users={users} orders={orders} topups={topups} complaints={complaints} adminUserIds={adminUserIds} />
         </TabsContent>
 
         {/* RANKINGS TAB */}
