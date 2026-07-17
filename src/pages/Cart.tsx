@@ -128,6 +128,7 @@ export default function Cart() {
             p_amount: item.effectivePrice,
             p_store_id: referredStoreId ?? undefined,
             p_profit: profit,
+            p_network_id: item.networkId,
           });
 
           if (orderError) throw new Error(`Order failed: ${orderError.message}`);
