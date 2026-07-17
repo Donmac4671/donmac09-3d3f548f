@@ -234,7 +234,7 @@ function DateFilter({
   );
 }
 
-export default function AdminAnalytics({ users, orders, topups, complaints }: AdminAnalyticsProps) {
+export default function AdminAnalytics({ users, orders, topups, complaints, adminUserIds }: AdminAnalyticsProps) {
   const today = new Date();
   const [dateFrom, setDateFrom] = useState<Date | undefined>(today);
   const [dateTo, setDateTo] = useState<Date | undefined>(today);
