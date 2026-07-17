@@ -439,6 +439,7 @@ serve(async (req) => {
         );
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          signedInUserId = user.id;
           const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
           const [
             { data: profile },
