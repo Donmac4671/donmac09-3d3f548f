@@ -414,15 +414,6 @@ export default function Login() {
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Don't have an account?{" "}
-                <Link
-                  to={isStorePage && storeSlug ? `/${storeSlug}/register` : "/register"}
-                  className="text-primary font-medium hover:underline"
-                >
-                  Sign Up
-                </Link>
-              </p>
             </>
           )}
         </div>
