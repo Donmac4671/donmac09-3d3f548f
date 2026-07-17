@@ -56,8 +56,9 @@ Deno.serve(async (req) => {
     });
 
     if (createErr) {
-      console.error("Supabase Admin CreateUser error:", createErr.message);
-      return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: jsonHeaders });
+      console.error("Supabase Admin CreateUser error:", JSON.stringify(createErr), createErr);
+      const msg = (createErr as any).message || (createErr as any).msg || (createErr as any).error_description || (createErr as any).code || JSON.stringify(createErr) || "Failed to create user";
+      return new Response(JSON.stringify({ error: msg }), { status: 400, headers: jsonHeaders });
     }
 
     const userId = created.user?.id;
