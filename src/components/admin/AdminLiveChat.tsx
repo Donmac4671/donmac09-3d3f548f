@@ -23,6 +23,8 @@ export default function AdminLiveChat() {
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
+  const [userSearchResults, setUserSearchResults] = useState<{ user_id: string; full_name: string; email: string }[]>([]);
+  const [searching, setSearching] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [userTyping, setUserTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
