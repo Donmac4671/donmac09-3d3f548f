@@ -24,15 +24,19 @@ export default function AdminLiveChat() {
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [userTyping, setUserTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const typingChannelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<any>(null);
+  const lastTypingSentRef = useRef<number>(0);
 
   useEffect(() => {
     fetchThreads();
 
     const channel = supabase
       .channel("admin-chat")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => {
         fetchThreads();
         if (selectedUser) fetchMessages(selectedUser);
       })
@@ -41,9 +45,36 @@ export default function AdminLiveChat() {
     return () => { supabase.removeChannel(channel); };
   }, [selectedUser]);
 
+  // Typing indicator broadcast channel scoped to the selected user
+  useEffect(() => {
+    if (!selectedUser) return;
+    const ch = supabase.channel(`chat-typing-${selectedUser}`, { config: { broadcast: { self: false } } });
+    ch.on("broadcast", { event: "typing" }, (payload: any) => {
+      if (payload?.payload?.role === "user") {
+        setUserTyping(true);
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setUserTyping(false), 2500);
+      }
+    }).subscribe();
+    typingChannelRef.current = ch;
+    return () => {
+      clearTimeout(typingTimeoutRef.current);
+      setUserTyping(false);
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+    };
+  }, [selectedUser]);
+
+  const emitTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { role: "admin" } });
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, userTyping]);
 
   const fetchThreads = async () => {
     const { data: allMessages } = await supabase
