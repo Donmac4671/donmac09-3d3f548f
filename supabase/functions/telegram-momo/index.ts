@@ -156,7 +156,21 @@ async function getNextOrderRef(supabase: any): Promise<string> {
   return String(data);
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  // Restrict to scheduler/service-role callers via shared secret or service-role JWT.
+  const triggerSecret = Deno.env.get("TRIGGER_SHARED_SECRET");
+  const providedSecret = req.headers.get("x-trigger-secret");
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const hasServiceRole = serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`;
+  const hasSecret = triggerSecret && providedSecret === triggerSecret;
+  if (!hasSecret && !hasServiceRole) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   console.log("telegram-momo invoked");
   const startTime = Date.now();
 
