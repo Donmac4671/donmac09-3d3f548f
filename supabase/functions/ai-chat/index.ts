@@ -186,11 +186,14 @@ function buildPricingText(
   networks: Network[],
   tier: "agent" | "general" | "guest",
   promo: { discount: number; applies: boolean } | null,
+  resellerOverrides?: Record<string, number> | null,
 ): string {
   return networks.map((n) => {
     if (n.bundles.length === 0) return "";
     const lines = n.bundles.map((b) => {
-      const base = tier === "agent" ? b.agent : b.general;
+      const key = `${n.id}|${b.size}`;
+      const override = resellerOverrides?.[key];
+      const base = override ?? (tier === "agent" ? b.agent : b.general);
       if (promo && promo.applies && promo.discount > 0) {
         const discounted = Math.round(base * (1 - promo.discount / 100) * 100) / 100;
         return `  ${b.size}: ₵${discounted.toFixed(2)} (was ₵${base.toFixed(2)}, ${promo.discount}% promo)`;
@@ -199,6 +202,60 @@ function buildPricingText(
     }).join("\n");
     return `${n.name}:\n${lines}`;
   }).filter(Boolean).join("\n\n");
+}
+
+async function resolveResellerStoreContext(
+  adminClient: any,
+  userId: string | null,
+): Promise<{ storeId: string; storeName: string; ownedByUser: boolean; overrides: Record<string, number> } | null> {
+  if (!userId) return null;
+  try {
+    const { data: owned } = await adminClient
+      .from("reseller_stores")
+      .select("id, store_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    let storeId: string | null = owned?.id ?? null;
+    let storeName: string = owned?.store_name ?? "";
+    const ownedByUser = !!owned;
+
+    if (!storeId) {
+      const { data: ref } = await adminClient
+        .from("store_referrals")
+        .select("store_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (ref?.store_id) {
+        storeId = ref.store_id;
+        const { data: s } = await adminClient
+          .from("reseller_stores")
+          .select("store_name")
+          .eq("id", storeId)
+          .maybeSingle();
+        storeName = s?.store_name ?? "";
+      }
+    }
+
+    if (!storeId) return null;
+
+    const { data: prices } = await adminClient
+      .from("reseller_bundle_prices")
+      .select("network_id, bundle_size, price")
+      .eq("store_id", storeId);
+
+    const overrides: Record<string, number> = {};
+    if (Array.isArray(prices)) {
+      for (const p of prices) {
+        overrides[`${p.network_id}|${p.bundle_size}`] = Number(p.price);
+      }
+    }
+
+    return { storeId, storeName, ownedByUser, overrides };
+  } catch (e) {
+    console.error("resolveResellerStoreContext failed:", e);
+    return null;
+  }
 }
 
 async function getActivePromo(
@@ -371,6 +428,7 @@ serve(async (req) => {
 
     let userContext = "User is not signed in.";
     let userTier: "agent" | "general" | "guest" = "guest";
+    let signedInUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       try {
@@ -381,6 +439,7 @@ serve(async (req) => {
         );
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          signedInUserId = user.id;
           const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
           const [
             { data: profile },
@@ -465,19 +524,21 @@ ${complaintsText}`;
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
     );
 
-    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage, platformStats] = await Promise.all([
+    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage, platformStats, storeContext] = await Promise.all([
       buildLiveNetworks(adminClient),
       getActivePromo(adminClient, userTier),
       getPromoHistory(adminClient),
       getRecentBroadcasts(adminClient),
       getActiveSiteMessage(adminClient),
       getPlatformStats(adminClient),
+      resolveResellerStoreContext(adminClient, signedInUserId),
     ]);
 
     const pricing = buildPricingText(
       liveNetworks,
       userTier,
       promo ? { discount: promo.discount, applies: promo.applies } : null,
+      storeContext?.overrides ?? null,
     );
     const tierLabel = userTier === "agent" ? "Agent" : userTier === "general" ? "General" : "Guest (not signed in)";
     const nowLocal = (() => {
@@ -538,7 +599,11 @@ ${siteMessage}
 
 ${broadcasts}
 
-PRICING for this user (tier: ${tierLabel}) — always use these EXACT figures (they reflect the latest admin updates and any active promotion). Never quote a different tier's price. If a promo is active and applies to this user, quote the discounted price and mention when the promo ends.
+${storeContext
+  ? `STORE CONTEXT: The signed-in user is ${storeContext.ownedByUser ? `the OWNER (reseller) of the "${storeContext.storeName}" storefront` : `a customer of the "${storeContext.storeName}" reseller storefront`}. The PRICING below already reflects THIS store's custom prices (reseller overrides applied where set; other bundles fall back to the platform price). Quote these figures directly — do NOT mention "wholesale", "admin", "base", or any other store's prices.`
+  : `STORE CONTEXT: No reseller storefront is linked to this user. Use the platform's standard prices below.`}
+
+PRICING for this user (tier: ${tierLabel}) — always use these EXACT figures (they reflect the latest admin updates, this user's reseller store overrides if any, and any active promotion). Never quote a different tier's or another store's price. If a promo is active and applies to this user, quote the discounted price and mention when the promo ends.
 ${pricing}
 
 MTN MASHUP COMBO PACKAGES (data + voice minutes, top-up style — found on the Mashup page):
