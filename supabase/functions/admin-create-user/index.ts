@@ -21,20 +21,32 @@ const readableError = (error: unknown, fallback = "Failed to create user") => {
 
 const findAuthUserByEmail = async (admin: ReturnType<typeof createClient>, email: string) => {
   const target = email.trim().toLowerCase();
-  const perPage = 100;
 
+  // Direct DB lookup via SECURITY DEFINER RPC - reliable regardless of listUsers pagination/state.
+  try {
+    const { data: rpcId, error: rpcErr } = await admin.rpc("get_auth_user_id_by_email", { p_email: target });
+    if (!rpcErr && rpcId) {
+      const { data: got, error: getErr } = await admin.auth.admin.getUserById(rpcId as string);
+      if (!getErr && got?.user) return got.user;
+    } else if (rpcErr) {
+      console.warn("get_auth_user_id_by_email rpc error:", readableError(rpcErr));
+    }
+  } catch (err) {
+    console.warn("get_auth_user_id_by_email lookup failed:", readableError(err));
+  }
+
+  // Fallback: paginate listUsers.
+  const perPage = 200;
   for (let page = 1; page <= 20; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
     if (error) {
       console.error("List users error:", readableError(error));
       return null;
     }
-
     const user = data.users.find((candidate) => candidate.email?.toLowerCase() === target);
     if (user) return user;
     if (data.users.length < perPage) return null;
   }
-
   return null;
 };
 
