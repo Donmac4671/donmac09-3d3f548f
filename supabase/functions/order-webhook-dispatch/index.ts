@@ -35,11 +35,26 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const expected = Deno.env.get("TRIGGER_SHARED_SECRET");
+    const provided = req.headers.get("x-trigger-secret") || req.headers.get("X-Trigger-Secret");
+    if (!expected || provided !== expected) {
+      return new Response("unauthorized", { status: 401, headers: corsHeaders });
+    }
+
     const evt = await req.json();
     const op = evt?.type as string;
-    const rec = evt?.record;
-    const old = evt?.old_record;
-    if (!rec || !rec.user_id) return new Response("ok");
+    const rawRec = evt?.record;
+    const rawOld = evt?.old_record;
+    if (!rawRec || !rawRec.id || !rawRec.user_id) return new Response("ok");
+
+    // Re-fetch the authoritative order row — never trust caller-supplied fields.
+    const { data: rec } = await admin
+      .from("orders")
+      .select("*")
+      .eq("id", rawRec.id)
+      .maybeSingle();
+    if (!rec) return new Response("ok");
+    const old = rawOld;
 
     // Only react to INSERT or status changes on UPDATE
     if (op === "UPDATE" && old && old.status === rec.status) {
