@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
         p_phone: item.phone,
         p_bundle: item.bundle,
         p_amount: item.amount,
+        p_network_id: item.network_id,
       });
 
       if (rpcError) {
