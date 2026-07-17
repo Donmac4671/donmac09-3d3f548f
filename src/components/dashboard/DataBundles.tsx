@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -35,44 +34,97 @@ function NetworkIcon({ network }: { network: Network }) {
   );
 }
 
-function BundleCard({ bundle, network, tier, onSelect, applyDiscount, getResellerPrice }: { bundle: DataBundle; network: Network; tier: string; onSelect: () => void; applyDiscount?: (price: number) => number; getResellerPrice: (netId: string, size: string, base: number) => number }) {
-  const gradientClass = network.gradient;
+// Official brand colors
+const BRAND_BG: Record<string, string> = {
+  mtn: "#FFCB05",
+  telecel: "#EE2722",
+  "at-bigtime": "linear-gradient(135deg, #0066B3 0%, #0066B3 55%, #ED1C24 55%, #ED1C24 100%)",
+  "at-premium": "linear-gradient(135deg, #0066B3 0%, #0066B3 55%, #ED1C24 55%, #ED1C24 100%)",
+};
+const BRAND_TEXT: Record<string, string> = {
+  mtn: "#1a1a1a",
+  telecel: "#ffffff",
+  "at-bigtime": "#ffffff",
+  "at-premium": "#ffffff",
+};
+
+function getValidity(networkId: string): string {
+  if (networkId === "at-bigtime") return "Non-Expiry";
+  if (networkId === "at-premium") return "60 Days";
+  if (networkId === "telecel") return "60 Days";
+  return "90 Days";
+}
+
+function BundleCard({
+  bundle,
+  network,
+  tier,
+  onSelect,
+  applyDiscount,
+  getResellerPrice,
+}: {
+  bundle: DataBundle;
+  network: Network;
+  tier: string;
+  onSelect: () => void;
+  applyDiscount?: (price: number) => number;
+  getResellerPrice: (netId: string, size: string, base: number) => number;
+}) {
   const wholesalePrice = getBundlePrice(bundle, tier);
   const isPrivilegedTier = tier === "reseller" || tier === "agent" || tier === "admin";
   const basePrice = isPrivilegedTier ? wholesalePrice : getResellerPrice(network.id, bundle.size, wholesalePrice);
   const displayPrice = applyDiscount ? applyDiscount(basePrice) : basePrice;
   const hasDiscount = displayPrice < basePrice;
+  const offline = !!bundle.isOffline;
+
+  const cardStyle = offline
+    ? { background: "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)", color: "#fff" }
+    : { background: BRAND_BG[network.id] ?? undefined, color: BRAND_TEXT[network.id] ?? "#fff" };
 
   return (
-    <div className={`flex flex-col items-center ${bundle.isOffline ? "opacity-60" : ""}`}>
-      <div className={`${gradientClass} rounded-2xl p-3 w-full aspect-square flex flex-col items-center justify-center text-white relative transition-all duration-200 ${bundle.isOffline ? "grayscale" : "hover:shadow-lg hover:-translate-y-1 hover:scale-105"}`}>
-        <span className="text-3xl lg:text-4xl font-bold">{bundle.sizeGB}</span>
-        <span className="text-xs font-medium uppercase">Gigabytes</span>
-        {/* Online / Offline status badge */}
-        {bundle.isOffline ? (
-          <span className="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
-            Offline
+    <div className="flex flex-col items-center">
+      <div
+        style={cardStyle}
+        className={`rounded-2xl p-3 w-full aspect-square flex flex-col items-center justify-center text-center relative transition-all duration-200 ${
+          offline ? "opacity-70" : "hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+        }`}
+      >
+        {offline ? (
+          <span className="absolute top-1 right-1 flex items-center gap-1 bg-gray-700 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full shadow">
+            <span className="w-1.5 h-1.5 rounded-full bg-white" /> Offline
           </span>
         ) : (
-          <span className="absolute top-2 right-2 flex items-center gap-1 bg-green-500/90 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded">
+          <span className="absolute top-1 right-1 flex items-center gap-1 bg-green-500 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full shadow">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Online
           </span>
         )}
-      </div>
-      <div className="mt-2 bg-accent rounded-full px-3 py-1 flex items-center gap-1">
-        <span className="text-[10px] text-muted-foreground">Price</span>
+        <span className="text-sm font-extrabold tracking-wide uppercase leading-tight">
+          {network.name} {bundle.size}
+        </span>
+        <span className="text-2xl lg:text-3xl font-extrabold mt-1">
+          {formatCurrency(displayPrice)}
+        </span>
         {hasDiscount && (
-          <span className="text-xs text-muted-foreground line-through">{formatCurrency(basePrice)}</span>
+          <span className="text-[10px] opacity-70 line-through leading-none">
+            {formatCurrency(basePrice)}
+          </span>
         )}
-        <span className={`text-sm font-bold ${hasDiscount ? "text-green-600" : "text-foreground"}`}>{formatCurrency(displayPrice)}</span>
+        <span className="text-[10px] font-medium opacity-90 mt-1">
+          Validity: {getValidity(network.id)}
+        </span>
       </div>
       <Button
         size="sm"
-        className="mt-2 gradient-primary border-0 text-xs w-full"
+        style={
+          offline
+            ? { background: "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)", color: "#fff" }
+            : { background: BRAND_BG[network.id], color: BRAND_TEXT[network.id] }
+        }
+        className="mt-2 border-0 text-xs w-full font-semibold shadow-sm hover:opacity-90 hover:shadow-md transition-all"
         onClick={onSelect}
-        disabled={bundle.isOffline}
+        disabled={offline}
       >
-        <ShoppingCart className="w-3 h-3 mr-1" /> {bundle.isOffline ? "Offline" : "Select Bundle"}
+        <ShoppingCart className="w-3 h-3 mr-1" /> {offline ? "Offline" : "Select Bundle"}
       </Button>
     </div>
   );
@@ -86,7 +138,7 @@ export default function DataBundles() {
   const { toast } = useToast();
   const { profile, isAdmin } = useAuth();
   const { networks: mergedNetworks } = useCustomBundles();
-  const { getResellerPrice: calculateResellerPrice, loading: pricesLoading } = useResellerPrices();
+  const { getResellerPrice: calculateResellerPrice } = useResellerPrices();
   const userTier = profile?.tier || "customer";
 
   const getResellerPrice = (netId: string, size: string, base: number) => {
@@ -106,13 +158,11 @@ export default function DataBundles() {
     "at-premium": ["026", "027", "056", "057"],
   };
 
-  // Special exceptions: specific numbers that work on a different network
   const mtnExceptions = ["0278213799"];
 
   const phonePrefix = phoneNumber.length >= 3 ? phoneNumber.slice(0, 3) : "";
   const detectedNetwork = useMemo(() => {
     if (phonePrefix.length < 3) return null;
-    // Check exceptions first
     if (mtnExceptions.includes(phoneNumber)) return "mtn";
     for (const [netId, prefixes] of Object.entries(networkPrefixes)) {
       if (prefixes.includes(phonePrefix)) return netId;
@@ -123,7 +173,6 @@ export default function DataBundles() {
   const isWrongNetwork = useMemo(() => {
     if (!selectedBundle || !detectedNetwork || detectedNetwork === "unknown") return false;
     const selectedId = selectedBundle.network.id;
-    // AirtelTigo networks share prefixes
     if ((selectedId === "at-bigtime" || selectedId === "at-premium") && (detectedNetwork === "at-bigtime" || detectedNetwork === "at-premium")) return false;
     return detectedNetwork !== selectedId;
   }, [detectedNetwork, selectedBundle]);
@@ -230,78 +279,129 @@ export default function DataBundles() {
 
       {/* Add to cart dialog */}
       <Dialog open={!!selectedBundle} onOpenChange={() => setSelectedBundle(null)}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              {selectedBundle && <NetworkIcon network={selectedBundle.network} />}
-              <div>
-                <DialogTitle>{selectedBundle?.network.name} {selectedBundle?.bundle.size}</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">Add bundle to cart</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-0">
+          {selectedBundle && (() => {
+            const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
+            const isPrivilegedTier = userTier === "reseller" || userTier === "agent" || userTier === "admin";
+            const base = isPrivilegedTier ? wholesalePrice : getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice);
+            const final = promo ? applyDiscount(base) : base;
+            const hasDiscount = final < base;
+            const headerStyle = {
+              background: BRAND_BG[selectedBundle.network.id] ?? "var(--accent)",
+              color: BRAND_TEXT[selectedBundle.network.id] ?? "#fff",
+            };
+            const validity = getValidity(selectedBundle.network.id);
+            const phoneValid = phoneNumber.length === 10 && !isWrongNetwork && detectedNetwork !== "unknown";
+            return (
+              <>
+                {/* Branded header */}
+                <div style={headerStyle} className="relative px-5 pt-6 pb-8">
+                  <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+                  <div className="absolute -top-8 -left-8 w-28 h-28 rounded-full bg-black/10 blur-2xl" />
+                  <DialogHeader className="relative">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/40 shadow-lg bg-white/20">
+                        <img
+                          src={networkLogos[selectedBundle.network.id]}
+                          alt={selectedBundle.network.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="text-left">
+                        <DialogTitle style={{ color: "inherit" }} className="text-lg font-extrabold tracking-tight">
+                          {selectedBundle.network.name} {selectedBundle.bundle.size}
+                        </DialogTitle>
+                        <p className="text-xs opacity-80">Confirm details to add to cart</p>
+                      </div>
+                    </div>
+                  </DialogHeader>
+                </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="bg-accent rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">💰 Price</p>
-              {(() => {
-                if (!selectedBundle) return null;
-                const wholesalePrice = getBundlePrice(selectedBundle.bundle, userTier);
-                const isPrivilegedTier = userTier === "reseller" || userTier === "agent" || userTier === "admin";
-                const base = isPrivilegedTier ? wholesalePrice : getResellerPrice(selectedBundle.network.id, selectedBundle.bundle.size, wholesalePrice);
-                const final = promo ? applyDiscount(base) : base;
-                const hasDiscount = final < base;
-                return (
-                  <>
-                    {hasDiscount && <p className="text-sm text-muted-foreground line-through">{formatCurrency(base)}</p>}
-                    <p className={`text-xl font-bold ${hasDiscount ? "text-green-600" : "text-foreground"}`}>{formatCurrency(final)}</p>
-                  </>
-                );
-              })()}
-            </div>
-            <div className="bg-accent rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">⏱ Validity</p>
-              <p className="text-xl font-bold text-foreground">
-                {selectedBundle?.network.id === "at-bigtime" ? "Non-Expiry" : selectedBundle?.network.id === "at-premium" ? "60 Days" : "90 Days"}
-              </p>
-            </div>
-          </div>
+                <div className="px-5 -mt-5 pb-5 space-y-4">
+                  {/* Price + validity card */}
+                  <div className="bg-card rounded-2xl border border-border shadow-md p-4 grid grid-cols-2 divide-x divide-border">
+                    <div className="pr-3 text-center">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Price</p>
+                      {hasDiscount && (
+                        <p className="text-xs text-muted-foreground line-through leading-none">{formatCurrency(base)}</p>
+                      )}
+                      <p className={`text-2xl font-extrabold ${hasDiscount ? "text-green-600" : "text-foreground"}`}>
+                        {formatCurrency(final)}
+                      </p>
+                    </div>
+                    <div className="pl-3 text-center">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Validity</p>
+                      <p className="text-2xl font-extrabold text-foreground">{validity}</p>
+                    </div>
+                  </div>
 
-          <div className="mt-4">
-            <label className="text-sm font-medium text-foreground flex items-center gap-1 mb-2">
-              📞 Recipient Phone Number
-            </label>
-            <Input
-              placeholder="e.g., 0549358359"
-              value={phoneNumber}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                setPhoneNumber(val);
-              }}
-              maxLength={10}
-              inputMode="numeric"
-            />
-            {phoneNumber.length > 0 && phoneNumber.length < 10 && (
-              <p className="text-xs text-destructive mt-1">{10 - phoneNumber.length} more digit(s) needed</p>
-            )}
-            {isWrongNetwork && selectedBundle && (
-              <p className="text-xs text-destructive mt-1 font-semibold">
-                ⚠️ This number doesn't look like a {getExpectedNetworkName(selectedBundle.network.id)} number
-              </p>
-            )}
-            {detectedNetwork === "unknown" && phoneNumber.length >= 3 && (
-              <p className="text-xs text-destructive mt-1">⚠️ Unrecognized phone number prefix</p>
-            )}
-          </div>
+                  {/* Phone input */}
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                      Recipient Phone Number
+                    </label>
+                    <div
+                      className={`flex items-center gap-2 rounded-xl border-2 bg-background px-3 transition-colors ${
+                        phoneNumber.length === 0
+                          ? "border-border"
+                          : phoneValid
+                          ? "border-green-500"
+                          : "border-destructive"
+                      }`}
+                    >
+                      <span className="text-lg">📞</span>
+                      <Input
+                        placeholder="0549358359"
+                        value={phoneNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setPhoneNumber(val);
+                        }}
+                        maxLength={10}
+                        inputMode="numeric"
+                        className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 text-base font-semibold tracking-wider"
+                        style={{ fontSize: 16 }}
+                      />
+                      {phoneValid && (
+                        <span className="text-green-600 text-lg" aria-hidden>✓</span>
+                      )}
+                    </div>
+                    {phoneNumber.length > 0 && phoneNumber.length < 10 && (
+                      <p className="text-xs text-muted-foreground mt-1.5 ml-1">
+                        {10 - phoneNumber.length} more digit(s) needed
+                      </p>
+                    )}
+                    {isWrongNetwork && (
+                      <p className="text-xs text-destructive mt-1.5 ml-1 font-semibold">
+                        ⚠️ Not a {getExpectedNetworkName(selectedBundle.network.id)} number
+                      </p>
+                    )}
+                    {detectedNetwork === "unknown" && phoneNumber.length >= 3 && (
+                      <p className="text-xs text-destructive mt-1.5 ml-1">⚠️ Unrecognized phone prefix</p>
+                    )}
+                  </div>
 
-          <div className="flex gap-3 mt-4">
-            <Button variant="outline" className="flex-1" onClick={() => setSelectedBundle(null)}>
-              Cancel
-            </Button>
-            <Button className="flex-1 gradient-primary border-0" onClick={handleAddToCart}>
-              <ShoppingCart className="w-4 h-4 mr-1" /> Add to Cart
-            </Button>
-          </div>
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-1">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-11 rounded-xl"
+                      onClick={() => setSelectedBundle(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1 h-11 rounded-xl gradient-primary border-0 shadow-md font-semibold"
+                      onClick={handleAddToCart}
+                      disabled={!phoneValid}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-1.5" /> Add to Cart
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </>
