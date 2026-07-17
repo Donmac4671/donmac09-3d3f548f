@@ -88,9 +88,15 @@ export default function Login() {
       return;
     }
 
-    // Everyone else (including customers and admins) goes to the dashboard
+    // Referred customers → send back to their reseller's storefront
+    if (!isReseller && referredStoreSlug) {
+      navigate(`/${referredStoreSlug}`, { replace: true });
+      return;
+    }
+
+    // Everyone else (admins, resellers) goes to the dashboard
     navigate("/dashboard", { replace: true });
-  }, [user, profile, authLoading, isReseller, navigate, toast]);
+  }, [user, profile, authLoading, isReseller, referredStoreSlug, navigate, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
