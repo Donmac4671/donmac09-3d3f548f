@@ -38,6 +38,36 @@ const findAuthUserByEmail = async (admin: ReturnType<typeof createClient>, email
   return null;
 };
 
+const signUpUserFallback = async (
+  supabaseUrl: string,
+  anonKey: string,
+  email: string,
+  password: string,
+  metadata: Record<string, string>,
+) => {
+  const signupClient = createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data, error } = await signupClient.auth.signUp({
+    email,
+    password,
+    options: { data: metadata },
+  });
+
+  if (error) return { userId: null, error };
+
+  const user = data.user;
+  if (!user?.id || (Array.isArray(user.identities) && user.identities.length === 0)) {
+    return {
+      userId: null,
+      error: new Error("This email may already be registered. Try a different email or reset that user's password."),
+    };
+  }
+
+  return { userId: user.id, error: null };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -48,14 +78,22 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data: { user: caller }, error: userError } = await userClient.auth.getUser();
-    const callerId = caller?.id;
-    if (userError || !callerId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: jsonHeaders });
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
 
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const { data: { user: caller }, error: userError } = await admin.auth.getUser(token);
+    const callerId = caller?.id;
+    if (userError || !callerId) {
+      console.warn("Admin create user unauthorized:", readableError(userError, "Missing or expired session"));
+      return new Response(
+        JSON.stringify({ error: "Admin session expired. Please sign out, sign back in, and try again." }),
+        { status: 401, headers: jsonHeaders },
+      );
+    }
+
     const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", callerId);
     const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: jsonHeaders });
@@ -109,21 +147,44 @@ Deno.serve(async (req) => {
         const foundAfterFailure = await findAuthUserByEmail(admin, email);
 
         if (!foundAfterFailure) {
-          return new Response(JSON.stringify({ error: readableError(createErr) }), { status: 400, headers: jsonHeaders });
+          console.warn("Admin create failed; trying signup fallback for:", email);
+          const fallback = await signUpUserFallback(supabaseUrl, anonKey, email, password, metadata);
+
+          if (!fallback.userId) {
+            const createMessage = readableError(createErr);
+            const fallbackMessage = readableError(fallback.error, "Signup fallback failed");
+            return new Response(
+              JSON.stringify({ error: `${createMessage}. ${fallbackMessage}` }),
+              { status: 400, headers: jsonHeaders },
+            );
+          }
+
+          const { error: confirmErr } = await admin.auth.admin.updateUserById(fallback.userId, {
+            password,
+            email_confirm: true,
+            user_metadata: metadata,
+          });
+
+          if (confirmErr) {
+            console.error("Admin confirm fallback user error:", readableError(confirmErr), confirmErr);
+            return new Response(JSON.stringify({ error: readableError(confirmErr, "User was created but could not be confirmed") }), { status: 400, headers: jsonHeaders });
+          }
+
+          userId = fallback.userId;
+        } else {
+          const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(foundAfterFailure.id, {
+            password,
+            email_confirm: true,
+            user_metadata: metadata,
+          });
+
+          if (updateErr) {
+            console.error("Admin UpdateUser after create failure error:", readableError(updateErr), updateErr);
+            return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
+          }
+
+          userId = updated.user?.id ?? foundAfterFailure.id;
         }
-
-        const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(foundAfterFailure.id, {
-          password,
-          email_confirm: true,
-          user_metadata: metadata,
-        });
-
-        if (updateErr) {
-          console.error("Admin UpdateUser after create failure error:", readableError(updateErr), updateErr);
-          return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
-        }
-
-        userId = updated.user?.id ?? foundAfterFailure.id;
       } else {
         userId = created.user?.id;
       }
