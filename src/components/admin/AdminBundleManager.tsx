@@ -191,7 +191,7 @@ export default function AdminBundleManager() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-semibold text-foreground w-16">{bundle.size}</span>
                       <span className="text-sm text-muted-foreground">
-                        Agent: {formatCurrency(bundle.agentPrice)} · General: {formatCurrency(bundle.generalPrice)}
+                        Price: {formatCurrency(bundle.generalPrice)}
                         {bundle.costPrice != null && <> · Cost: {formatCurrency(bundle.costPrice)}</>}
                       </span>
                       {isHidden && <Badge variant="outline" className="bg-destructive/10 text-destructive text-xs">Hidden</Badge>}
