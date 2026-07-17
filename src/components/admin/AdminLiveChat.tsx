@@ -229,7 +229,20 @@ export default function AdminLiveChat() {
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.sender_role === "admin" ? "justify-end" : "justify-start"}`}>
+                <div key={m.id} className={`group flex ${m.sender_role === "admin" ? "justify-end" : "justify-start"} items-end gap-1`}>
+                  {m.sender_role === "admin" && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this message?")) return;
+                        await supabase.from("chat_messages").delete().eq("id", m.id);
+                        setMessages((prev) => prev.filter((x) => x.id !== m.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-destructive"
+                      aria-label="Delete message"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <div
                     className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
                       m.sender_role === "admin"
@@ -245,8 +258,28 @@ export default function AdminLiveChat() {
                       {format(new Date(m.created_at), "h:mm a")}
                     </p>
                   </div>
+                  {m.sender_role !== "admin" && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this message?")) return;
+                        await supabase.from("chat_messages").delete().eq("id", m.id);
+                        setMessages((prev) => prev.filter((x) => x.id !== m.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-destructive"
+                      aria-label="Delete message"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
+              {userTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-muted px-3 py-2 rounded-xl rounded-bl-sm">
+                    <span className="text-xs text-muted-foreground animate-pulse">User is typing…</span>
+                  </div>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
             <div className="p-2 border-t border-border flex gap-1.5 items-center">
@@ -256,7 +289,7 @@ export default function AdminLiveChat() {
               </Button>
               <Input
                 value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
+                onChange={(e) => { setNewMsg(e.target.value); emitTyping(); }}
                 placeholder={uploading ? "Uploading..." : "Type a reply..."}
                 className="text-sm h-9"
                 onKeyDown={(e) => e.key === "Enter" && sendReply()}
