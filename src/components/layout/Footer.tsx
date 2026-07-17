@@ -1,12 +1,23 @@
 import { ExternalLink } from "lucide-react";
+import { useStoreBranding } from "@/hooks/useStoreBranding";
 
 export default function Footer(_props: { showGuides?: boolean } = {}) {
+  const store = useStoreBranding();
+  const rawWa = store?.whatsapp;
+  const digits = (rawWa || "").replace(/\D/g, "");
+  const waNumber = digits
+    ? digits.startsWith("233")
+      ? digits
+      : digits.startsWith("0")
+        ? "233" + digits.slice(1)
+        : digits
+    : "233549358359";
   return (
     <footer className="border-t border-border bg-card mt-8">
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <div className="flex flex-col items-center gap-3 pt-2">
           <a
-            href="https://wa.me/233549358359"
+            href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"

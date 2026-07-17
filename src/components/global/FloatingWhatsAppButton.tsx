@@ -1,7 +1,22 @@
+import { useStoreBranding } from "@/hooks/useStoreBranding";
+
+const DEFAULT_WHATSAPP = "233549358359";
+
+function normalizeWhatsApp(raw?: string | null): string {
+  if (!raw) return DEFAULT_WHATSAPP;
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return DEFAULT_WHATSAPP;
+  if (digits.startsWith("233")) return digits;
+  if (digits.startsWith("0")) return "233" + digits.slice(1);
+  return digits;
+}
+
 export default function FloatingWhatsAppButton() {
+  const store = useStoreBranding();
+  const number = normalizeWhatsApp(store?.whatsapp);
   return (
     <a
-      href="https://wa.me/233549358359"
+      href={`https://wa.me/${number}`}
       target="_blank"
       rel="noreferrer"
       aria-label="Contact Support on WhatsApp"
