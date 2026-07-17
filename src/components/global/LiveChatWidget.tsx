@@ -156,8 +156,12 @@ function LiveChatTab() {
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [adminTyping, setAdminTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const typingChannelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<any>(null);
+  const lastTypingSentRef = useRef<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -167,18 +171,43 @@ function LiveChatTab() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `user_id=eq.${user.id}` }, (payload) => {
         setMessages((prev) => [...prev, payload.new]);
       })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "chat_messages", filter: `user_id=eq.${user.id}` }, (payload: any) => {
+        setMessages((prev) => prev.filter((m) => m.id !== payload.old?.id));
+      })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    const typingCh = supabase.channel(`chat-typing-${user.id}`, { config: { broadcast: { self: false } } });
+    typingCh.on("broadcast", { event: "typing" }, (payload: any) => {
+      if (payload?.payload?.role === "admin") {
+        setAdminTyping(true);
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setAdminTyping(false), 2500);
+      }
+    }).subscribe();
+    typingChannelRef.current = typingCh;
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(typingCh);
+      clearTimeout(typingTimeoutRef.current);
+    };
   }, [user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, adminTyping]);
 
   const fetchMessages = async () => {
     if (!user) return;
     const { data } = await supabase.from("chat_messages").select("*").eq("user_id", user.id).order("created_at", { ascending: true });
     if (data) setMessages(data);
+  };
+
+  const emitTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { role: "user" } });
   };
 
   const sendMessage = async (mediaUrl?: string) => {
@@ -197,14 +226,11 @@ function LiveChatTab() {
     const path = `${user.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("chat-media").upload(path, file);
     if (!error) {
-      // Store the storage path; signed URLs are generated on render.
       await sendMessage(path);
     }
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
   };
-
-  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url);
 
   return (
     <>
@@ -225,6 +251,13 @@ function LiveChatTab() {
             </div>
           </div>
         ))}
+        {adminTyping && (
+          <div className="flex justify-start">
+            <div className="bg-muted px-3 py-2 rounded-xl rounded-bl-sm">
+              <span className="text-xs text-muted-foreground animate-pulse">Support is typing…</span>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
       <div className="p-2 border-t border-border flex gap-1.5 items-center">
@@ -232,7 +265,7 @@ function LiveChatTab() {
         <Button size="icon" variant="ghost" className="shrink-0 h-9 w-9" onClick={() => fileRef.current?.click()} disabled={uploading}>
           <Paperclip className="w-4 h-4" />
         </Button>
-        <Input value={newMsg} onChange={(e) => setNewMsg(e.target.value)} placeholder={uploading ? "Uploading..." : "Type a message..."} className="text-sm h-9" onKeyDown={(e) => e.key === "Enter" && sendMessage()} disabled={uploading} />
+        <Input value={newMsg} onChange={(e) => { setNewMsg(e.target.value); emitTyping(); }} placeholder={uploading ? "Uploading..." : "Type a message..."} className="text-sm h-9" onKeyDown={(e) => e.key === "Enter" && sendMessage()} disabled={uploading} />
         <Button size="icon" className="shrink-0 h-9 w-9" onClick={() => sendMessage()} disabled={sending || uploading || !newMsg.trim()}>
           <Send className="w-4 h-4" />
         </Button>
