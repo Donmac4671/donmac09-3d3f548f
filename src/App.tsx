@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import FloatingCartButton from "@/components/global/FloatingCartButton";
 import LiveChatWidget from "@/components/global/LiveChatWidget";
+import FloatingWhatsAppButton from "@/components/global/FloatingWhatsAppButton";
 import RealtimeNotifications from "@/components/global/RealtimeNotifications";
 import EnableNotificationsBanner from "@/components/global/EnableNotificationsBanner";
 import SiteMessagePopup from "@/components/global/SiteMessagePopup";
