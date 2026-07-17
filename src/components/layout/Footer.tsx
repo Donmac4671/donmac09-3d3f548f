@@ -17,7 +17,7 @@ export default function Footer(_props: { showGuides?: boolean } = {}) {
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <div className="flex flex-col items-center gap-3 pt-2">
           <a
-            href="https://wa.me/233549358359"
+            href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
