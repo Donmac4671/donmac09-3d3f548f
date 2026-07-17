@@ -1373,6 +1373,7 @@ export type Database = {
         Returns: Json
       }
       generate_topup_reference_code: { Args: never; Returns: string }
+      get_auth_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_my_store_profit: {
         Args: never
         Returns: {
