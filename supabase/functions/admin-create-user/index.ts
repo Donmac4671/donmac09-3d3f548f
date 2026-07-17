@@ -1,11 +1,42 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+
+const readableError = (error: unknown, fallback = "Failed to create user") => {
+  if (!error) return fallback;
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string") return error;
+  const record = error as Record<string, unknown>;
+  for (const key of ["message", "msg", "error_description", "error", "code", "statusText"]) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  const details = Object.fromEntries(
+    Object.getOwnPropertyNames(error as object).map((key) => [key, record[key]]),
+  );
+  const serialized = JSON.stringify(details);
+  return serialized && serialized !== "{}" ? serialized : fallback;
+};
+
+const findAuthUserByEmail = async (admin: ReturnType<typeof createClient>, email: string) => {
+  const target = email.trim().toLowerCase();
+  const perPage = 100;
+
+  for (let page = 1; page <= 20; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      console.error("List users error:", readableError(error));
+      return null;
+    }
+
+    const user = data.users.find((candidate) => candidate.email?.toLowerCase() === target);
+    if (user) return user;
+    if (data.users.length < perPage) return null;
+  }
+
+  return null;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -48,20 +79,59 @@ Deno.serve(async (req) => {
     }
 
     const user_type = String(body.user_type ?? "reseller");
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name, phone, user_type, tier: user_type },
-    });
+    const metadata = { full_name, phone, user_type, tier: user_type };
+    const existingUser = await findAuthUserByEmail(admin, email);
+    let userId = existingUser?.id;
 
-    if (createErr) {
-      console.error("Supabase Admin CreateUser error:", JSON.stringify(createErr), createErr);
-      const msg = (createErr as any).message || (createErr as any).msg || (createErr as any).error_description || (createErr as any).code || JSON.stringify(createErr) || "Failed to create user";
-      return new Response(JSON.stringify({ error: msg }), { status: 400, headers: jsonHeaders });
+    if (existingUser) {
+      const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(existingUser.id, {
+        password,
+        email_confirm: true,
+        user_metadata: metadata,
+      });
+
+      if (updateErr) {
+        console.error("Admin UpdateUser error:", readableError(updateErr), updateErr);
+        return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
+      }
+
+      userId = updated.user?.id ?? existingUser.id;
+    } else {
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: metadata,
+      });
+
+      if (createErr) {
+        console.error("Admin CreateUser error:", readableError(createErr), createErr);
+        const foundAfterFailure = await findAuthUserByEmail(admin, email);
+
+        if (!foundAfterFailure) {
+          return new Response(JSON.stringify({ error: readableError(createErr) }), { status: 400, headers: jsonHeaders });
+        }
+
+        const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(foundAfterFailure.id, {
+          password,
+          email_confirm: true,
+          user_metadata: metadata,
+        });
+
+        if (updateErr) {
+          console.error("Admin UpdateUser after create failure error:", readableError(updateErr), updateErr);
+          return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
+        }
+
+        userId = updated.user?.id ?? foundAfterFailure.id;
+      } else {
+        userId = created.user?.id;
+      }
     }
 
-    const userId = created.user?.id;
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Could not resolve created user" }), { status: 400, headers: jsonHeaders });
+    }
 
     const { error: profileErr } = await admin.from("profiles").upsert(
       {

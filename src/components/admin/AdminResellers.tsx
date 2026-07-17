@@ -93,13 +93,20 @@ export default function AdminResellers() {
       });
 
       if (error) {
-        let msg = error.message;
-        if (error instanceof Error && (error as any).context?.json) {
+        let msg = error.message || "Could not create user";
+        const context = (error as any).context;
+        if (context?.json) {
           try {
-            const body = await (error as any).context.json();
-            if (body.error) msg = body.error;
+            const body = await context.json();
+            if (typeof body?.error === "string") msg = body.error;
+            else if (body?.error) msg = JSON.stringify(body.error);
           } catch {
-            /* ignore */
+            try {
+              const text = await context.text();
+              if (text) msg = text;
+            } catch {
+              /* ignore */
+            }
           }
         }
         toast({ title: "Create failed", description: msg, variant: "destructive" });
