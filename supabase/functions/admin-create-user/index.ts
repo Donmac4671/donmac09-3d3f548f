@@ -9,16 +9,21 @@ const readableError = (error: unknown, fallback = "Failed to create user") => {
   const record = error as Record<string, unknown>;
   const msg = typeof record.message === "string" && record.message.trim() ? record.message : "";
   const name = typeof record.name === "string" ? record.name : "";
+  if (name === "AuthRetryableFetchError") {
+    return "The auth service could not create this account right now. If the email already exists, use the existing account or reset its password, then create the reseller store.";
+  }
   if (msg) return name && name !== "Error" ? `${name}: ${msg}` : msg;
   for (const key of ["msg", "error_description", "error", "code", "statusText"]) {
     const value = record[key];
     if (typeof value === "string" && value.trim()) return value;
   }
-  if (name === "AuthRetryableFetchError") {
-    return "Auth service is temporarily unavailable. Please retry in a moment.";
-  }
   if (name) return name;
   return fallback;
+};
+
+const isAuthRetryableError = (error: unknown) => {
+  const record = error as Record<string, unknown> | null;
+  return record?.name === "AuthRetryableFetchError";
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -179,6 +184,13 @@ Deno.serve(async (req) => {
         const foundAfterFailure = await findAuthUserByEmail(admin, email);
 
         if (!foundAfterFailure) {
+          if (isAuthRetryableError(createErr)) {
+            return new Response(
+              JSON.stringify({ error: readableError(createErr) }),
+              { status: 503, headers: jsonHeaders },
+            );
+          }
+
           console.warn("Admin create failed; trying signup fallback for:", email);
           const fallback = await signUpUserFallback(supabaseUrl, anonKey, email, password, metadata);
 
