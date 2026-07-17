@@ -674,11 +674,11 @@ export default function Admin() {
                       <Select value={o.status} onValueChange={(val) => handleUpdateOrderStatus(o.id, val)}>
                         <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="failed">Failed</SelectItem>
+                          <SelectItem value="waiting">Waiting</SelectItem>
                           <SelectItem value="pending">Pending</SelectItem>
                           <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="waiting">Waiting</SelectItem>
                           <SelectItem value="completed">Delivered</SelectItem>
-                          <SelectItem value="failed">Failed</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
