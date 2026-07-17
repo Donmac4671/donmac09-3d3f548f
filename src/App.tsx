@@ -132,14 +132,8 @@ const App = () => (
                   </PublicRoute>
                 }
               />
-              <Route
-                path="/register"
-                element={
-                  <PublicRoute>
-                    <Register />
-                  </PublicRoute>
-                }
-              />
+              <Route path="/register" element={<Navigate to="/login" replace />} />
+              
               
               {/* Store-specific routes - for customers */}
               <Route path="/:slug/login" element={<Login />} />
