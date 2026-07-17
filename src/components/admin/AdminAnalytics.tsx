@@ -618,7 +618,7 @@ export default function AdminAnalytics({ users, orders, topups, complaints, admi
                   <Wallet className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">GHDataConnect Balance</p>
+                  <p className="text-sm text-muted-foreground">GHData Balance</p>
                   <p className="text-2xl font-bold">
                     {ghBalanceLoading ? "..." : ghBalance !== null ? formatCurrency(ghBalance) : "Not available"}
                   </p>
