@@ -79,12 +79,14 @@ export default function Admin() {
   const [complaintDateTo, setComplaintDateTo] = useState<Date | undefined>(today);
 
   const fetchData = async () => {
-    const [{ data: u }, { data: t }, { data: c }, { data: ur }, { data: stores }] = await Promise.all([
+    const [{ data: u }, { data: t }, { data: c }, { data: ur }, { data: stores }, { data: refs }, { data: rStores }] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallet_topups").select("*").order("created_at", { ascending: false }),
       supabase.from("complaints").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*"),
       supabase.rpc("admin_get_store_profits"),
+      supabase.from("store_referrals").select("user_id, store_id"),
+      supabase.from("reseller_stores").select("id, slug, full_name, user_id"),
     ]);
 
 
@@ -122,10 +124,22 @@ export default function Admin() {
         lifetime: Number(s.lifetime_profit) || 0,
       });
     });
+
+    // Build customer -> reseller store map
+    const storeById = new Map<string, { slug: string; full_name: string }>();
+    (rStores as any[] | null)?.forEach((s) => storeById.set(s.id, { slug: s.slug, full_name: s.full_name }));
+    const referralMap = new Map<string, { slug: string; full_name: string }>();
+    (refs as any[] | null)?.forEach((r) => {
+      const st = storeById.get(r.store_id);
+      if (st) referralMap.set(r.user_id, st);
+    });
+
     const enrichedUsers = (u || []).map((row: any) => ({
       ...row,
       reseller_available_profit: profitMap.get(row.user_id)?.available ?? 0,
       reseller_lifetime_profit: profitMap.get(row.user_id)?.lifetime ?? 0,
+      referred_by_slug: referralMap.get(row.user_id)?.slug ?? null,
+      referred_by_name: referralMap.get(row.user_id)?.full_name ?? null,
     }));
 
     setUsers(enrichedUsers);
