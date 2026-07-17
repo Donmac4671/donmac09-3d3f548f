@@ -524,19 +524,21 @@ ${complaintsText}`;
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
     );
 
-    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage, platformStats] = await Promise.all([
+    const [liveNetworks, promo, promoHistory, broadcasts, siteMessage, platformStats, storeContext] = await Promise.all([
       buildLiveNetworks(adminClient),
       getActivePromo(adminClient, userTier),
       getPromoHistory(adminClient),
       getRecentBroadcasts(adminClient),
       getActiveSiteMessage(adminClient),
       getPlatformStats(adminClient),
+      resolveResellerStoreContext(adminClient, signedInUserId),
     ]);
 
     const pricing = buildPricingText(
       liveNetworks,
       userTier,
       promo ? { discount: promo.discount, applies: promo.applies } : null,
+      storeContext?.overrides ?? null,
     );
     const tierLabel = userTier === "agent" ? "Agent" : userTier === "general" ? "General" : "Guest (not signed in)";
     const nowLocal = (() => {
