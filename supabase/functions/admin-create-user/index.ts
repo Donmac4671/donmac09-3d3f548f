@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
       userId = updated.user?.id ?? existingUser.id;
     } else {
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      const { data: created, error: createErr } = await createUserWithRetry(admin, {
         email,
         password,
         email_confirm: true,
