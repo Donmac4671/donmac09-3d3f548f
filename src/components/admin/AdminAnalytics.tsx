@@ -30,6 +30,7 @@ interface AdminAnalyticsProps {
   orders: any[];
   topups: any[];
   complaints: any[];
+  adminUserIds?: Set<string>;
 }
 
 const orderChartConfig: ChartConfig = {
