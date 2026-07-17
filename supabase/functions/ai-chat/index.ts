@@ -186,11 +186,14 @@ function buildPricingText(
   networks: Network[],
   tier: "agent" | "general" | "guest",
   promo: { discount: number; applies: boolean } | null,
+  resellerOverrides?: Record<string, number> | null,
 ): string {
   return networks.map((n) => {
     if (n.bundles.length === 0) return "";
     const lines = n.bundles.map((b) => {
-      const base = tier === "agent" ? b.agent : b.general;
+      const key = `${n.id}|${b.size}`;
+      const override = resellerOverrides?.[key];
+      const base = override ?? (tier === "agent" ? b.agent : b.general);
       if (promo && promo.applies && promo.discount > 0) {
         const discounted = Math.round(base * (1 - promo.discount / 100) * 100) / 100;
         return `  ${b.size}: ₵${discounted.toFixed(2)} (was ₵${base.toFixed(2)}, ${promo.discount}% promo)`;
@@ -199,6 +202,60 @@ function buildPricingText(
     }).join("\n");
     return `${n.name}:\n${lines}`;
   }).filter(Boolean).join("\n\n");
+}
+
+async function resolveResellerStoreContext(
+  adminClient: any,
+  userId: string | null,
+): Promise<{ storeId: string; storeName: string; ownedByUser: boolean; overrides: Record<string, number> } | null> {
+  if (!userId) return null;
+  try {
+    const { data: owned } = await adminClient
+      .from("reseller_stores")
+      .select("id, store_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    let storeId: string | null = owned?.id ?? null;
+    let storeName: string = owned?.store_name ?? "";
+    const ownedByUser = !!owned;
+
+    if (!storeId) {
+      const { data: ref } = await adminClient
+        .from("store_referrals")
+        .select("store_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (ref?.store_id) {
+        storeId = ref.store_id;
+        const { data: s } = await adminClient
+          .from("reseller_stores")
+          .select("store_name")
+          .eq("id", storeId)
+          .maybeSingle();
+        storeName = s?.store_name ?? "";
+      }
+    }
+
+    if (!storeId) return null;
+
+    const { data: prices } = await adminClient
+      .from("reseller_bundle_prices")
+      .select("network_id, bundle_size, price")
+      .eq("store_id", storeId);
+
+    const overrides: Record<string, number> = {};
+    if (Array.isArray(prices)) {
+      for (const p of prices) {
+        overrides[`${p.network_id}|${p.bundle_size}`] = Number(p.price);
+      }
+    }
+
+    return { storeId, storeName, ownedByUser, overrides };
+  } catch (e) {
+    console.error("resolveResellerStoreContext failed:", e);
+    return null;
+  }
 }
 
 async function getActivePromo(
