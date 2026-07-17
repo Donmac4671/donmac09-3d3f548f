@@ -316,7 +316,9 @@ export default function AdminAnalytics({ users, orders, topups, complaints, admi
     const completedOrders = filteredOrders.filter((o) => o.status === "completed" || o.status === "delivered").length;
     const failedOrders = filteredOrders.filter((o) => o.status === "failed").length;
     const openComplaints = filteredComplaints.filter((c) => c.status === "open").length;
-    const totalWalletBalance = users.reduce((sum, u) => sum + Number(u.wallet_balance), 0);
+    const totalWalletBalance = users
+      .filter((u) => !adminUserIds || !adminUserIds.has(u.user_id))
+      .reduce((sum, u) => sum + Number(u.wallet_balance), 0);
     const blockedUsers = users.filter((u) => u.is_blocked).length;
     const pendingTopups = filteredTopups.filter((t) => t.status === "pending").length;
 
