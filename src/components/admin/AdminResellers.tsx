@@ -147,7 +147,12 @@ export default function AdminResellers() {
         return;
       }
 
-      toast({ title: "User added", description: `${newUser.full_name} can now sign in.` });
+      toast({
+        title: "User added",
+        description: data?.password_updated === false
+          ? `${newUser.full_name} is now a reseller. Their existing password was kept because the new one was too weak.`
+          : `${newUser.full_name} can now sign in.`,
+      });
       setAddUserOpen(false);
       setNewUser({ full_name: "", email: "", phone: "", password: "" });
       setTimeout(() => {
