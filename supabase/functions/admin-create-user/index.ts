@@ -26,6 +26,11 @@ const isAuthRetryableError = (error: unknown) => {
   return record?.name === "AuthRetryableFetchError";
 };
 
+const isWeakPasswordError = (error: unknown) => {
+  const record = error as Record<string, unknown> | null;
+  return record?.name === "AuthWeakPasswordError" || record?.code === "weak_password";
+};
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const createUserWithRetry = async (
@@ -33,15 +38,40 @@ const createUserWithRetry = async (
   payload: { email: string; password: string; email_confirm: boolean; user_metadata: Record<string, string> },
 ) => {
   let lastError: unknown = null;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const { data, error } = await admin.auth.admin.createUser(payload);
     if (!error) return { data, error: null as unknown };
     lastError = error;
     const name = (error as { name?: string })?.name ?? "";
     if (name !== "AuthRetryableFetchError") break;
-    await sleep(300 * (attempt + 1));
+    await sleep(500 * (attempt + 1));
   }
   return { data: null, error: lastError };
+};
+
+const updateAuthUser = async (
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  password: string,
+  metadata: Record<string, string>,
+) => {
+  const { data, error } = await admin.auth.admin.updateUserById(userId, {
+    password,
+    email_confirm: true,
+    user_metadata: metadata,
+  });
+
+  if (!error) return { data, error: null as unknown, passwordUpdated: true };
+
+  if (!isWeakPasswordError(error)) return { data: null, error, passwordUpdated: false };
+
+  console.warn("Password rejected for existing user; keeping current password:", readableError(error));
+  const retry = await admin.auth.admin.updateUserById(userId, {
+    email_confirm: true,
+    user_metadata: metadata,
+  });
+
+  return { data: retry.data, error: retry.error, passwordUpdated: false };
 };
 
 const findAuthUserByEmail = async (admin: ReturnType<typeof createClient>, email: string) => {
@@ -157,19 +187,22 @@ Deno.serve(async (req) => {
     const metadata = { full_name, phone, user_type, tier: user_type };
     const existingUser = await findAuthUserByEmail(admin, email);
     let userId = existingUser?.id;
+    let passwordUpdated = true;
 
     if (existingUser) {
-      const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(existingUser.id, {
+      const { data: updated, error: updateErr, passwordUpdated: didUpdatePassword } = await updateAuthUser(
+        admin,
+        existingUser.id,
         password,
-        email_confirm: true,
-        user_metadata: metadata,
-      });
+        metadata,
+      );
 
       if (updateErr) {
         console.error("Admin UpdateUser error:", readableError(updateErr), updateErr);
         return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
       }
 
+      passwordUpdated = didUpdatePassword;
       userId = updated.user?.id ?? existingUser.id;
     } else {
       const { data: created, error: createErr } = await createUserWithRetry(admin, {
@@ -184,27 +217,20 @@ Deno.serve(async (req) => {
         const foundAfterFailure = await findAuthUserByEmail(admin, email);
 
         if (!foundAfterFailure) {
-          if (isAuthRetryableError(createErr)) {
-            return new Response(
-              JSON.stringify({ error: readableError(createErr) }),
-              { status: 503, headers: jsonHeaders },
-            );
-          }
-
           console.warn("Admin create failed; trying signup fallback for:", email);
           const fallback = await signUpUserFallback(supabaseUrl, anonKey, email, password, metadata);
 
           if (!fallback.userId) {
             const createMessage = readableError(createErr);
             const fallbackMessage = readableError(fallback.error, "Signup fallback failed");
+            const status = isAuthRetryableError(createErr) ? 503 : 400;
             return new Response(
               JSON.stringify({ error: `${createMessage}. ${fallbackMessage}` }),
-              { status: 400, headers: jsonHeaders },
+              { status, headers: jsonHeaders },
             );
           }
 
           const { error: confirmErr } = await admin.auth.admin.updateUserById(fallback.userId, {
-            password,
             email_confirm: true,
             user_metadata: metadata,
           });
@@ -216,17 +242,19 @@ Deno.serve(async (req) => {
 
           userId = fallback.userId;
         } else {
-          const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(foundAfterFailure.id, {
+          const { data: updated, error: updateErr, passwordUpdated: didUpdatePassword } = await updateAuthUser(
+            admin,
+            foundAfterFailure.id,
             password,
-            email_confirm: true,
-            user_metadata: metadata,
-          });
+            metadata,
+          );
 
           if (updateErr) {
             console.error("Admin UpdateUser after create failure error:", readableError(updateErr), updateErr);
             return new Response(JSON.stringify({ error: readableError(updateErr, "Failed to update existing user") }), { status: 400, headers: jsonHeaders });
           }
 
+          passwordUpdated = didUpdatePassword;
           userId = updated.user?.id ?? foundAfterFailure.id;
         }
       } else {
@@ -262,7 +290,10 @@ Deno.serve(async (req) => {
     );
     if (roleErr) console.warn("Role upsert skipped:", roleErr.message);
 
-    return new Response(JSON.stringify({ success: true, user_id: userId, profile_verified: true }), { status: 200, headers: jsonHeaders });
+    return new Response(
+      JSON.stringify({ success: true, user_id: userId, profile_verified: true, password_updated: passwordUpdated }),
+      { status: 200, headers: jsonHeaders },
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: jsonHeaders });
