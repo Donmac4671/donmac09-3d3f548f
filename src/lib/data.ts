@@ -23,7 +23,7 @@ export const networks: Network[] = [
     gradient: "gradient-mtn",
     bundles: [
       { size: "1GB", sizeGB: 1, price: 4.50, generalPrice: 4.50 },
-      { size: "2GB", sizeGB: 2, price: 8.60, generalPrice: 8.60 },
+      { size: "2GB", sizeGB: 2, price: 8.80, generalPrice: 8.80 },
       { size: "3GB", sizeGB: 3, price: 12.90, generalPrice: 12.90 },
       { size: "4GB", sizeGB: 4, price: 17.20, generalPrice: 17.20 },
       { size: "5GB", sizeGB: 5, price: 21.50, generalPrice: 21.50 },
