@@ -1487,6 +1487,7 @@ export type Database = {
         }
         Returns: Json
       }
+      promote_mtn_pending_to_processing: { Args: never; Returns: number }
       provision_my_profile: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
