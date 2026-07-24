@@ -219,7 +219,8 @@ serve(async (req) => {
 
       if (lastResult?.success) {
         const actualRef = lastResult.data?.reference ?? lastResult.data?.id ?? lastResult.reference ?? reference;
-        const nextStatus = networkKey === "at-premium" ? "completed" : "processing";
+        const nextStatus =
+          networkKey === "at-premium" ? "completed" : networkKey === "mtn" ? "pending" : "processing";
         await supabase
           .from("orders")
           .update({ gh_reference: String(actualRef), status: nextStatus })
