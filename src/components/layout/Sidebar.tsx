@@ -10,7 +10,7 @@ const navItems = [
   { label: "Top Ups", icon: CreditCard, path: "/topups" },
   { label: "My Store", icon: Store, path: "/mystore" },
   { label: "Complaints", icon: MessageSquare, path: "/complaints" },
-  { label: "Profile", icon: User, path: "/profile" },
+  { label: "Profile & Password", icon: User, path: "/profile" },
 ];
 
 export default function Sidebar() {
