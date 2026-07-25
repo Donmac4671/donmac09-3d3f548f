@@ -21,7 +21,7 @@ const navItems = [
   { label: "Top Ups", icon: CreditCard, path: "/topups" },
   { label: "My Store", icon: Store, path: "/mystore" },
   { label: "Complaints", icon: MessageSquare, path: "/complaints" },
-  { label: "Profile", icon: User, path: "/profile" },
+  { label: "Profile & Password", icon: User, path: "/profile" },
 ];
 
 export default function TopBar({ title }: { title: string }) {
@@ -133,7 +133,7 @@ export default function TopBar({ title }: { title: string }) {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/profile" className="flex items-center gap-2"><User className="w-4 h-4" /> Profile</Link>
+              <Link to="/profile" className="flex items-center gap-2"><User className="w-4 h-4" /> Profile &amp; Password</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/orders" className="flex items-center gap-2"><ShoppingBag className="w-4 h-4" /> Orders</Link>
