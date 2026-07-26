@@ -37,7 +37,7 @@ export default function Admin() {
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
-    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "cost-prices", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals"];
+    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "cost-prices", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals", "audit-log"];
     return validTabs.includes(hash) ? hash : "analytics";
   };
 
