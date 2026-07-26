@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
-import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine } from "lucide-react";
+import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine, ScrollText } from "lucide-react";
+import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminBundleManager from "@/components/admin/AdminBundleManager";
 import AdminCostPrices from "@/components/admin/AdminCostPrices";
@@ -36,7 +37,7 @@ export default function Admin() {
 
   const getInitialTab = () => {
     const hash = window.location.hash.replace("#", "");
-    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "cost-prices", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals"];
+    const validTabs = ["analytics", "users", "orders", "verified-id", "complaints", "bundles", "cost-prices", "promos", "site-message", "broadcast", "live-chat", "rankings", "resellers", "withdrawals", "audit-log"];
     return validTabs.includes(hash) ? hash : "analytics";
   };
 
@@ -387,6 +388,7 @@ export default function Admin() {
             <TabsTrigger value="broadcast" className="gap-2 justify-center whitespace-nowrap"><Megaphone className="w-4 h-4" /> Broadcast</TabsTrigger>
             <TabsTrigger value="live-chat" className="gap-2 justify-center whitespace-nowrap"><MessageCircle className="w-4 h-4" /> Live Chat</TabsTrigger>
             <TabsTrigger value="rankings" className="gap-2 justify-center whitespace-nowrap"><Crown className="w-4 h-4" /> Rankings</TabsTrigger>
+            <TabsTrigger value="audit-log" className="gap-2 justify-center whitespace-nowrap"><ScrollText className="w-4 h-4" /> Audit Log</TabsTrigger>
           </TabsList>
         </div>
 
@@ -856,6 +858,10 @@ export default function Admin() {
 
         <TabsContent value="withdrawals">
           <AdminWithdrawals />
+        </TabsContent>
+
+        <TabsContent value="audit-log">
+          <AdminAuditLog />
         </TabsContent>
       </Tabs>
 
