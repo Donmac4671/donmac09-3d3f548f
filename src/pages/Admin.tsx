@@ -388,6 +388,7 @@ export default function Admin() {
             <TabsTrigger value="broadcast" className="gap-2 justify-center whitespace-nowrap"><Megaphone className="w-4 h-4" /> Broadcast</TabsTrigger>
             <TabsTrigger value="live-chat" className="gap-2 justify-center whitespace-nowrap"><MessageCircle className="w-4 h-4" /> Live Chat</TabsTrigger>
             <TabsTrigger value="rankings" className="gap-2 justify-center whitespace-nowrap"><Crown className="w-4 h-4" /> Rankings</TabsTrigger>
+            <TabsTrigger value="audit-log" className="gap-2 justify-center whitespace-nowrap"><ScrollText className="w-4 h-4" /> Audit Log</TabsTrigger>
           </TabsList>
         </div>
 
