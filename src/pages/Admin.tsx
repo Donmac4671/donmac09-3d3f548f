@@ -859,6 +859,10 @@ export default function Admin() {
         <TabsContent value="withdrawals">
           <AdminWithdrawals />
         </TabsContent>
+
+        <TabsContent value="audit-log">
+          <AdminAuditLog />
+        </TabsContent>
       </Tabs>
 
       {/* Wallet Dialog */}
