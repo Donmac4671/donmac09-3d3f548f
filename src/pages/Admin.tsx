@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/data";
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
-import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine } from "lucide-react";
+import { Users, ShoppingBag, Ban, DollarSign, Trash2, MessageSquare, MessageCircle, Search, CalendarIcon, BarChart3, Crown, Wifi, Percent, Shield, Hash, Megaphone, Copy, RotateCcw, RefreshCw, Store, ArrowDownToLine, ScrollText } from "lucide-react";
+import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminBundleManager from "@/components/admin/AdminBundleManager";
 import AdminCostPrices from "@/components/admin/AdminCostPrices";
