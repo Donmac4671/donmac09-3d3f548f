@@ -192,6 +192,40 @@ Deno.serve(async (req) => {
         return json({ error: error.message }, 400);
       }
       const row = Array.isArray(rpc) ? rpc[0] : rpc;
+      const orderId = row?.order_id;
+
+      // Call fulfill-order directly for data bundles to submit immediately to GHData
+      if (orderId && found.network.id !== "airtime" && found.network.id !== "mashup" && found.network.id !== "vs") {
+        try {
+          const sizeMatch = found.bundle.size.match(/(\d+(?:\.\d+)?)\s*(GB|MB)/i);
+          let bundleSizeGb = 1;
+          if (sizeMatch) {
+            const val = parseFloat(sizeMatch[1]);
+            const unit = sizeMatch[2].toUpperCase();
+            bundleSizeGb = unit === "MB" ? val / 1000 : val;
+          }
+
+          console.log(`📡 Public API calling fulfill-order for order ${orderId}`);
+          const fulfillResponse = await fetch(`${SUPABASE_URL}/functions/v1/fulfill-order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              order_id: orderId,
+              network_id: found.network.id,
+              phone: phone,
+              bundle_size_gb: bundleSizeGb,
+            }),
+          });
+          const fulfillResult = await fulfillResponse.json().catch(() => ({}));
+          console.log(`📡 Public API fulfill-order response:`, fulfillResult);
+        } catch (err) {
+          console.error(`❌ Public API fulfill-order failed:`, err);
+        }
+      }
+
       const out = {
         order_ref: row?.order_ref,
         status: "processing",

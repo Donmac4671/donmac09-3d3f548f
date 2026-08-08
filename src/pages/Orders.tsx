@@ -83,7 +83,7 @@ export default function Orders() {
       case "completed": return "bg-success/10 text-success border-success/20";
       case "pending": return "bg-warning/10 text-warning border-warning/20";
       case "waiting": return "bg-amber-500/10 text-amber-600 border-amber-500/20";
-      case "processing": return "bg-primary/10 text-primary border-primary/20";
+      case "processing": return "bg-blue-500/10 text-blue-600 border-blue-500/20";
       case "failed": return "bg-destructive/10 text-destructive border-destructive/20";
       default: return "";
     }
@@ -93,7 +93,7 @@ export default function Orders() {
     { key: "all", label: "All", icon: List, color: "text-foreground" },
     { key: "pending", label: "Pending", icon: Clock, color: "text-warning" },
     { key: "waiting", label: "Waiting", icon: Hourglass, color: "text-amber-600" },
-    { key: "processing", label: "Processing", icon: Loader, color: "text-primary" },
+    { key: "processing", label: "Processing", icon: Loader, color: "text-blue-500" },
     { key: "completed", label: "Delivered", icon: CheckCircle, color: "text-success" },
     { key: "failed", label: "Failed", icon: XCircle, color: "text-destructive" },
   ];
