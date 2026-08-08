@@ -545,7 +545,7 @@ export default function Admin() {
                   <p className="text-xs text-muted-foreground">Pending</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-lg font-bold text-primary">{orders.filter(o => o.status === "processing").length}</p>
+                  <p className="text-lg font-bold text-blue-500">{orders.filter(o => o.status === "processing").length}</p>
                   <p className="text-xs text-muted-foreground">Processing</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
@@ -694,7 +694,7 @@ export default function Admin() {
                       <Badge variant="outline" className={
                         o.status === "completed" ? "bg-success/10 text-success" :
                         o.status === "pending" ? "bg-warning/10 text-warning" :
-                        o.status === "processing" ? "bg-primary/10 text-primary" :
+                        o.status === "processing" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
                         o.status === "waiting" ? "bg-warning/10 text-warning" :
                         "bg-destructive/10 text-destructive"
                       }>{o.status === "completed" ? "delivered" : o.status}</Badge>
